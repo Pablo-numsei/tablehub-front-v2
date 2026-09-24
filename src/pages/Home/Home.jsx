@@ -17,7 +17,9 @@ export default function Home() {
   const kitchenRef = useRef(null)
   const ecosystemRef = useRef(null)
   const pointer = useRef({ x: 0, y: 0 })
-  const scroll3d = useRef({ rx: 0, ry: 0, z: 0 })
+  const pointerSmooth = useRef({ x: 0, y: 0 })
+  const targetProgress = useRef(0)
+  const currentProgress = useRef(0)
   const raf = useRef(0)
 
   useEffect(() => {
@@ -39,29 +41,66 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    const updateScroll = () => {
+    const updateTargetProgress = () => {
       const story = storyRef.current
       if (!story) return
 
       const rect = story.getBoundingClientRect()
       const travel = story.offsetHeight - window.innerHeight
-      const p = clamp(-rect.top / Math.max(travel, 1))
+      targetProgress.current = clamp(-rect.top / Math.max(travel, 1))
+    }
 
+    updateTargetProgress()
+    window.addEventListener('scroll', updateTargetProgress, { passive: true })
+    window.addEventListener('resize', updateTargetProgress)
+
+    return () => {
+      window.removeEventListener('scroll', updateTargetProgress)
+      window.removeEventListener('resize', updateTargetProgress)
+    }
+  }, [])
+
+  useEffect(() => {
+    const onPointerMove = (event) => {
+      if (window.innerWidth <= 900) return
+
+      pointer.current = {
+        x: (event.clientX / window.innerWidth - .5) * 9,
+        y: (event.clientY / window.innerHeight - .5) * -6,
+      }
+    }
+
+    const show = (node, opacity, transform) => {
+      if (!node) return
+      node.style.opacity = String(opacity)
+      node.style.transform = transform
+    }
+
+    const render = () => {
+      const scrollEase = window.innerWidth <= 900 ? 0.12 : 0.075
+      const pointerEase = 0.08
+
+      currentProgress.current +=
+        (targetProgress.current - currentProgress.current) * scrollEase
+
+      pointerSmooth.current.x +=
+        (pointer.current.x - pointerSmooth.current.x) * pointerEase
+      pointerSmooth.current.y +=
+        (pointer.current.y - pointerSmooth.current.y) * pointerEase
+
+      const p = currentProgress.current
       const a = range(p, .12, .32)
       const b = range(p, .30, .50)
       const c = range(p, .48, .70)
       const d = range(p, .68, .94)
 
-      scroll3d.current = {
-        rx: -7 * a + 8 * b - 4 * c,
-        ry: 10 * a - 18 * b + 12 * c - 4 * d,
-        z: 80 * a - 45 * b - 20 * c + 10 * d,
-      }
+      const rx = -7 * a + 8 * b - 4 * c
+      const ry = 10 * a - 18 * b + 12 * c - 4 * d
+      const z = 80 * a - 45 * b - 20 * c + 10 * d
 
-      const show = (node, opacity, transform) => {
-        if (!node) return
-        node.style.opacity = String(opacity)
-        node.style.transform = transform
+      if (sceneRef.current) {
+        sceneRef.current.style.transform =
+          `perspective(1100px) rotateX(${rx + pointerSmooth.current.y}deg) rotateY(${ry + pointerSmooth.current.x}deg) translateZ(${z}px)`
       }
 
       show(
@@ -93,28 +132,7 @@ export default function Home() {
         range(p, .70, .84),
         `translate(-50%, -50%) translateY(${45 - 45 * d}px) scale(${.9 + .1 * d})`,
       )
-    }
 
-    updateScroll()
-    window.addEventListener('scroll', updateScroll, { passive: true })
-    return () => window.removeEventListener('scroll', updateScroll)
-  }, [])
-
-  useEffect(() => {
-    const onPointerMove = (event) => {
-      if (window.innerWidth <= 900) return
-      pointer.current = {
-        x: (event.clientX / window.innerWidth - .5) * 9,
-        y: (event.clientY / window.innerHeight - .5) * -6,
-      }
-    }
-
-    const render = () => {
-      if (sceneRef.current) {
-        const { rx, ry, z } = scroll3d.current
-        sceneRef.current.style.transform =
-          `perspective(1100px) rotateX(${rx + pointer.current.y}deg) rotateY(${ry + pointer.current.x}deg) translateZ(${z}px)`
-      }
       raf.current = requestAnimationFrame(render)
     }
 

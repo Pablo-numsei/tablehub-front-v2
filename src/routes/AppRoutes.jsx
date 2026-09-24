@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Home from '../pages/Home/Home.jsx'
+import ComoFunciona from '../pages/ComoFunciona/ComoFunciona.jsx'
+import Recursos from '../pages/Recursos/Recursos.jsx'
 import Login from '../pages/Login/Login.jsx'
 import Register from '../pages/Register/Register.jsx'
 import Dashboard from '../pages/Dashboard/Dashboard.jsx'
@@ -9,6 +11,9 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/como-funciona" element={<ComoFunciona />} />
+      <Route path="/recursos" element={<Recursos />} />
+
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Register />} />
 

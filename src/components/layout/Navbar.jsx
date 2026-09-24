@@ -33,9 +33,9 @@ export default function Navbar() {
         </button>
 
         <nav className={`th-navbar__links ${open ? 'is-open' : ''}`}>
-          <a href="#inicio" onClick={() => setOpen(false)}>Início</a>
-          <a href="#fluxo" onClick={() => setOpen(false)}>Como funciona</a>
-          <a href="#recursos" onClick={() => setOpen(false)}>Recursos</a>
+          <NavLink to="/" onClick={() => setOpen(false)}>Início</NavLink>
+          <NavLink to="/como-funciona" onClick={() => setOpen(false)}>Como funciona</NavLink>
+          <NavLink to="/recursos" onClick={() => setOpen(false)}>Recursos</NavLink>
           <NavLink to="/login" onClick={() => setOpen(false)}>Entrar</NavLink>
           <NavLink className="th-btn th-btn--primary" to="/cadastro" onClick={() => setOpen(false)}>
             Começar

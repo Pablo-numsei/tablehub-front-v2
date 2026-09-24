@@ -151,16 +151,19 @@
   .management-nav {
     width: 100%;
     display: flex;
-    justify-content: space-around;
-    gap: 4px;
+    justify-content: flex-start;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .management-nav::-webkit-scrollbar {
+    display: none;
   }
 
   .management-nav__item {
     width: 46px;
+    min-width: 46px;
     min-height: 46px;
-  }
-
-  .management-nav__item:nth-child(n+6) {
-    display: none;
   }
 }

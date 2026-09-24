@@ -74,37 +74,37 @@ export default function ComoFunciona() {
 
       if (sceneRef.current) {
         sceneRef.current.style.transform =
-          `perspective(1200px) rotateX(${pointerSmooth.current.y}deg) rotateY(${pointerSmooth.current.x}deg)`
+          `perspective(1200px) rotateX(${pointerSmooth.current.y * .3}deg) rotateY(${pointerSmooth.current.x * .3}deg)`
       }
 
       show(
         introRef.current,
         1 - range(p, .07, .21),
-        `translate(-50%, -50%) translateY(${-40 * range(p, .07, .21)}px) scale(${1 - .04 * range(p, .07, .21)})`,
+        `translateY(${-40 * range(p, .07, .21)}px) scale(${1 - .04 * range(p, .07, .21)})`,
       )
 
       show(
         qrRef.current,
         range(p, .13, .25) * (1 - range(p, .34, .44)),
-        `translate(-50%, -50%) translate3d(0, ${28 - 28 * a}px, ${120 * a}px) scale(${.9 + .1 * a}) rotateY(${12 - 12 * a}deg)`,
+        `translate3d(0, ${28 - 28 * a}px, ${120 * a}px) scale(${.9 + .1 * a}) rotateY(${12 - 12 * a}deg)`,
       )
 
       show(
         orderRef.current,
         range(p, .31, .43) * (1 - range(p, .52, .62)),
-        `translate(-50%, -50%) translate3d(0, ${32 - 32 * b}px, ${110 * b}px) scale(${.9 + .1 * b}) rotateY(${-12 + 12 * b}deg)`,
+        `translate3d(0, ${32 - 32 * b}px, ${110 * b}px) scale(${.9 + .1 * b}) rotateY(${-12 + 12 * b}deg)`,
       )
 
       show(
         kitchenRef.current,
         range(p, .50, .61) * (1 - range(p, .70, .80)),
-        `translate(-50%, -50%) translate3d(0, ${32 - 32 * c}px, ${100 * c}px) scale(${.9 + .1 * c})`,
+        `translate3d(0, ${32 - 32 * c}px, ${100 * c}px) scale(${.9 + .1 * c})`,
       )
 
       show(
         ecosystemRef.current,
         range(p, .70, .84),
-        `translate(-50%, -50%) translateY(${40 - 40 * d}px) scale(${.9 + .1 * d})`,
+        `translateY(${28 - 28 * d}px) scale(${.9 + .1 * d})`,
       )
 
       raf.current = requestAnimationFrame(render)

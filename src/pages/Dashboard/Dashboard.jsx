@@ -1,14 +1,6 @@
 import { NavLink } from 'react-router-dom'
-import {
-  FiBarChart2,
-  FiBookOpen,
-  FiCreditCard,
-  FiGrid,
-  FiHome,
-  FiPackage,
-  FiShoppingBag,
-  FiUsers,
-} from 'react-icons/fi'
+import { FiBarChart2 } from 'react-icons/fi'
+import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
 import './Dashboard.css'
 
 const metrics = [
@@ -38,48 +30,10 @@ const tables = [
 
 const bars = [32, 46, 40, 58, 72, 64, 83, 76, 92, 70, 86, 95]
 
-const navItems = [
-  ['Dashboard', '/dashboard', FiHome],
-  ['Cardápio', '/cardapio', FiBookOpen],
-  ['Pedidos', '/pedidos', FiShoppingBag],
-  ['Clientes', '/clientes', FiUsers],
-  ['Financeiro', '/financeiro', FiCreditCard],
-  ['Mesas', '/mesas', FiGrid],
-  ['Produtos / Estoque', '/estoque', FiPackage],
-]
-
 export default function Dashboard() {
   return (
     <main className="dashboard-page">
-      <aside className="dashboard-sidebar">
-        <div className="dashboard-brand">
-          <span className="dashboard-brand__mark">T</span>
-          <span>TableHub</span>
-        </div>
-
-        <span className="dashboard-sidebar__label">GESTÃO</span>
-
-        <nav className="dashboard-nav">
-          {navItems.map(([label, path, Icon]) => (
-            <NavLink
-              key={path}
-              to={path}
-              className={({ isActive }) => `dashboard-nav__item ${isActive ? 'is-active' : ''}`}
-            >
-              <Icon />
-              <span>{label}</span>
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="dashboard-user">
-          <div className="dashboard-user__avatar">A</div>
-          <div>
-            <strong>Administrador</strong>
-            <small>TableHub</small>
-          </div>
-        </div>
-      </aside>
+      <ManagementSidebar />
 
       <section className="dashboard-content">
         <header className="dashboard-header">

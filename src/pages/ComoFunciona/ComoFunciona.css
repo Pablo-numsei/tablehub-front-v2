@@ -74,13 +74,13 @@
   position: absolute;
   left: 50%;
   top: 50%;
+  translate: -50% -50%;
   will-change: transform, opacity;
 }
 
 .how-story__intro {
   width: min(760px, 90vw);
   text-align: center;
-  transform: translate(-50%, -50%);
 }
 
 .how-story__intro h2 {
@@ -105,7 +105,6 @@
     0 40px 100px rgba(0,0,0,.42);
   backdrop-filter: blur(22px);
   opacity: 0;
-  transform: translate(-50%, -50%);
 }
 
 .how-card--qr {
@@ -195,16 +194,15 @@
 
 .how-ecosystem {
   width: min(760px, calc(100vw - 40px));
-  height: 510px;
+  height: 500px;
   opacity: 0;
-  transform: translate(-50%, -50%);
 }
 
 .how-ecosystem__core {
   position: absolute;
   left: 50%;
-  top: 42%;
-  transform: translate(-50%, -50%);
+  top: 40%;
+  translate: -50% -50%;
   width: 180px;
   height: 180px;
   border-radius: 50%;
@@ -235,9 +233,9 @@
 .how-ecosystem__copy {
   position: absolute;
   left: 50%;
-  bottom: -12px;
-  width: min(620px, 92%);
-  transform: translateX(-50%);
+  bottom: 18px;
+  width: min(660px, 92%);
+  translate: -50% 0;
   text-align: center;
 }
 
@@ -279,5 +277,11 @@
   .how-ecosystem {
     transform: none !important;
     transition: none !important;
+  }
+
+  .how-story__intro,
+  .how-card,
+  .how-ecosystem {
+    translate: -50% -50%;
   }
 }

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { FiArrowRight, FiPlus, FiSearch, FiX } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
+import '../../styles/management.css'
 import './Pedidos.css'
 
 const initialOrders = [

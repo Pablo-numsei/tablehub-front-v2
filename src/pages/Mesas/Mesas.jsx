@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { FiCopy, FiPlus, FiQrCode, FiX } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
+import '../../styles/management.css'
 import './Mesas.css'
 
 const initialTables = [

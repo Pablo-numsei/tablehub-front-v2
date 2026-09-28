@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { FiCopy, FiPlus, FiQrCode, FiX } from 'react-icons/fi'
+import { FiCopy, FiLink, FiPlus, FiX } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
 import '../../styles/management.css'
 import './Mesas.css'
@@ -63,7 +63,7 @@ export default function Mesas() {
 
   const copyQrLink = async () => {
     if (!selectedTable) return
-    const url = `${window.location.origin}/cardapio?mesa=${selectedTable.number}`
+    const url = `${window.location.origin}/menu?mesa=${selectedTable.number}`
 
     try {
       await navigator.clipboard.writeText(url)
@@ -174,7 +174,7 @@ export default function Mesas() {
             </div>
 
             <div className="table-modal__order">
-              <FiQrCode />
+              <FiLink />
               <div>
                 <small>Pedido associado</small>
                 <strong>{selectedTable.order || 'Nenhum pedido ativo'}</strong>

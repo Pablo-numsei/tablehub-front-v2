@@ -112,7 +112,7 @@ export default function ConfirmarPedido() {
 
           <aside className="customer-flow-card">
             <span className="customer-flow-card__eyebrow">MESA</span>
-            <h2>0{Number(table)}</h2>
+            <h2>{String(table).padStart(2, '0')}</h2>
 
             <div className="customer-summary-row">
               <span>Itens</span>

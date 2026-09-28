@@ -9,6 +9,9 @@ import Pedidos from '../pages/Pedidos/Pedidos.jsx'
 import Mesas from '../pages/Mesas/Mesas.jsx'
 import Cardapio from '../pages/Cardapio/Cardapio.jsx'
 import MenuCliente from '../pages/MenuCliente/MenuCliente.jsx'
+import CarrinhoCliente from '../pages/CarrinhoCliente/CarrinhoCliente.jsx'
+import ConfirmarPedido from '../pages/ConfirmarPedido/ConfirmarPedido.jsx'
+import AcompanharPedido from '../pages/AcompanharPedido/AcompanharPedido.jsx'
 import PlaceholderPage from '../pages/Placeholder/PlaceholderPage.jsx'
 
 export default function AppRoutes() {
@@ -27,6 +30,9 @@ export default function AppRoutes() {
       <Route path="/financeiro" element={<PlaceholderPage title="Financeiro" />} />
       <Route path="/cardapio" element={<Cardapio />} />
       <Route path="/menu" element={<MenuCliente />} />
+      <Route path="/carrinho" element={<CarrinhoCliente />} />
+      <Route path="/confirmar-pedido" element={<ConfirmarPedido />} />
+      <Route path="/acompanhar-pedido" element={<AcompanharPedido />} />
       <Route path="/mesas" element={<Mesas />} />
       <Route path="/estoque" element={<PlaceholderPage title="Produtos / Estoque" />} />
 

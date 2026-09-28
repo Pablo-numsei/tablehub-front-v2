@@ -1,0 +1,700 @@
+/* TableHub UI/UX 2.1 — Light Gray + Gold
+   Transitional override layer. It intentionally sits after the existing page CSS
+   so the redesign can be rolled out without breaking current component structure. */
+
+html,
+body,
+#root {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  color-scheme: light;
+}
+
+::selection {
+  background: var(--primary-soft);
+  color: var(--text);
+}
+
+.th-btn {
+  border-radius: var(--radius-control);
+  font-weight: 700;
+}
+
+.th-btn--primary {
+  color: var(--text) !important;
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-soft);
+}
+
+.th-btn--primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .07);
+}
+
+.th-btn--glass {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--surface);
+  backdrop-filter: none;
+}
+
+.th-btn--glass:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-active);
+}
+
+.placeholder-page,
+.home-page,
+.how-page,
+.resources-page,
+.management-page,
+.dashboard-page,
+.customer-menu-page,
+.customer-flow-page,
+.auth-page {
+  background: var(--bg) !important;
+  color: var(--text);
+}
+
+.placeholder-card,
+.metric-card,
+.dashboard-panel,
+.order-card,
+.table-summary-grid article,
+.table-management-card,
+.menu-toolbar,
+.menu-product-card,
+.customer-product-card,
+.customer-flow-card,
+.auth-panel,
+.auth-float-card,
+.resource-card,
+.how-card {
+  border-color: var(--border) !important;
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-soft) !important;
+  backdrop-filter: none !important;
+}
+
+.placeholder-card,
+.auth-panel,
+.how-card {
+  border-radius: var(--radius-container);
+}
+
+.management-page,
+.dashboard-page {
+  background-image: none !important;
+}
+
+.management-content,
+.dashboard-content {
+  color: var(--text);
+}
+
+/* Navigation */
+.management-sidebar,
+.dashboard-sidebar {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border) !important;
+}
+
+.management-brand,
+.dashboard-brand,
+.management-nav__item,
+.dashboard-nav__item {
+  color: var(--text);
+}
+
+.management-nav__item,
+.dashboard-nav__item {
+  font-weight: 700;
+  border-radius: var(--radius-control);
+}
+
+.management-nav__item:hover,
+.dashboard-nav__item:hover {
+  color: var(--text);
+  background: rgba(247, 215, 116, .25);
+}
+
+.management-nav__item.is-active,
+.dashboard-nav__item.is-active {
+  color: var(--text);
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.management-nav__item.is-active svg,
+.dashboard-nav__item.is-active svg {
+  color: var(--text);
+}
+
+.management-brand__mark,
+.dashboard-brand__mark {
+  color: var(--text);
+  border-color: var(--border-active);
+  background: var(--primary-soft);
+}
+
+.management-user,
+.dashboard-user {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  box-shadow: none !important;
+}
+
+.management-user__avatar,
+.dashboard-user__avatar {
+  color: var(--text);
+  background: var(--primary);
+}
+
+/* Global page hierarchy */
+.management-eyebrow,
+.dashboard-header__eyebrow,
+.dashboard-panel__head span,
+.customer-menu-hero span,
+.customer-flow-head > span,
+.customer-flow-card__eyebrow,
+.auth-panel__eyebrow,
+.auth-visual__copy > span,
+.hero-eyebrow,
+.how-intro__content > span,
+.how-story__intro > span,
+.how-card small,
+.how-ecosystem__copy small,
+.resources-hero__content > span,
+.resources-cta__panel > span {
+  color: var(--primary-strong) !important;
+}
+
+.management-header h1,
+.dashboard-header h1 {
+  font-weight: 700;
+}
+
+.management-header p,
+.dashboard-header p,
+.hero-copy p,
+.how-intro p,
+.how-story__intro p,
+.resources-hero p,
+.auth-panel__sub,
+.auth-visual__copy p {
+  color: var(--text-secondary);
+}
+
+/* Inputs and search */
+.th-input,
+.orders-search,
+.menu-search,
+.customer-note,
+.dashboard-period {
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+  background: var(--surface-elevated) !important;
+  border-radius: var(--radius-control);
+  box-shadow: none !important;
+}
+
+.th-input::placeholder,
+.orders-search input::placeholder,
+.menu-search input::placeholder,
+.customer-note::placeholder {
+  color: var(--text-disabled) !important;
+}
+
+.th-input:focus,
+.orders-search:focus-within,
+.menu-search:focus-within,
+.customer-note:focus {
+  border-color: var(--border-active) !important;
+  box-shadow: 0 0 0 3px rgba(229, 197, 95, .13) !important;
+}
+
+/* Toolbars / tabs */
+.orders-toolbar,
+.menu-toolbar {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.orders-tabs button,
+.menu-tabs button,
+.table-filter button,
+.customer-menu-tabs button {
+  color: var(--text-secondary);
+  border-color: var(--border);
+  background: var(--surface-elevated);
+  font-weight: 600;
+}
+
+.orders-tabs button.is-active,
+.menu-tabs button.is-active,
+.table-filter button.is-active,
+.customer-menu-tabs button.is-active {
+  color: var(--text);
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+/* Dashboard */
+.metric-card,
+.dashboard-panel {
+  border-radius: var(--radius-card) !important;
+}
+
+.metric-card > span,
+.dashboard-panel__head a,
+.orders-row > span:not(.status-badge),
+.table-card span {
+  color: var(--text-secondary);
+}
+
+.metric-card > strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.metric-card > small {
+  color: var(--success);
+}
+
+.orders-row {
+  background: var(--surface-elevated) !important;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}
+
+.table-card,
+.performance-column__track {
+  background: var(--surface-elevated) !important;
+  border-color: var(--border) !important;
+}
+
+.performance-column__bar {
+  background: linear-gradient(to top, rgba(224,187,74,.45), var(--primary)) !important;
+}
+
+/* Semantic statuses */
+.status-badge--aguardando,
+.order-status--aguardando {
+  color: #6F5B16 !important;
+  background: rgba(247,215,116,.35) !important;
+  border-color: rgba(224,187,74,.55) !important;
+}
+
+.status-badge--preparando,
+.order-status--preparando {
+  color: #315E82 !important;
+  background: rgba(79,143,191,.13) !important;
+  border-color: rgba(79,143,191,.28) !important;
+}
+
+.status-badge--pronto,
+.status-badge--entregue,
+.order-status--pronto,
+.order-status--entregue {
+  color: #25704A !important;
+  background: rgba(63,175,119,.13) !important;
+  border-color: rgba(63,175,119,.28) !important;
+}
+
+.table-state--livre,
+.table-card--livre span {
+  color: var(--success) !important;
+}
+
+.table-state--ocupada {
+  color: var(--info) !important;
+}
+
+.table-state--reservada,
+.table-card--reservada span {
+  color: var(--warning) !important;
+}
+
+/* Orders */
+.order-card {
+  border-radius: var(--radius-card);
+}
+
+.order-card__bottom {
+  border-color: var(--border);
+}
+
+.order-card__bottom button {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.order-drawer {
+  color: var(--text);
+  background: var(--surface-elevated) !important;
+  border-color: var(--border);
+  box-shadow: -12px 0 36px rgba(0,0,0,.08);
+}
+
+.order-drawer__head button,
+.order-drawer__meta > div,
+.order-drawer__items > div {
+  color: var(--text);
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+
+/* Tables / QR */
+.table-summary-grid article,
+.table-management-card {
+  border-radius: var(--radius-card);
+}
+
+.table-management-card--livre {
+  border-color: rgba(63,175,119,.34) !important;
+}
+
+.table-management-card--reservada {
+  border-color: rgba(214,147,71,.34) !important;
+}
+
+.table-management-card > button,
+.table-modal__status button,
+.table-modal__order,
+.table-modal__close {
+  color: var(--text);
+  background: var(--surface-elevated) !important;
+  border-color: var(--border) !important;
+}
+
+.table-modal {
+  color: var(--text);
+  background: var(--surface-elevated) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 16px 48px rgba(0,0,0,.10) !important;
+}
+
+.table-modal__status button.is-active {
+  color: var(--text);
+  background: var(--primary-soft) !important;
+  border-color: var(--primary) !important;
+}
+
+.table-qr,
+.table-modal__qr {
+  background: var(--surface-elevated) !important;
+}
+
+.table-qr span {
+  background: var(--text) !important;
+}
+
+.table-qr span.is-green {
+  background: var(--primary-strong) !important;
+}
+
+/* Menu admin + customer */
+.menu-product-card__image,
+.customer-product-card__image {
+  background: linear-gradient(145deg, rgba(247,215,116,.28), rgba(247,215,116,.10)) !important;
+}
+
+.menu-product-card__image span,
+.customer-product-card__image span {
+  color: var(--primary-strong) !important;
+}
+
+.availability,
+.menu-edit-button,
+.customer-product-unavailable,
+.customer-quantity {
+  color: var(--text-secondary);
+  background: var(--surface-elevated) !important;
+  border-color: var(--border) !important;
+}
+
+.availability.is-on {
+  color: #25704A !important;
+  border-color: rgba(63,175,119,.30) !important;
+  background: rgba(63,175,119,.10) !important;
+}
+
+.customer-menu-page {
+  background-image: none !important;
+}
+
+.customer-menu-brand__mark {
+  color: var(--text);
+  background: var(--primary-soft);
+  border-color: var(--border-active);
+}
+
+.customer-menu-table {
+  color: var(--primary-strong);
+}
+
+.customer-product-card {
+  border-radius: 16px !important;
+}
+
+.customer-product-card__action > button,
+.customer-cart-bar {
+  color: var(--text) !important;
+  background: var(--primary) !important;
+  box-shadow: var(--shadow-soft) !important;
+  font-weight: 700;
+}
+
+.customer-product-card__action > button:hover,
+.customer-cart-bar:hover {
+  background: var(--primary-hover) !important;
+}
+
+.customer-quantity button {
+  color: var(--text);
+  background: var(--primary-soft) !important;
+}
+
+/* Customer flow */
+.customer-flow-page {
+  background-image: none !important;
+}
+
+.customer-flow-card {
+  border-radius: var(--radius-container) !important;
+}
+
+.customer-cart-item,
+.customer-order-list > div,
+.customer-status-step {
+  color: var(--text);
+  background: var(--surface-elevated) !important;
+  border-color: var(--border) !important;
+}
+
+.customer-cart-quantity button {
+  color: var(--text);
+  background: var(--primary-soft) !important;
+}
+
+.customer-status-current--aguardando {
+  color: #6F5B16 !important;
+}
+
+.customer-status-current--preparando {
+  color: var(--info) !important;
+}
+
+.customer-status-current--pronto,
+.customer-status-current--entregue {
+  color: var(--success) !important;
+}
+
+.customer-status-step.is-done,
+.customer-status-step.is-current {
+  border-color: var(--border-active) !important;
+}
+
+.customer-status-step.is-done .customer-status-step__dot {
+  color: #fff;
+  border-color: var(--success);
+  background: var(--success);
+}
+
+.customer-status-step.is-current .customer-status-step__dot {
+  color: var(--text);
+  border-color: var(--primary-strong);
+  background: var(--primary-soft);
+}
+
+/* Authentication */
+.auth-page {
+  background-image: none !important;
+}
+
+.auth-form-side {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border) !important;
+  backdrop-filter: none !important;
+}
+
+.auth-panel {
+  background: var(--surface) !important;
+}
+
+.auth-float-card {
+  background: var(--surface-elevated) !important;
+}
+
+.auth-float-card svg,
+.auth-meta a,
+.auth-switch a {
+  color: var(--primary-strong);
+}
+
+.auth-error {
+  color: #8B3131;
+  border-color: rgba(216,91,91,.28);
+  background: rgba(216,91,91,.10);
+}
+
+/* Marketing */
+.th-navbar.is-scrolled,
+.page-navbar {
+  background: rgba(231,229,224,.92) !important;
+  border-color: var(--border) !important;
+  backdrop-filter: blur(18px);
+}
+
+.th-brand__mark {
+  color: var(--text);
+  border-color: var(--border-active);
+  background: var(--primary-soft) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+.th-navbar__links,
+.page-navbar__link,
+.page-pager__link {
+  color: var(--text-secondary);
+}
+
+.th-navbar__links.is-open {
+  background: var(--surface-elevated) !important;
+  border-color: var(--border) !important;
+}
+
+.page-navbar__link,
+.page-pager__link,
+.hero-page-links a {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+
+.page-navbar__link--next,
+.page-pager__link--next {
+  color: var(--text) !important;
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+.hero-section,
+.how-intro,
+.how-stage,
+.resources-hero,
+.page-pager {
+  background: var(--bg) !important;
+}
+
+.hero-section {
+  background:
+    radial-gradient(circle at 76% 30%, rgba(247,215,116,.24), transparent 28%),
+    var(--bg) !important;
+}
+
+.hero-device {
+  background: var(--surface-elevated) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 18px 50px rgba(0,0,0,.08) !important;
+}
+
+.hero-device__card,
+.hero-device__grid span {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+
+.status-dot {
+  background: var(--primary-strong);
+  box-shadow: 0 0 16px rgba(224,187,74,.32);
+}
+
+.hero-copy h1 span,
+.hero-page-links small {
+  color: var(--primary-strong) !important;
+}
+
+.how-intro {
+  background:
+    radial-gradient(circle at 50% 42%, rgba(247,215,116,.20), transparent 34%),
+    var(--bg) !important;
+}
+
+.how-stage {
+  background:
+    radial-gradient(circle at center, rgba(247,215,116,.13), transparent 34%),
+    var(--bg) !important;
+}
+
+.how-card {
+  background: var(--surface-elevated) !important;
+}
+
+.how-status {
+  background: var(--surface-elevated);
+}
+
+.how-status.is-done {
+  color: var(--success);
+}
+
+.how-status.is-active {
+  color: var(--text);
+  border-color: var(--border-active);
+  background: var(--primary-soft);
+}
+
+.how-ecosystem__core {
+  color: var(--text);
+  border-color: var(--border-active);
+  background: var(--primary-soft);
+  box-shadow: 0 12px 36px rgba(224,187,74,.12);
+}
+
+.how-eco {
+  color: var(--text-secondary);
+  background: var(--surface-elevated) !important;
+  border-color: var(--border);
+}
+
+.resources-hero {
+  background:
+    radial-gradient(circle at 50% 30%, rgba(247,215,116,.18), transparent 30%),
+    var(--bg) !important;
+}
+
+.resource-card {
+  border-radius: var(--radius-container) !important;
+}
+
+.resource-card:hover {
+  border-color: var(--border-active) !important;
+}
+
+.resource-card__icon {
+  color: var(--text);
+  border-color: var(--border-active);
+  background: var(--primary-soft);
+}
+
+.resources-cta__panel {
+  background: var(--surface) !important;
+  border-color: var(--border-active) !important;
+  box-shadow: var(--shadow-soft);
+}
+
+@media (max-width: 900px) {
+  .management-sidebar,
+  .dashboard-sidebar {
+    background: rgba(221,218,211,.96) !important;
+    border-color: var(--border) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  }
+}

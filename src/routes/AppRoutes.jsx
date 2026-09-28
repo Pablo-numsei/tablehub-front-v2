@@ -7,6 +7,8 @@ import Register from '../pages/Register/Register.jsx'
 import Dashboard from '../pages/Dashboard/Dashboard.jsx'
 import Pedidos from '../pages/Pedidos/Pedidos.jsx'
 import Mesas from '../pages/Mesas/Mesas.jsx'
+import Cardapio from '../pages/Cardapio/Cardapio.jsx'
+import MenuCliente from '../pages/MenuCliente/MenuCliente.jsx'
 import PlaceholderPage from '../pages/Placeholder/PlaceholderPage.jsx'
 
 export default function AppRoutes() {
@@ -23,7 +25,8 @@ export default function AppRoutes() {
       <Route path="/pedidos" element={<Pedidos />} />
       <Route path="/clientes" element={<PlaceholderPage title="Clientes" />} />
       <Route path="/financeiro" element={<PlaceholderPage title="Financeiro" />} />
-      <Route path="/cardapio" element={<PlaceholderPage title="Cardápio" />} />
+      <Route path="/cardapio" element={<Cardapio />} />
+      <Route path="/menu" element={<MenuCliente />} />
       <Route path="/mesas" element={<Mesas />} />
       <Route path="/estoque" element={<PlaceholderPage title="Produtos / Estoque" />} />
 

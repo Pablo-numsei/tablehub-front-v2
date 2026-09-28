@@ -1,6 +1,11 @@
 import { useMemo, useState } from 'react'
 import { FiArrowRight, FiPlus, FiSearch, FiX } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
+import { money } from '../../data/customerMenu.js'
+import {
+  loadCustomerOrders,
+  updateCustomerOrderStatus,
+} from '../../utils/customerSession.js'
 import '../../styles/management.css'
 import './Pedidos.css'
 
@@ -60,8 +65,22 @@ const nextStatus = {
   Entregue: 'Entregue',
 }
 
+const customerOrderToManagement = (order) => ({
+  id: order.id,
+  table: `Mesa ${order.table}`,
+  customer: order.customer || 'Cliente da mesa',
+  time: order.time,
+  status: order.status,
+  total: money(order.total),
+  items: order.items.map((item) => `${item.quantity}x ${item.name}`),
+  note: order.note || '',
+})
+
 export default function Pedidos() {
-  const [orders, setOrders] = useState(initialOrders)
+  const [orders, setOrders] = useState(() => [
+    ...loadCustomerOrders().map(customerOrderToManagement),
+    ...initialOrders,
+  ])
   const [filter, setFilter] = useState('Todos')
   const [query, setQuery] = useState('')
   const [selectedId, setSelectedId] = useState(null)
@@ -85,11 +104,13 @@ export default function Pedidos() {
 
   const advanceStatus = (id) => {
     setOrders((current) =>
-      current.map((order) =>
-        order.id === id
-          ? { ...order, status: nextStatus[order.status] }
-          : order,
-      ),
+      current.map((order) => {
+        if (order.id !== id) return order
+
+        const status = nextStatus[order.status]
+        updateCustomerOrderStatus(id, status)
+        return { ...order, status }
+      }),
     )
   }
 
@@ -205,6 +226,13 @@ export default function Pedidos() {
                 <div key={item}>{item}</div>
               ))}
             </div>
+
+            {selectedOrder.note && (
+              <div className="order-drawer__items" style={{ marginTop: 22 }}>
+                <span>OBSERVAÇÕES</span>
+                <div>{selectedOrder.note}</div>
+              </div>
+            )}
 
             <div className="order-drawer__total">
               <span>Total</span>

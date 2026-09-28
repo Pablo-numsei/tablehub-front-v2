@@ -9,6 +9,7 @@ import {
   FiSmartphone,
 } from 'react-icons/fi'
 import Navbar from '../../components/layout/Navbar.jsx'
+import { tableHubHomeImage } from '../../assets/tablehubHomeImage.js'
 import './Home.css'
 
 export default function Home() {
@@ -35,6 +36,8 @@ export default function Home() {
       <Navbar />
 
       <section className="hero-section">
+        <img className="hero-bg-image" src={tableHubHomeImage} alt="" aria-hidden="true" />
+        <div className="hero-bg-overlay" aria-hidden="true" />
         <div className="container hero-grid">
           <div className="hero-copy">
             <div className="hero-eyebrow hero-stagger">

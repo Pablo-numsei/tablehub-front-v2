@@ -51,7 +51,6 @@ export default function Recursos() {
       <PageNavbar
         title="Recursos"
         previous={{ to: '/como-funciona', label: 'Como funciona' }}
-        next={{ to: '/cadastro', label: 'Criar conta' }}
       />
 
       <section className="resources-hero">
@@ -96,9 +95,6 @@ export default function Recursos() {
         <div className="container page-pager__inner">
           <Link className="page-pager__link" to="/como-funciona">
             <FiArrowLeft /> Como funciona
-          </Link>
-          <Link className="page-pager__link page-pager__link--next" to="/cadastro">
-            Criar conta <FiArrowRight />
           </Link>
         </div>
       </section>

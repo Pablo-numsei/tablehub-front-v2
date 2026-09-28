@@ -1,42 +1,49 @@
 import { useMemo, useState } from 'react'
 import { FiMinus, FiPlus, FiShoppingBag } from 'react-icons/fi'
+import { useNavigate } from 'react-router-dom'
+import {
+  customerCategories as categories,
+  customerProducts as products,
+  money,
+} from '../../data/customerMenu.js'
+import { loadCart, saveCart } from '../../utils/customerSession.js'
 import './MenuCliente.css'
 
-const products = [
-  { id: 1, name: 'Smash Table', category: 'Hambúrgueres', price: 24, available: true },
-  { id: 2, name: 'Burger Especial', category: 'Hambúrgueres', price: 31.9, available: true },
-  { id: 3, name: 'Batata Crocante', category: 'Acompanhamentos', price: 18, available: true },
-  { id: 4, name: 'Onion Rings', category: 'Acompanhamentos', price: 20, available: false },
-  { id: 5, name: 'Refrigerante', category: 'Bebidas', price: 12.9, available: true },
-  { id: 6, name: 'Brownie', category: 'Sobremesas', price: 16, available: true },
-]
-
-const categories = ['Todos', 'Hambúrgueres', 'Acompanhamentos', 'Bebidas', 'Sobremesas']
-
-const money = (value) =>
-  value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-
 export default function MenuCliente() {
+  const navigate = useNavigate()
   const params = new URLSearchParams(window.location.search)
   const table = params.get('mesa') || '04'
   const [filter, setFilter] = useState('Todos')
-  const [cart, setCart] = useState({})
+  const [cart, setCart] = useState(() => loadCart())
 
   const visible = useMemo(
     () => products.filter((product) => filter === 'Todos' || product.category === filter),
     [filter],
   )
 
+  const updateCart = (updater) => {
+    setCart((current) => {
+      const next = updater(current)
+      saveCart(next)
+      return next
+    })
+  }
+
   const add = (id) => {
-    setCart((current) => ({ ...current, [id]: (current[id] || 0) + 1 }))
+    updateCart((current) => ({
+      ...current,
+      [id]: (current[id] || 0) + 1,
+    }))
   }
 
   const remove = (id) => {
-    setCart((current) => {
+    updateCart((current) => {
       const next = { ...current }
       const value = (next[id] || 0) - 1
+
       if (value <= 0) delete next[id]
       else next[id] = value
+
       return next
     })
   }
@@ -120,7 +127,11 @@ export default function MenuCliente() {
       </section>
 
       {itemCount > 0 && (
-        <button className="customer-cart-bar" type="button">
+        <button
+          className="customer-cart-bar"
+          type="button"
+          onClick={() => navigate(`/carrinho?mesa=${table}`)}
+        >
           <FiShoppingBag />
           <span>{itemCount} {itemCount === 1 ? 'item' : 'itens'}</span>
           <strong>{money(total)}</strong>

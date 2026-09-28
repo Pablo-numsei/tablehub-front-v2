@@ -1,3 +1,3 @@
-# TableHub Frontend 2.0
+# TableHub Frontend 
 
 Nova base do frontend do TableHub.

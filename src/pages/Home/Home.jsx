@@ -9,7 +9,6 @@ import {
   FiSmartphone,
 } from 'react-icons/fi'
 import Navbar from '../../components/layout/Navbar.jsx'
-import { tableHubHomeImage } from '../../assets/tablehubHomeImage.js'
 import './Home.css'
 
 export default function Home() {
@@ -35,10 +34,7 @@ export default function Home() {
     <main className="home-page">
       <Navbar />
 
-      <section
-        className="hero-section"
-        style={{ '--hero-bg-image': `url("${tableHubHomeImage}")` }}
-      >
+      <section className="hero-section">
         <div className="container hero-grid">
           <div className="hero-copy">
             <div className="hero-eyebrow hero-stagger">

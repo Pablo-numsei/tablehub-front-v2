@@ -2,20 +2,36 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background-color: var(--bg) !important;
-  background-image:
+  background: var(--bg) !important;
+}
+
+.home-page .hero-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url('/images/fundo2.webp');
+  background-size: 360px 360px;
+  background-position: center;
+  background-repeat: repeat;
+  opacity: .13;
+}
+
+.home-page .hero-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
     linear-gradient(
       90deg,
-      rgba(231, 229, 224, .96) 0%,
-      rgba(231, 229, 224, .82) 30%,
-      rgba(231, 229, 224, .46) 52%,
-      rgba(231, 229, 224, .16) 76%,
-      rgba(231, 229, 224, .05) 100%
-    ),
-    var(--hero-bg-image) !important;
-  background-size: 100% 100%, auto 100% !important;
-  background-position: center, right center !important;
-  background-repeat: no-repeat, no-repeat !important;
+      rgba(231, 229, 224, .82) 0%,
+      rgba(231, 229, 224, .55) 42%,
+      rgba(231, 229, 224, .28) 68%,
+      rgba(231, 229, 224, .14) 100%
+    );
 }
 
 .home-page .hero-grid {
@@ -24,14 +40,12 @@
 }
 
 @media (max-width: 900px) {
-  .home-page .hero-section {
-    background-image:
-      linear-gradient(
-        rgba(231, 229, 224, .72),
-        rgba(231, 229, 224, .78)
-      ),
-      var(--hero-bg-image) !important;
-    background-size: 100% 100%, auto 100% !important;
-    background-position: center, 62% center !important;
+  .home-page .hero-section::before {
+    background-size: 300px 300px;
+    opacity: .10;
+  }
+
+  .home-page .hero-section::after {
+    background: rgba(231, 229, 224, .56);
   }
 }

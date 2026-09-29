@@ -35,9 +35,10 @@ export default function Home() {
     <main className="home-page">
       <Navbar />
 
-      <section className="hero-section">
-        <img className="hero-bg-image" src={tableHubHomeImage} alt="" aria-hidden="true" />
-        <div className="hero-bg-overlay" aria-hidden="true" />
+      <section
+        className="hero-section"
+        style={{ '--hero-bg-image': `url("${tableHubHomeImage}")` }}
+      >
         <div className="container hero-grid">
           <div className="hero-copy">
             <div className="hero-eyebrow hero-stagger">

@@ -12,11 +12,10 @@
   z-index: 0;
   pointer-events: none;
   background-image: url('/images/fundo2.webp');
-  background-size: 340px 340px;
+  background-size: 300px 300px;
   background-position: center;
   background-repeat: repeat;
-  opacity: .38;
-  filter: contrast(1.12) brightness(.96) saturate(.72);
+  opacity: .46;
 }
 
 .home-page .hero-section::after {
@@ -28,9 +27,9 @@
   background:
     linear-gradient(
       90deg,
-      rgba(242, 238, 228, .66) 0%,
-      rgba(242, 238, 228, .34) 42%,
-      rgba(242, 238, 228, .10) 70%,
+      rgba(242, 238, 228, .48) 0%,
+      rgba(242, 238, 228, .28) 40%,
+      rgba(242, 238, 228, .10) 68%,
       rgba(242, 238, 228, 0) 100%
     );
 }
@@ -42,11 +41,11 @@
 
 @media (max-width: 900px) {
   .home-page .hero-section::before {
-    background-size: 290px 290px;
-    opacity: .32;
+    background-size: 260px 260px;
+    opacity: .40;
   }
 
   .home-page .hero-section::after {
-    background: rgba(242, 238, 228, .34);
+    background: rgba(242, 238, 228, .24);
   }
 }

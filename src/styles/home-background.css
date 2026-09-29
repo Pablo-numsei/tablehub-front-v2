@@ -2,7 +2,7 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: var(--bg) !important;
+  background: #F7F4EC !important;
 }
 
 .home-page .hero-section::before {
@@ -15,8 +15,8 @@
   background-size: 360px 360px;
   background-position: center;
   background-repeat: repeat;
-  opacity: .30;
-  mix-blend-mode: multiply;
+  opacity: .18;
+  filter: brightness(1.16) saturate(.78) sepia(.08);
 }
 
 .home-page .hero-section::after {
@@ -28,10 +28,10 @@
   background:
     linear-gradient(
       90deg,
-      rgba(231, 229, 224, .58) 0%,
-      rgba(231, 229, 224, .36) 38%,
-      rgba(231, 229, 224, .16) 66%,
-      rgba(231, 229, 224, .04) 100%
+      rgba(247, 244, 236, .78) 0%,
+      rgba(247, 244, 236, .56) 40%,
+      rgba(247, 244, 236, .26) 68%,
+      rgba(247, 244, 236, .10) 100%
     );
 }
 
@@ -43,10 +43,10 @@
 @media (max-width: 900px) {
   .home-page .hero-section::before {
     background-size: 300px 300px;
-    opacity: .24;
+    opacity: .15;
   }
 
   .home-page .hero-section::after {
-    background: rgba(231, 229, 224, .34);
+    background: rgba(247, 244, 236, .50);
   }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { FiMenu, FiX } from 'react-icons/fi'
+import ThemeToggle from './ThemeToggle.jsx'
 import './Navbar.css'
 
 export default function Navbar() {
@@ -36,6 +37,7 @@ export default function Navbar() {
           <NavLink to="/" onClick={() => setOpen(false)}>Início</NavLink>
           <NavLink to="/como-funciona" onClick={() => setOpen(false)}>Como funciona</NavLink>
           <NavLink to="/recursos" onClick={() => setOpen(false)}>Recursos</NavLink>
+          <ThemeToggle />
           <NavLink to="/login" onClick={() => setOpen(false)}>Entrar</NavLink>
           <NavLink className="th-btn th-btn--primary" to="/cadastro" onClick={() => setOpen(false)}>
             Começar

@@ -1,0 +1,143 @@
+/* Theme behavior and comfort layer.
+   The light Home background asset remains unchanged.
+   Dracula only adds a darker viewing layer while the mode is active. */
+
+body {
+  transition: background-color .24s ease, color .24s ease;
+}
+
+.th-navbar,
+.th-navbar.is-scrolled,
+.page-navbar {
+  background: transparent !important;
+  border-color: transparent !important;
+  backdrop-filter: none !important;
+}
+
+.th-btn--primary,
+.page-navbar__link--next,
+.page-pager__link--next,
+.customer-product-card__action > button,
+.customer-cart-bar {
+  color: var(--on-primary) !important;
+}
+
+.home-page .hero-copy h1,
+.home-page .hero-copy p,
+.home-page .hero-eyebrow,
+.home-page .hero-page-links {
+  position: relative;
+  z-index: 1;
+}
+
+.home-page .hero-copy h1 {
+  text-shadow: 0 2px 22px rgba(242, 238, 228, .55);
+}
+
+:root[data-theme='dracula'] body {
+  color-scheme: dark;
+}
+
+:root[data-theme='dracula'] .th-navbar__inner,
+:root[data-theme='dracula'] .page-navbar__inner {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .05),
+    0 14px 38px rgba(0, 0, 0, .24);
+}
+
+:root[data-theme='dracula'] .management-sidebar,
+:root[data-theme='dracula'] .dashboard-sidebar {
+  background: var(--bg-secondary) !important;
+}
+
+:root[data-theme='dracula'] .management-nav__item.is-active,
+:root[data-theme='dracula'] .dashboard-nav__item.is-active {
+  color: var(--on-primary) !important;
+}
+
+:root[data-theme='dracula'] .management-nav__item.is-active svg,
+:root[data-theme='dracula'] .dashboard-nav__item.is-active svg {
+  color: var(--on-primary) !important;
+}
+
+:root[data-theme='dracula'] .management-user,
+:root[data-theme='dracula'] .dashboard-user,
+:root[data-theme='dracula'] .metric-card,
+:root[data-theme='dracula'] .dashboard-panel,
+:root[data-theme='dracula'] .order-card,
+:root[data-theme='dracula'] .table-summary-grid article,
+:root[data-theme='dracula'] .table-management-card,
+:root[data-theme='dracula'] .menu-toolbar,
+:root[data-theme='dracula'] .menu-product-card,
+:root[data-theme='dracula'] .customer-product-card,
+:root[data-theme='dracula'] .customer-flow-card,
+:root[data-theme='dracula'] .auth-panel,
+:root[data-theme='dracula'] .auth-float-card,
+:root[data-theme='dracula'] .resource-card,
+:root[data-theme='dracula'] .how-card {
+  box-shadow: var(--shadow-soft) !important;
+}
+
+:root[data-theme='dracula'] .home-page .hero-section {
+  background: var(--bg) !important;
+}
+
+:root[data-theme='dracula'] .home-page .hero-section::before {
+  opacity: .18;
+  filter: brightness(.55) saturate(.75);
+}
+
+:root[data-theme='dracula'] .home-page .hero-section::after {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(40, 42, 54, .88) 0%,
+      rgba(40, 42, 54, .70) 42%,
+      rgba(40, 42, 54, .50) 72%,
+      rgba(40, 42, 54, .38) 100%
+    );
+}
+
+:root[data-theme='dracula'] .home-page .hero-copy h1 {
+  text-shadow: 0 6px 30px rgba(0, 0, 0, .30);
+}
+
+:root[data-theme='dracula'] .status-badge--aguardando,
+:root[data-theme='dracula'] .order-status--aguardando {
+  color: #F1FA8C !important;
+  background: rgba(241, 250, 140, .10) !important;
+  border-color: rgba(241, 250, 140, .22) !important;
+}
+
+:root[data-theme='dracula'] .status-badge--preparando,
+:root[data-theme='dracula'] .order-status--preparando {
+  color: #8BE9FD !important;
+  background: rgba(139, 233, 253, .09) !important;
+  border-color: rgba(139, 233, 253, .20) !important;
+}
+
+:root[data-theme='dracula'] .status-badge--pronto,
+:root[data-theme='dracula'] .status-badge--entregue,
+:root[data-theme='dracula'] .order-status--pronto,
+:root[data-theme='dracula'] .order-status--entregue {
+  color: #50FA7B !important;
+  background: rgba(80, 250, 123, .08) !important;
+  border-color: rgba(80, 250, 123, .18) !important;
+}
+
+@media (max-width: 900px) {
+  :root[data-theme='dracula'] .management-sidebar,
+  :root[data-theme='dracula'] .dashboard-sidebar {
+    background: rgba(36, 38, 49, .95) !important;
+  }
+
+  :root[data-theme='dracula'] .home-page .hero-section::after {
+    background: rgba(40, 42, 54, .68);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
+}

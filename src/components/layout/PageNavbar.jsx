@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { FiArrowLeft, FiArrowRight } from 'react-icons/fi'
+import ThemeToggle from './ThemeToggle.jsx'
 import './PageNavbar.css'
 
 export default function PageNavbar({
@@ -18,6 +19,8 @@ export default function PageNavbar({
         <span className="page-navbar__title">{title}</span>
 
         <nav className="page-navbar__controls" aria-label="Navegação entre páginas">
+          <ThemeToggle compact />
+
           {previous && (
             <Link className="page-navbar__link" to={previous.to}>
               <FiArrowLeft />

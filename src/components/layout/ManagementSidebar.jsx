@@ -8,6 +8,7 @@ import {
   FiShoppingBag,
   FiUsers,
 } from 'react-icons/fi'
+import ThemeToggle from './ThemeToggle.jsx'
 import './ManagementSidebar.css'
 
 const navItems = [
@@ -44,6 +45,10 @@ export default function ManagementSidebar() {
           </NavLink>
         ))}
       </nav>
+
+      <div className="management-theme">
+        <ThemeToggle />
+      </div>
 
       <div className="management-user">
         <div className="management-user__avatar">A</div>

@@ -1,0 +1,51 @@
+.theme-toggle {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  background: var(--surface-elevated);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: .82rem;
+  transition:
+    color .2s ease,
+    background .2s ease,
+    border-color .2s ease,
+    transform .2s ease,
+    box-shadow .2s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--text);
+  border-color: var(--border-active);
+  background: var(--surface-hover);
+  transform: translateY(-1px);
+}
+
+.theme-toggle svg {
+  flex: 0 0 auto;
+  font-size: 1rem;
+}
+
+.theme-toggle.is-compact {
+  width: 40px;
+  padding: 0;
+}
+
+.theme-toggle.is-compact span {
+  display: none;
+}
+
+:root[data-theme='dracula'] .theme-toggle {
+  background: rgba(68, 71, 90, .72);
+  border-color: rgba(189, 147, 249, .28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .05),
+    0 8px 24px rgba(0, 0, 0, .16);
+}

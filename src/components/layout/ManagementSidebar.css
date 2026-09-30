@@ -70,8 +70,17 @@
   color: var(--primary);
 }
 
-.management-user {
+.management-theme {
   margin-top: auto;
+  padding-top: 18px;
+}
+
+.management-theme .theme-toggle {
+  width: 100%;
+}
+
+.management-user {
+  margin-top: 10px;
   min-height: 72px;
   padding: 14px;
   border: 1px solid var(--border);
@@ -113,7 +122,8 @@
   .management-brand > span:last-child,
   .management-sidebar__label,
   .management-nav__item span,
-  .management-user > div:last-child {
+  .management-user > div:last-child,
+  .management-theme .theme-toggle span {
     display: none;
   }
 
@@ -124,6 +134,11 @@
   }
 
   .management-nav__item {
+    padding: 0;
+  }
+
+  .management-theme .theme-toggle {
+    width: 46px;
     padding: 0;
   }
 }
@@ -164,6 +179,17 @@
   .management-nav__item {
     width: 46px;
     min-width: 46px;
+    min-height: 46px;
+  }
+
+  .management-theme {
+    flex: 0 0 auto;
+    margin: 0 0 0 6px;
+    padding: 0;
+  }
+
+  .management-theme .theme-toggle {
+    width: 46px;
     min-height: 46px;
   }
 }

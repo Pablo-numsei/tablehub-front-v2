@@ -2,20 +2,21 @@
   --bg: #E7E5E0;
   --bg-secondary: #DDDAD3;
 
-  --surface: #F3F1EB;
-  --surface-elevated: #FAF8F2;
-  --surface-hover: #EBE7DE;
+  --surface: #EEEAE2;
+  --surface-elevated: #F4F0E7;
+  --surface-hover: #E7E1D7;
 
   --primary: #F7D774;
   --primary-hover: #E0BB4A;
   --primary-strong: #E0BB4A;
   --primary-soft: rgba(247, 215, 116, .25);
+  --on-primary: #2B2412;
 
-  --text: #1F1B16;
-  --text-secondary: #5F5A52;
-  --text-disabled: #969189;
+  --text: #29251F;
+  --text-secondary: #625D54;
+  --text-disabled: #918A80;
 
-  --border: #D6D0C4;
+  --border: #CEC7BC;
   --border-active: #E5C55F;
 
   --success: #3FAF77;
@@ -23,6 +24,10 @@
   --accent: #4F8FBF;
   --warning: #D69347;
   --danger: #D85B5B;
+
+  --nav-glass: rgba(238, 234, 226, .72);
+  --nav-glass-strong: rgba(238, 234, 226, .86);
+  --nav-glass-border: rgba(113, 103, 89, .18);
 
   --radius-sm: 8px;
   --radius-control: 12px;
@@ -33,4 +38,38 @@
   --radius-xl: 24px;
 
   --shadow-soft: 0 4px 20px rgba(0, 0, 0, .05);
+}
+
+:root[data-theme='dracula'] {
+  --bg: #282A36;
+  --bg-secondary: #242631;
+
+  --surface: #30323F;
+  --surface-elevated: #383A4A;
+  --surface-hover: #44475A;
+
+  --primary: #F7D774;
+  --primary-hover: #E7C65C;
+  --primary-strong: #F7D774;
+  --primary-soft: rgba(247, 215, 116, .16);
+  --on-primary: #282A36;
+
+  --text: #F0EFEA;
+  --text-secondary: #B8B7C2;
+  --text-disabled: #7E8194;
+
+  --border: #4A4D60;
+  --border-active: #BD93F9;
+
+  --success: #50FA7B;
+  --info: #8BE9FD;
+  --accent: #BD93F9;
+  --warning: #FFB86C;
+  --danger: #FF5555;
+
+  --nav-glass: rgba(40, 42, 54, .74);
+  --nav-glass-strong: rgba(40, 42, 54, .88);
+  --nav-glass-border: rgba(189, 147, 249, .22);
+
+  --shadow-soft: 0 6px 24px rgba(0, 0, 0, .20);
 }

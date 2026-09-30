@@ -8,6 +8,9 @@ import Dashboard from '../pages/Dashboard/Dashboard.jsx'
 import Pedidos from '../pages/Pedidos/Pedidos.jsx'
 import Mesas from '../pages/Mesas/Mesas.jsx'
 import Cardapio from '../pages/Cardapio/Cardapio.jsx'
+import Clientes from '../pages/Clientes/Clientes.jsx'
+import Financeiro from '../pages/Financeiro/Financeiro.jsx'
+import Estoque from '../pages/Estoque/Estoque.jsx'
 import MenuCliente from '../pages/MenuCliente/MenuCliente.jsx'
 import CarrinhoCliente from '../pages/CarrinhoCliente/CarrinhoCliente.jsx'
 import ConfirmarPedido from '../pages/ConfirmarPedido/ConfirmarPedido.jsx'
@@ -18,7 +21,6 @@ import AcompanharPedido from '../pages/AcompanharPedido/AcompanharPedido.jsx'
 import ChamarGarcom from '../pages/ChamarGarcom/ChamarGarcom.jsx'
 import SolicitarConta from '../pages/SolicitarConta/SolicitarConta.jsx'
 import HistoricoCliente from '../pages/HistoricoCliente/HistoricoCliente.jsx'
-import PlaceholderPage from '../pages/Placeholder/PlaceholderPage.jsx'
 
 export default function AppRoutes() {
   return (
@@ -32,8 +34,8 @@ export default function AppRoutes() {
 
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/pedidos" element={<Pedidos />} />
-      <Route path="/clientes" element={<PlaceholderPage title="Clientes" />} />
-      <Route path="/financeiro" element={<PlaceholderPage title="Financeiro" />} />
+      <Route path="/clientes" element={<Clientes />} />
+      <Route path="/financeiro" element={<Financeiro />} />
       <Route path="/cardapio" element={<Cardapio />} />
       <Route path="/menu" element={<MenuCliente />} />
       <Route path="/carrinho" element={<CarrinhoCliente />} />
@@ -46,7 +48,7 @@ export default function AppRoutes() {
       <Route path="/solicitar-conta" element={<SolicitarConta />} />
       <Route path="/historico" element={<HistoricoCliente />} />
       <Route path="/mesas" element={<Mesas />} />
-      <Route path="/estoque" element={<PlaceholderPage title="Produtos / Estoque" />} />
+      <Route path="/estoque" element={<Estoque />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

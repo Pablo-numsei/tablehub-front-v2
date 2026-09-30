@@ -11,6 +11,7 @@ import Cardapio from '../pages/Cardapio/Cardapio.jsx'
 import Clientes from '../pages/Clientes/Clientes.jsx'
 import Financeiro from '../pages/Financeiro/Financeiro.jsx'
 import Estoque from '../pages/Estoque/Estoque.jsx'
+import Atendimento from '../pages/Atendimento/Atendimento.jsx'
 import MenuCliente from '../pages/MenuCliente/MenuCliente.jsx'
 import CarrinhoCliente from '../pages/CarrinhoCliente/CarrinhoCliente.jsx'
 import ConfirmarPedido from '../pages/ConfirmarPedido/ConfirmarPedido.jsx'
@@ -34,6 +35,7 @@ export default function AppRoutes() {
 
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/pedidos" element={<Pedidos />} />
+      <Route path="/atendimento" element={<Atendimento />} />
       <Route path="/clientes" element={<Clientes />} />
       <Route path="/financeiro" element={<Financeiro />} />
       <Route path="/cardapio" element={<Cardapio />} />

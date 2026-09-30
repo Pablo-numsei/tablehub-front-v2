@@ -133,3 +133,23 @@ export const createServiceRequest = ({
 
   return request
 }
+
+export const updateServiceRequestStatus = (id, status) => {
+  const requests = loadServiceRequests()
+  const exists = requests.some((request) => request.id === id)
+
+  if (!exists) return null
+
+  const updated = requests.map((request) =>
+    request.id === id
+      ? {
+          ...request,
+          status,
+          updatedAt: new Date().toISOString(),
+        }
+      : request,
+  )
+
+  sessionStorage.setItem(REQUESTS_KEY, JSON.stringify(updated))
+  return updated.find((request) => request.id === id) || null
+}

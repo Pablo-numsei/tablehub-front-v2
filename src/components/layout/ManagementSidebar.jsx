@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
+  FiBell,
   FiBookOpen,
   FiCreditCard,
   FiGrid,
@@ -15,6 +16,7 @@ const navItems = [
   ['Dashboard', '/dashboard', FiHome],
   ['Cardápio', '/cardapio', FiBookOpen],
   ['Pedidos', '/pedidos', FiShoppingBag],
+  ['Atendimento', '/atendimento', FiBell],
   ['Clientes', '/clientes', FiUsers],
   ['Financeiro', '/financeiro', FiCreditCard],
   ['Mesas', '/mesas', FiGrid],

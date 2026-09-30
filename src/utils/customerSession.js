@@ -3,6 +3,7 @@ import { customerProducts } from '../data/customerMenu.js'
 const CART_KEY = 'tablehub_customer_cart'
 const ORDERS_KEY = 'tablehub_customer_orders'
 const ACTIVE_ORDER_KEY = 'tablehub_active_order'
+const REQUESTS_KEY = 'tablehub_customer_requests'
 
 const readJson = (key, fallback) => {
   try {
@@ -60,6 +61,9 @@ export const createCustomerOrder = ({ table, cart, note = '' }) => {
     total,
     note: note.trim(),
     items,
+    paymentMethod: null,
+    paymentStatus: 'Pendente',
+    paidAt: null,
     createdAt: new Date().toISOString(),
   }
 
@@ -74,11 +78,58 @@ export const updateCustomerOrderStatus = (id, status) => {
   const orders = loadCustomerOrders()
   const exists = orders.some((order) => order.id === id)
 
-  if (!exists) return
+  if (!exists) return null
 
   const updated = orders.map((order) =>
     order.id === id ? { ...order, status } : order,
   )
 
   sessionStorage.setItem(ORDERS_KEY, JSON.stringify(updated))
+  return updated.find((order) => order.id === id) || null
+}
+
+export const updateCustomerOrderPayment = (id, method) => {
+  const orders = loadCustomerOrders()
+  const exists = orders.some((order) => order.id === id)
+
+  if (!exists) return null
+
+  const paidAt = new Date().toISOString()
+  const updated = orders.map((order) =>
+    order.id === id
+      ? {
+          ...order,
+          paymentMethod: method,
+          paymentStatus: 'Simulado',
+          paidAt,
+        }
+      : order,
+  )
+
+  sessionStorage.setItem(ORDERS_KEY, JSON.stringify(updated))
+  return updated.find((order) => order.id === id) || null
+}
+
+export const loadServiceRequests = () => readJson(REQUESTS_KEY, [])
+
+export const createServiceRequest = ({
+  type,
+  table,
+  orderId = null,
+  detail = '',
+}) => {
+  const request = {
+    id: `REQ-${String(Date.now()).slice(-6)}`,
+    type,
+    table: String(table).padStart(2, '0'),
+    orderId,
+    detail,
+    status: 'Enviado',
+    createdAt: new Date().toISOString(),
+  }
+
+  const requests = loadServiceRequests()
+  sessionStorage.setItem(REQUESTS_KEY, JSON.stringify([request, ...requests]))
+
+  return request
 }

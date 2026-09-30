@@ -11,7 +11,13 @@ import Cardapio from '../pages/Cardapio/Cardapio.jsx'
 import MenuCliente from '../pages/MenuCliente/MenuCliente.jsx'
 import CarrinhoCliente from '../pages/CarrinhoCliente/CarrinhoCliente.jsx'
 import ConfirmarPedido from '../pages/ConfirmarPedido/ConfirmarPedido.jsx'
+import PedidoConfirmado from '../pages/PedidoConfirmado/PedidoConfirmado.jsx'
+import PagamentoCliente from '../pages/PagamentoCliente/PagamentoCliente.jsx'
+import ComprovanteCliente from '../pages/ComprovanteCliente/ComprovanteCliente.jsx'
 import AcompanharPedido from '../pages/AcompanharPedido/AcompanharPedido.jsx'
+import ChamarGarcom from '../pages/ChamarGarcom/ChamarGarcom.jsx'
+import SolicitarConta from '../pages/SolicitarConta/SolicitarConta.jsx'
+import HistoricoCliente from '../pages/HistoricoCliente/HistoricoCliente.jsx'
 import PlaceholderPage from '../pages/Placeholder/PlaceholderPage.jsx'
 
 export default function AppRoutes() {
@@ -32,7 +38,13 @@ export default function AppRoutes() {
       <Route path="/menu" element={<MenuCliente />} />
       <Route path="/carrinho" element={<CarrinhoCliente />} />
       <Route path="/confirmar-pedido" element={<ConfirmarPedido />} />
+      <Route path="/pedido-confirmado" element={<PedidoConfirmado />} />
+      <Route path="/pagamento" element={<PagamentoCliente />} />
+      <Route path="/comprovante" element={<ComprovanteCliente />} />
       <Route path="/acompanhar-pedido" element={<AcompanharPedido />} />
+      <Route path="/chamar-garcom" element={<ChamarGarcom />} />
+      <Route path="/solicitar-conta" element={<SolicitarConta />} />
+      <Route path="/historico" element={<HistoricoCliente />} />
       <Route path="/mesas" element={<Mesas />} />
       <Route path="/estoque" element={<PlaceholderPage title="Produtos / Estoque" />} />
 

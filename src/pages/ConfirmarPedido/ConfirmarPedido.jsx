@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { FiArrowLeft, FiCheck } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
+import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { customerProducts, money } from '../../data/customerMenu.js'
 import {
   clearCart,
@@ -38,7 +39,7 @@ export default function ConfirmarPedido() {
     clearCart()
 
     navigate(
-      `/acompanhar-pedido?id=${encodeURIComponent(order.id)}&mesa=${table}`,
+      `/pedido-confirmado?id=${encodeURIComponent(order.id)}&mesa=${table}`,
       { replace: true },
     )
   }
@@ -49,7 +50,10 @@ export default function ConfirmarPedido() {
         <div className="customer-flow-shell">
           <header className="customer-flow-topbar">
             <div className="customer-flow-brand">TableHub</div>
-            <div className="customer-flow-table">MESA {table}</div>
+            <div className="customer-flow-topbar__actions">
+              <div className="customer-flow-table">MESA {table}</div>
+              <ThemeToggle compact />
+            </div>
           </header>
 
           <section className="customer-flow-head">
@@ -76,7 +80,10 @@ export default function ConfirmarPedido() {
       <div className="customer-flow-shell">
         <header className="customer-flow-topbar">
           <div className="customer-flow-brand">TableHub</div>
-          <div className="customer-flow-table">MESA {table}</div>
+          <div className="customer-flow-topbar__actions">
+            <div className="customer-flow-table">MESA {table}</div>
+            <ThemeToggle compact />
+          </div>
         </header>
 
         <section className="customer-flow-head">

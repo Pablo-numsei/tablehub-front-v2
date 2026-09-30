@@ -17,6 +17,12 @@
   gap: 20px;
 }
 
+.customer-menu-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .customer-menu-brand {
   display: flex;
   align-items: center;
@@ -155,7 +161,7 @@
 
 .customer-product-card__action > button {
   background: var(--primary);
-  color: #050807;
+  color: var(--on-primary);
   font-weight: 800;
 }
 
@@ -183,8 +189,8 @@
   height: 34px;
   border: 0;
   border-radius: 9px;
-  background: rgba(62,230,168,.10);
-  color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--text);
 }
 
 .customer-cart-bar {
@@ -199,12 +205,12 @@
   border-radius: 18px;
   transform: translateX(-50%);
   background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-  color: #050807;
+  color: var(--on-primary);
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 20px 55px rgba(62,230,168,.22);
+  box-shadow: 0 20px 55px rgba(0,0,0,.14);
   font-weight: 800;
 }
 

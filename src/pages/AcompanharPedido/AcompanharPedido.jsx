@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FiCheck, FiRefreshCw } from 'react-icons/fi'
+import {
+  FiBell,
+  FiCheck,
+  FiCreditCard,
+  FiFileText,
+  FiRefreshCw,
+} from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
+import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { money } from '../../data/customerMenu.js'
 import {
   getActiveCustomerOrder,
@@ -47,6 +54,7 @@ export default function AcompanharPedido() {
         <div className="customer-flow-shell">
           <header className="customer-flow-topbar">
             <div className="customer-flow-brand">TableHub</div>
+            <ThemeToggle compact />
           </header>
 
           <section className="customer-flow-head">
@@ -68,20 +76,23 @@ export default function AcompanharPedido() {
     )
   }
 
+  const orderQuery = `id=${encodeURIComponent(order.id)}&mesa=${order.table}`
+
   return (
     <main className="customer-flow-page">
       <div className="customer-flow-shell">
         <header className="customer-flow-topbar">
           <div className="customer-flow-brand">TableHub</div>
-          <div className="customer-flow-table">MESA {order.table}</div>
+          <div className="customer-flow-topbar__actions">
+            <div className="customer-flow-table">MESA {order.table}</div>
+            <ThemeToggle compact />
+          </div>
         </header>
 
         <section className="customer-flow-head customer-status-card">
           <span>PEDIDO {order.id}</span>
           <h1>Acompanhe seu pedido.</h1>
-          <p>
-            Esta tela consulta o estado do pedido durante a sessão atual.
-          </p>
+          <p>O status abaixo representa o fluxo atual da cozinha nesta demonstração.</p>
         </section>
 
         <section className="customer-flow-card customer-status-card">
@@ -121,6 +132,11 @@ export default function AcompanharPedido() {
             <strong>{order.time}</strong>
           </div>
 
+          <div className="customer-summary-row">
+            <span>Pagamento</span>
+            <strong>{order.paymentMethod || 'Pendente'}</strong>
+          </div>
+
           <div className="customer-flow-actions" style={{ marginTop: 24 }}>
             <button
               className="th-btn th-btn--glass th-btn--block"
@@ -128,6 +144,47 @@ export default function AcompanharPedido() {
               onClick={() => setOrder(getCustomerOrder(order.id))}
             >
               <FiRefreshCw /> Atualizar agora
+            </button>
+
+            <button
+              className="th-btn th-btn--primary th-btn--block"
+              type="button"
+              onClick={() =>
+                navigate(
+                  order.paymentMethod
+                    ? `/comprovante?${orderQuery}`
+                    : `/pagamento?${orderQuery}`,
+                )
+              }
+            >
+              <FiCreditCard />
+              {order.paymentMethod ? 'Ver comprovante' : 'Pagamento'}
+            </button>
+
+            <div className="customer-action-grid">
+              <button
+                className="th-btn th-btn--glass"
+                type="button"
+                onClick={() => navigate(`/chamar-garcom?${orderQuery}`)}
+              >
+                <FiBell /> Chamar garçom
+              </button>
+
+              <button
+                className="th-btn th-btn--glass"
+                type="button"
+                onClick={() => navigate(`/solicitar-conta?${orderQuery}`)}
+              >
+                <FiFileText /> Solicitar conta
+              </button>
+            </div>
+
+            <button
+              className="customer-text-link"
+              type="button"
+              onClick={() => navigate(`/historico?mesa=${order.table}`)}
+            >
+              Ver histórico de pedidos
             </button>
           </div>
         </section>

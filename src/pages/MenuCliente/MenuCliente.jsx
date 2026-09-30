@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { FiMinus, FiPlus, FiShoppingBag } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
+import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import {
   customerCategories as categories,
   customerProducts as products,
@@ -62,7 +63,10 @@ export default function MenuCliente() {
           <span>TableHub</span>
         </div>
 
-        <div className="customer-menu-table">MESA {table}</div>
+        <div className="customer-menu-header__actions">
+          <div className="customer-menu-table">MESA {table}</div>
+          <ThemeToggle compact />
+        </div>
       </header>
 
       <section className="customer-menu-hero">

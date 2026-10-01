@@ -1,36 +1,101 @@
+import { useEffect, useMemo, useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { FiBarChart2 } from 'react-icons/fi'
+import {
+  FiAlertCircle,
+  FiBarChart2,
+  FiRefreshCw,
+} from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
+import api from '../../services/api.js'
 import './Dashboard.css'
 
-const metrics = [
-  { label: 'Pedidos hoje', value: '128', delta: '+12%' },
-  { label: 'Faturamento', value: 'R$ 8.420', delta: '+8,4%' },
-  { label: 'Ticket médio', value: 'R$ 65,78', delta: '+2,1%' },
-  { label: 'Mesas ocupadas', value: '8 / 12', delta: '67%' },
-]
+const moneyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+})
 
-const recentOrders = [
-  { id: '#1028', table: 'Mesa 04', status: 'Preparando', total: 'R$ 78,90' },
-  { id: '#1027', table: 'Mesa 09', status: 'Pronto', total: 'R$ 54,00' },
-  { id: '#1026', table: 'Mesa 02', status: 'Aguardando', total: 'R$ 112,50' },
-  { id: '#1025', table: 'Mesa 11', status: 'Entregue', total: 'R$ 86,40' },
-]
+const formatMoney = (value) => moneyFormatter.format(Number(value || 0))
 
-const tables = [
-  ['01', 'Livre'],
-  ['02', 'Ocupada'],
-  ['03', 'Ocupada'],
-  ['04', 'Ocupada'],
-  ['05', 'Livre'],
-  ['06', 'Reservada'],
-  ['07', 'Livre'],
-  ['08', 'Ocupada'],
-]
+const statusSlug = (status = '') =>
+  status
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, '-')
 
-const bars = [32, 46, 40, 58, 72, 64, 83, 76, 92, 70, 86, 95]
+const formatTime = (value) => {
+  if (!value) return '—'
+
+  return new Date(value).toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
 export default function Dashboard() {
+  const [dashboard, setDashboard] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const loadDashboard = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const { data } = await api.get('/api/dashboard/resumo')
+      setDashboard(data)
+    } catch (requestError) {
+      setDashboard(null)
+      setError(
+        requestError?.response?.data?.message ||
+          'Não foi possível carregar os dados reais do Dashboard.',
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadDashboard()
+  }, [])
+
+  const metrics = useMemo(() => {
+    if (!dashboard) return []
+
+    const occupiedPercentage = dashboard.totalMesas
+      ? Math.round((dashboard.mesasOcupadas / dashboard.totalMesas) * 100)
+      : 0
+
+    return [
+      {
+        label: 'Pedidos hoje',
+        value: String(dashboard.pedidosHoje),
+        detail: 'Pedidos registrados no banco',
+      },
+      {
+        label: 'Faturamento',
+        value: formatMoney(dashboard.faturamentoHoje),
+        detail: 'Pagamentos PAGO processados hoje',
+      },
+      {
+        label: 'Ticket médio',
+        value: formatMoney(dashboard.ticketMedio),
+        detail: 'Média dos pedidos pagos hoje',
+      },
+      {
+        label: 'Mesas ocupadas',
+        value: `${dashboard.mesasOcupadas} / ${dashboard.totalMesas}`,
+        detail: `${occupiedPercentage}% das mesas ativas`,
+      },
+    ]
+  }, [dashboard])
+
+  const movement = dashboard?.movimentoPorHora || []
+  const maxMovement = Math.max(
+    1,
+    ...movement.map((item) => Number(item.quantidade || 0)),
+  )
+
   return (
     <main className="dashboard-page">
       <ManagementSidebar />
@@ -40,92 +105,171 @@ export default function Dashboard() {
           <div>
             <span className="dashboard-header__eyebrow">VISÃO GERAL</span>
             <h1>Dashboard</h1>
-            <p>Visão geral da operação do restaurante.</p>
+            <p>Dados operacionais carregados diretamente do TableHub.</p>
           </div>
 
-          <button type="button" className="dashboard-period">Hoje</button>
+          <button
+            type="button"
+            className="dashboard-period"
+            onClick={loadDashboard}
+            disabled={loading}
+          >
+            <FiRefreshCw className={loading ? 'is-spinning' : ''} />
+            {loading ? 'Atualizando' : 'Hoje'}
+          </button>
         </header>
 
-        <section className="dashboard-metrics">
-          {metrics.map((metric) => (
-            <article className="metric-card" key={metric.label}>
-              <span>{metric.label}</span>
-              <strong>{metric.value}</strong>
-              <small>{metric.delta}</small>
-            </article>
-          ))}
-        </section>
-
-        <section className="dashboard-grid">
-          <article className="dashboard-panel dashboard-panel--orders">
-            <div className="dashboard-panel__head">
-              <div>
-                <span>OPERAÇÃO</span>
-                <h2>Pedidos recentes</h2>
-              </div>
-              <NavLink to="/pedidos">Ver todos</NavLink>
-            </div>
-
-            <div className="orders-table">
-              {recentOrders.map((order) => (
-                <div className="orders-row" key={order.id}>
-                  <strong>{order.id}</strong>
-                  <span>{order.table}</span>
-                  <span className={`status-badge status-badge--${order.status.toLowerCase()}`}>
-                    {order.status}
-                  </span>
-                  <span>{order.total}</span>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="dashboard-panel dashboard-panel--tables">
-            <div className="dashboard-panel__head">
-              <div>
-                <span>SALÃO</span>
-                <h2>Status das mesas</h2>
-              </div>
-              <NavLink to="/mesas">Abrir mesas</NavLink>
-            </div>
-
-            <div className="tables-grid">
-              {tables.map(([number, status]) => (
-                <div
-                  className={`table-card table-card--${status.toLowerCase()}`}
-                  key={number}
-                >
-                  <strong>{number}</strong>
-                  <span>{status}</span>
-                </div>
-              ))}
-            </div>
-          </article>
-        </section>
-
-        <article className="dashboard-panel dashboard-panel--performance">
-          <div className="dashboard-panel__head">
+        {error && (
+          <div className="dashboard-alert" role="alert">
+            <FiAlertCircle />
             <div>
-              <span>DESEMPENHO</span>
-              <h2>Movimento do dia</h2>
+              <strong>Dashboard sem conexão com o backend.</strong>
+              <span>{error}</span>
             </div>
-            <FiBarChart2 />
+            <button type="button" onClick={loadDashboard}>
+              Tentar novamente
+            </button>
           </div>
+        )}
 
-          <div className="performance-chart" aria-label="Gráfico de movimento do dia">
-            {bars.map((height, index) => (
-              <div className="performance-column" key={index}>
-                <div className="performance-column__track">
-                  <div
-                    className="performance-column__bar"
-                    style={{ height: `${height}%` }}
-                  />
-                </div>
-                <small>{String(index + 10).padStart(2, '0')}h</small>
-              </div>
+        <section className="dashboard-metrics">
+          {loading &&
+            Array.from({ length: 4 }).map((_, index) => (
+              <article className="metric-card metric-card--loading" key={index}>
+                <span />
+                <strong />
+                <small />
+              </article>
             ))}
-          </div>
-        </article>
+
+          {!loading &&
+            metrics.map((metric) => (
+              <article className="metric-card" key={metric.label}>
+                <span>{metric.label}</span>
+                <strong>{metric.value}</strong>
+                <small>{metric.detail}</small>
+              </article>
+            ))}
+        </section>
+
+        {!loading && dashboard && (
+          <>
+            <section className="dashboard-status-strip">
+              {dashboard.pedidosPorStatus.map((item) => (
+                <article
+                  className={`dashboard-status dashboard-status--${statusSlug(item.status)}`}
+                  key={item.status}
+                >
+                  <span>{item.status}</span>
+                  <strong>{item.quantidade}</strong>
+                </article>
+              ))}
+            </section>
+
+            <section className="dashboard-grid">
+              <article className="dashboard-panel dashboard-panel--orders">
+                <div className="dashboard-panel__head">
+                  <div>
+                    <span>OPERAÇÃO</span>
+                    <h2>Pedidos recentes</h2>
+                  </div>
+                  <NavLink to="/pedidos">Ver todos</NavLink>
+                </div>
+
+                {dashboard.pedidosRecentes.length > 0 ? (
+                  <div className="orders-table">
+                    {dashboard.pedidosRecentes.map((order) => (
+                      <div className="orders-row" key={order.id}>
+                        <strong>#{order.id}</strong>
+                        <span>Mesa {String(order.mesa).padStart(2, '0')}</span>
+                        <span
+                          className={`status-badge status-badge--${statusSlug(order.status)}`}
+                        >
+                          {order.status}
+                        </span>
+                        <span>{formatMoney(order.total)}</span>
+                        <small>{formatTime(order.criadoEm)}</small>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="dashboard-empty">
+                    Nenhum pedido registrado ainda.
+                  </div>
+                )}
+              </article>
+
+              <article className="dashboard-panel dashboard-panel--tables">
+                <div className="dashboard-panel__head">
+                  <div>
+                    <span>SALÃO</span>
+                    <h2>Status das mesas</h2>
+                  </div>
+                  <NavLink to="/mesas">Abrir mesas</NavLink>
+                </div>
+
+                {dashboard.mesas.length > 0 ? (
+                  <div className="tables-grid">
+                    {dashboard.mesas.map((table) => (
+                      <div
+                        className={`table-card table-card--${statusSlug(table.status)}`}
+                        key={table.numero}
+                      >
+                        <strong>{String(table.numero).padStart(2, '0')}</strong>
+                        <span>{table.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="dashboard-empty">
+                    Nenhuma mesa ativa cadastrada.
+                  </div>
+                )}
+              </article>
+            </section>
+
+            <article className="dashboard-panel dashboard-panel--performance">
+              <div className="dashboard-panel__head">
+                <div>
+                  <span>DESEMPENHO</span>
+                  <h2>Pedidos por hora</h2>
+                </div>
+                <FiBarChart2 />
+              </div>
+
+              <div className="performance-chart-scroll">
+                <div
+                  className="performance-chart"
+                  aria-label="Gráfico de pedidos por hora do dia"
+                >
+                  {movement.map((item) => {
+                    const quantity = Number(item.quantidade || 0)
+                    const height = quantity
+                      ? Math.max(8, (quantity / maxMovement) * 100)
+                      : 0
+
+                    return (
+                      <div className="performance-column" key={item.hora}>
+                        <strong>{quantity || ''}</strong>
+                        <div className="performance-column__track">
+                          <div
+                            className="performance-column__bar"
+                            style={{ height: `${height}%` }}
+                          />
+                        </div>
+                        <small>
+                          {item.hora % 2 === 0
+                            ? `${String(item.hora).padStart(2, '0')}h`
+                            : ''}
+                        </small>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </article>
+          </>
+        )}
       </section>
     </main>
   )

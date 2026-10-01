@@ -19,15 +19,31 @@ export default function Login() {
     setLoading(true)
 
     try {
-      const { data } = await api.post('/auth/login', form)
+      const { data } = await api.post('/api/auth/login', form)
 
-      if (data?.token) {
-        localStorage.setItem('tablehub_token', data.token)
+      if (!data?.token) {
+        throw new Error('Token não recebido pelo backend.')
       }
 
-      navigate('/dashboard')
-    } catch {
-      setError('Não foi possível entrar. Verifique os dados ou a API.')
+      localStorage.setItem('tablehub_token', data.token)
+      localStorage.setItem(
+        'tablehub_user',
+        JSON.stringify({
+          id: data.id,
+          nome: data.nome,
+          email: data.email,
+          perfilId: data.perfilId,
+          perfil: data.perfil,
+        }),
+      )
+
+      navigate('/dashboard', { replace: true })
+    } catch (requestError) {
+      const message =
+        requestError?.response?.data?.message ||
+        'Não foi possível entrar. Verifique o e-mail e a senha.'
+
+      setError(message)
     } finally {
       setLoading(false)
     }
@@ -44,12 +60,32 @@ export default function Login() {
 
         <div className="auth-field">
           <label className="th-label" htmlFor="email">E-mail</label>
-          <input className="th-input" id="email" name="email" type="email" value={form.email} onChange={update} placeholder="seu@email.com" required />
+          <input
+            className="th-input"
+            id="email"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={update}
+            placeholder="seu@email.com"
+            autoComplete="email"
+            required
+          />
         </div>
 
         <div className="auth-field">
           <label className="th-label" htmlFor="senha">Senha</label>
-          <input className="th-input" id="senha" name="senha" type="password" value={form.senha} onChange={update} placeholder="Sua senha" required />
+          <input
+            className="th-input"
+            id="senha"
+            name="senha"
+            type="password"
+            value={form.senha}
+            onChange={update}
+            placeholder="Sua senha"
+            autoComplete="current-password"
+            required
+          />
         </div>
 
         <div className="auth-meta">

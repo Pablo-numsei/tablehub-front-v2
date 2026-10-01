@@ -98,7 +98,11 @@ export default function MenuCliente() {
             return (
               <article className="customer-product-card" key={product.id}>
                 <div className="customer-product-card__image">
-                  <span>{product.name.charAt(0)}</span>
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    loading="lazy"
+                  />
                 </div>
 
                 <small>{product.category.toUpperCase()}</small>

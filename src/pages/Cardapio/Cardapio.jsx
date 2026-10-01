@@ -1,25 +1,19 @@
 import { useMemo, useState } from 'react'
 import { FiEdit3, FiPlus, FiSearch, FiToggleLeft, FiToggleRight } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
+import { customerCategories, customerProducts } from '../../data/customerMenu.js'
 import '../../styles/management.css'
 import './Cardapio.css'
 
-const initialProducts = [
-  { id: 1, name: 'Smash Table', category: 'Hambúrgueres', price: 24, available: true },
-  { id: 2, name: 'Burger Especial', category: 'Hambúrgueres', price: 31.9, available: true },
-  { id: 3, name: 'Batata Crocante', category: 'Acompanhamentos', price: 18, available: true },
-  { id: 4, name: 'Onion Rings', category: 'Acompanhamentos', price: 20, available: false },
-  { id: 5, name: 'Refrigerante', category: 'Bebidas', price: 12.9, available: true },
-  { id: 6, name: 'Brownie', category: 'Sobremesas', price: 16, available: true },
-]
-
-const categories = ['Todos', 'Hambúrgueres', 'Acompanhamentos', 'Bebidas', 'Sobremesas']
+const categories = customerCategories
 
 const money = (value) =>
   value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export default function Cardapio() {
-  const [products, setProducts] = useState(initialProducts)
+  const [products, setProducts] = useState(() =>
+    customerProducts.map((product) => ({ ...product })),
+  )
   const [filter, setFilter] = useState('Todos')
   const [query, setQuery] = useState('')
 
@@ -96,7 +90,11 @@ export default function Cardapio() {
           {visibleProducts.map((product) => (
             <article className="menu-product-card" key={product.id}>
               <div className="menu-product-card__image">
-                <span>{product.name.charAt(0)}</span>
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  loading="lazy"
+                />
               </div>
 
               <div className="menu-product-card__content">

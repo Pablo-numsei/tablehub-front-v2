@@ -104,6 +104,27 @@
   gap: 12px;
 }
 
+.orders-alert {
+  margin-top: 18px;
+  padding: 13px 15px;
+  border: 1px solid rgba(216,91,91,.28);
+  border-radius: 14px;
+  background: rgba(216,91,91,.08);
+  color: var(--danger);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.orders-spin {
+  animation: orders-spin .8s linear infinite;
+}
+
+@keyframes orders-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .order-card {
   padding: 20px;
   border: 1px solid var(--border);
@@ -140,12 +161,12 @@
   font-weight: 700;
 }
 
-.order-status--aguardando {
+.order-status--recebido {
   color: var(--accent);
   background: rgba(85,221,224,.07);
 }
 
-.order-status--preparando {
+.order-status--em-preparo {
   color: var(--warning);
   background: rgba(255,191,105,.07);
 }

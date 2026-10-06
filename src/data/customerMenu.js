@@ -5,7 +5,7 @@ export const customerProducts = [
     category: 'Hambúrgueres',
     price: 31.9,
     available: true,
-    image: '/images/menu/hamburguer-bacon.webp',
+    image: '/images/menu/Hamburguer.jpg',
   },
   {
     id: 2,
@@ -13,7 +13,7 @@ export const customerProducts = [
     category: 'Hambúrgueres',
     price: 24,
     available: true,
-    image: '/images/menu/hamburguer-frango.webp',
+    image: '/images/menu/hamburguer de frango.avif',
   },
   {
     id: 3,
@@ -21,7 +21,7 @@ export const customerProducts = [
     category: 'Acompanhamentos',
     price: 18,
     available: true,
-    image: '/images/menu/batata-frita.webp',
+    image: '/images/menu/batata frita.jpg',
   },
   {
     id: 4,
@@ -29,7 +29,7 @@ export const customerProducts = [
     category: 'Acompanhamentos',
     price: 20,
     available: true,
-    image: '/images/menu/batata-rustica.webp',
+    image: '/images/menu/batata rustica.webp',
   },
   {
     id: 5,
@@ -37,7 +37,7 @@ export const customerProducts = [
     category: 'Acompanhamentos',
     price: 20,
     available: true,
-    image: '/images/menu/onion-rings.webp',
+    image: '/images/menu/onion.jpg',
   },
   {
     id: 6,
@@ -45,7 +45,7 @@ export const customerProducts = [
     category: 'Acompanhamentos',
     price: 18,
     available: true,
-    image: '/images/menu/nuggets.webp',
+    image: '/images/menu/nuggets.jpg',
   },
   {
     id: 7,
@@ -53,7 +53,7 @@ export const customerProducts = [
     category: 'Acompanhamentos',
     price: 22,
     available: true,
-    image: '/images/menu/mini-pasteis.webp',
+    image: '/images/menu/pastelzinho.jpg',
   },
   {
     id: 8,
@@ -61,7 +61,7 @@ export const customerProducts = [
     category: 'Bebidas',
     price: 12.9,
     available: true,
-    image: '/images/menu/coca-cola.webp',
+    image: '/images/menu/coca.jpg',
   },
   {
     id: 9,
@@ -69,7 +69,7 @@ export const customerProducts = [
     category: 'Sobremesas',
     price: 16,
     available: true,
-    image: '/images/menu/banoffee.webp',
+    image: '/images/menu/banoffe.jpg',
   },
   {
     id: 10,
@@ -77,7 +77,7 @@ export const customerProducts = [
     category: 'Sobremesas',
     price: 22,
     available: true,
-    image: '/images/menu/petit-gateau.webp',
+    image: '/images/menu/petit gateau.webp',
   },
   {
     id: 11,
@@ -85,7 +85,7 @@ export const customerProducts = [
     category: 'Sobremesas',
     price: 14,
     available: true,
-    image: '/images/menu/pudim.webp',
+    image: '/images/menu/pudim.jpg',
   },
 ]
 

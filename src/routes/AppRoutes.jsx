@@ -22,6 +22,7 @@ import AcompanharPedido from '../pages/AcompanharPedido/AcompanharPedido.jsx'
 import ChamarGarcom from '../pages/ChamarGarcom/ChamarGarcom.jsx'
 import SolicitarConta from '../pages/SolicitarConta/SolicitarConta.jsx'
 import HistoricoCliente from '../pages/HistoricoCliente/HistoricoCliente.jsx'
+import ProtectedRoute from '../components/auth/ProtectedRoute.jsx'
 
 export default function AppRoutes() {
   return (
@@ -33,12 +34,6 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Register />} />
 
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/pedidos" element={<Pedidos />} />
-      <Route path="/atendimento" element={<Atendimento />} />
-      <Route path="/clientes" element={<Clientes />} />
-      <Route path="/financeiro" element={<Financeiro />} />
-      <Route path="/cardapio" element={<Cardapio />} />
       <Route path="/menu" element={<MenuCliente />} />
       <Route path="/carrinho" element={<CarrinhoCliente />} />
       <Route path="/confirmar-pedido" element={<ConfirmarPedido />} />
@@ -49,8 +44,17 @@ export default function AppRoutes() {
       <Route path="/chamar-garcom" element={<ChamarGarcom />} />
       <Route path="/solicitar-conta" element={<SolicitarConta />} />
       <Route path="/historico" element={<HistoricoCliente />} />
-      <Route path="/mesas" element={<Mesas />} />
-      <Route path="/estoque" element={<Estoque />} />
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/pedidos" element={<Pedidos />} />
+        <Route path="/atendimento" element={<Atendimento />} />
+        <Route path="/clientes" element={<Clientes />} />
+        <Route path="/financeiro" element={<Financeiro />} />
+        <Route path="/cardapio" element={<Cardapio />} />
+        <Route path="/mesas" element={<Mesas />} />
+        <Route path="/estoque" element={<Estoque />} />
+      </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

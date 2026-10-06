@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   FiBell,
   FiCheck,
@@ -9,44 +9,160 @@ import {
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { money } from '../../data/customerMenu.js'
+import api from '../../services/api.js'
 import {
   getActiveCustomerOrder,
   getCustomerOrder,
+  updateCustomerOrderStatus,
 } from '../../utils/customerSession.js'
 import '../../styles/customer-flow.css'
 
 const statuses = ['Aguardando', 'Preparando', 'Pronto', 'Entregue']
 
+const backendStatusToCustomer = {
+  Recebido: 'Aguardando',
+  'Em preparo': 'Preparando',
+  Pronto: 'Pronto',
+  Entregue: 'Entregue',
+}
+
+const getBackendId = (orderId, localOrder) => {
+  if (localOrder?.backendId != null) {
+    return Number(localOrder.backendId)
+  }
+
+  const parsed = Number(String(orderId || '').replace('#', ''))
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+}
+
+const formatTime = (value) => {
+  if (!value) return '—'
+
+  return new Date(value).toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export default function AcompanharPedido() {
   const navigate = useNavigate()
   const params = new URLSearchParams(window.location.search)
   const requestedId = params.get('id')
-  const [order, setOrder] = useState(() =>
-    requestedId ? getCustomerOrder(requestedId) : getActiveCustomerOrder(),
-  )
+
+  const initialLocalOrder = requestedId
+    ? getCustomerOrder(requestedId)
+    : getActiveCustomerOrder()
+
+  const [order, setOrder] = useState(initialLocalOrder)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState('')
+
+  const refreshOrder = useCallback(async ({ manual = false } = {}) => {
+    const localOrder = requestedId
+      ? getCustomerOrder(requestedId)
+      : getActiveCustomerOrder()
+
+    const backendId = getBackendId(requestedId, localOrder)
+
+    if (!backendId) {
+      setOrder(localOrder)
+      setLoading(false)
+      return
+    }
+
+    if (manual) setRefreshing(true)
+
+    try {
+      const { data: apiOrder } = await api.get(
+        `/api/pedidos/${backendId}`,
+      )
+
+      const backendStatus = apiOrder?.status?.name || 'Recebido'
+      const customerStatus =
+        backendStatusToCustomer[backendStatus] || 'Aguardando'
+
+      if (localOrder) {
+        updateCustomerOrderStatus(localOrder.id, customerStatus)
+      }
+
+      setOrder({
+        ...(localOrder || {}),
+        id: localOrder?.id || `#${apiOrder.id}`,
+        backendId: apiOrder.id,
+        table: String(
+          apiOrder?.mesa?.number ??
+            localOrder?.table ??
+            params.get('mesa') ??
+            '—',
+        ).padStart(2, '0'),
+        customer: localOrder?.customer || 'Cliente da mesa',
+        time: localOrder?.time || formatTime(apiOrder?.createdAt),
+        status: customerStatus,
+        backendStatus,
+        total: Number(
+          apiOrder?.totalValue ??
+            localOrder?.total ??
+            0,
+        ),
+        paymentMethod: localOrder?.paymentMethod || null,
+        paymentStatus: localOrder?.paymentStatus || 'Pendente',
+        createdAt:
+          apiOrder?.createdAt ||
+          localOrder?.createdAt ||
+          new Date().toISOString(),
+      })
+
+      setError('')
+    } catch (requestError) {
+      setError(
+        requestError?.response?.data?.message ||
+          'Não foi possível atualizar o status do pedido.',
+      )
+
+      if (!order && localOrder) {
+        setOrder(localOrder)
+      }
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }, [requestedId, order])
 
   useEffect(() => {
-    const refresh = () => {
-      const current = requestedId
-        ? getCustomerOrder(requestedId)
-        : getActiveCustomerOrder()
+    refreshOrder()
 
-      setOrder(current)
-    }
+    const timer = window.setInterval(
+      () => refreshOrder(),
+      2000,
+    )
 
-    const timer = window.setInterval(refresh, 1200)
-    window.addEventListener('storage', refresh)
-
-    return () => {
-      window.clearInterval(timer)
-      window.removeEventListener('storage', refresh)
-    }
-  }, [requestedId])
+    return () => window.clearInterval(timer)
+  }, [refreshOrder])
 
   const currentIndex = useMemo(
     () => statuses.indexOf(order?.status),
     [order?.status],
   )
+
+  if (loading && !order) {
+    return (
+      <main className="customer-flow-page">
+        <div className="customer-flow-shell">
+          <header className="customer-flow-topbar">
+            <div className="customer-flow-brand">TableHub</div>
+            <ThemeToggle compact />
+          </header>
+
+          <section className="customer-flow-head">
+            <span>PEDIDO</span>
+            <h1>Carregando pedido...</h1>
+            <p>Consultando o status atual no servidor.</p>
+          </section>
+        </div>
+      </main>
+    )
+  }
 
   if (!order) {
     return (
@@ -60,6 +176,7 @@ export default function AcompanharPedido() {
           <section className="customer-flow-head">
             <span>PEDIDO</span>
             <h1>Pedido não encontrado.</h1>
+            {error && <p>{error}</p>}
           </section>
 
           <div className="customer-flow-empty">
@@ -92,7 +209,7 @@ export default function AcompanharPedido() {
         <section className="customer-flow-head customer-status-card">
           <span>PEDIDO {order.id}</span>
           <h1>Acompanhe seu pedido.</h1>
-          <p>O status abaixo representa o fluxo atual da cozinha nesta demonstração.</p>
+          <p>O status é atualizado diretamente pelo sistema da cozinha.</p>
         </section>
 
         <section className="customer-flow-card customer-status-card">
@@ -102,6 +219,12 @@ export default function AcompanharPedido() {
           >
             {order.status}
           </div>
+
+          {error && (
+            <div className="customer-flow-error" role="alert">
+              {error}
+            </div>
+          )}
 
           <div className="customer-status-steps">
             {statuses.map((status, index) => {
@@ -141,9 +264,11 @@ export default function AcompanharPedido() {
             <button
               className="th-btn th-btn--glass th-btn--block"
               type="button"
-              onClick={() => setOrder(getCustomerOrder(order.id))}
+              onClick={() => refreshOrder({ manual: true })}
+              disabled={refreshing}
             >
-              <FiRefreshCw /> Atualizar agora
+              <FiRefreshCw />
+              {refreshing ? 'Atualizando...' : 'Atualizar agora'}
             </button>
 
             <button

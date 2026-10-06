@@ -62,6 +62,7 @@ export const customerProducts = [
     price: 12.9,
     available: true,
     image: '/images/menu/coca.jpg',
+    imageFit: 'contain',
   },
   {
     id: 9,

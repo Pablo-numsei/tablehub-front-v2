@@ -102,6 +102,10 @@ export default function MenuCliente() {
                     src={product.image}
                     alt={product.name}
                     loading="lazy"
+                    style={{
+                      objectFit: product.imageFit || 'cover',
+                      objectPosition: 'center',
+                    }}
                   />
                 </div>
 

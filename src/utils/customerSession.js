@@ -74,6 +74,70 @@ export const createCustomerOrder = ({ table, cart, note = '' }) => {
   return order
 }
 
+const mapBackendStatusToCustomer = (status) => {
+  const statusMap = {
+    Recebido: 'Aguardando',
+    'Em preparo': 'Preparando',
+    Pronto: 'Pronto',
+    Entregue: 'Entregue',
+  }
+
+  return statusMap[status] || 'Aguardando'
+}
+
+export const saveCustomerOrderFromApi = ({
+  apiOrder,
+  table,
+  cart,
+  note = '',
+}) => {
+  const items = customerProducts
+    .filter((product) => (cart[product.id] || 0) > 0)
+    .map((product) => ({
+      productId: product.id,
+      name: product.name,
+      quantity: cart[product.id],
+      price: product.price,
+    }))
+
+  const localTotal = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  )
+
+  const backendStatus = apiOrder?.status?.name || 'Recebido'
+  const createdAt = apiOrder?.createdAt || new Date().toISOString()
+  const backendId = apiOrder?.id ?? null
+
+  const order = {
+    id: backendId != null
+      ? `#${backendId}`
+      : `#${String(Date.now()).slice(-6)}`,
+    backendId,
+    table: String(table).padStart(2, '0'),
+    customer: 'Cliente da mesa',
+    time: new Date(createdAt).toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+    status: mapBackendStatusToCustomer(backendStatus),
+    backendStatus,
+    total: Number(apiOrder?.totalValue ?? localTotal),
+    note: note.trim(),
+    items,
+    paymentMethod: null,
+    paymentStatus: 'Pendente',
+    paidAt: null,
+    createdAt,
+  }
+
+  const orders = loadCustomerOrders()
+  sessionStorage.setItem(ORDERS_KEY, JSON.stringify([order, ...orders]))
+  sessionStorage.setItem(ACTIVE_ORDER_KEY, order.id)
+
+  return order
+}
+
 export const updateCustomerOrderStatus = (id, status) => {
   const orders = loadCustomerOrders()
   const exists = orders.some((order) => order.id === id)

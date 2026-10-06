@@ -3,12 +3,21 @@ import { FiArrowLeft, FiCheck } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { customerProducts, money } from '../../data/customerMenu.js'
+import api from '../../services/api.js'
 import {
   clearCart,
-  createCustomerOrder,
   loadCart,
+  saveCustomerOrderFromApi,
 } from '../../utils/customerSession.js'
 import '../../styles/customer-flow.css'
+
+const normalizeText = (value = '') =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
 
 export default function ConfirmarPedido() {
   const navigate = useNavigate()
@@ -17,6 +26,7 @@ export default function ConfirmarPedido() {
   const cart = loadCart()
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
   const items = useMemo(
     () =>
@@ -31,17 +41,111 @@ export default function ConfirmarPedido() {
     0,
   )
 
-  const confirmOrder = () => {
+  const confirmOrder = async () => {
     if (items.length === 0 || submitting) return
 
     setSubmitting(true)
-    const order = createCustomerOrder({ table, cart, note })
-    clearCart()
+    setError('')
 
-    navigate(
-      `/pedido-confirmado?id=${encodeURIComponent(order.id)}&mesa=${table}`,
-      { replace: true },
-    )
+    try {
+      const tableNumber = Number(table)
+
+      if (!Number.isInteger(tableNumber) || tableNumber <= 0) {
+        throw new Error('Número da mesa inválido.')
+      }
+
+      const [tablesResponse, productsResponse] = await Promise.all([
+        api.get('/api/mesas'),
+        api.get('/api/v1/produtos'),
+      ])
+
+      const tables = Array.isArray(tablesResponse.data)
+        ? tablesResponse.data
+        : []
+      const backendProducts = Array.isArray(productsResponse.data)
+        ? productsResponse.data
+        : []
+
+      const mesa = tables.find(
+        (current) =>
+          Number(current.number) === tableNumber &&
+          current.active !== false,
+      )
+
+      if (!mesa) {
+        throw new Error(
+          `A mesa ${String(table).padStart(2, '0')} não está cadastrada ou está inativa no banco.`,
+        )
+      }
+
+      const resolvedItems = items.map((item) => ({
+        item,
+        backendProduct: backendProducts.find(
+          (product) =>
+            normalizeText(product.name) === normalizeText(item.name),
+        ),
+      }))
+
+      const missingProducts = resolvedItems
+        .filter(({ backendProduct }) => !backendProduct)
+        .map(({ item }) => item.name)
+
+      if (missingProducts.length > 0) {
+        throw new Error(
+          `Estes produtos ainda não estão cadastrados no banco: ${missingProducts.join(', ')}.`,
+        )
+      }
+
+      const unavailableProducts = resolvedItems
+        .filter(({ item, backendProduct }) => {
+          const stock = Number(backendProduct.stockQuantity ?? 0)
+
+          return (
+            backendProduct.available === false ||
+            stock < item.quantity
+          )
+        })
+        .map(({ item }) => item.name)
+
+      if (unavailableProducts.length > 0) {
+        throw new Error(
+          `Produto indisponível ou sem estoque suficiente: ${unavailableProducts.join(', ')}.`,
+        )
+      }
+
+      const payload = {
+        mesaId: mesa.id,
+        criadoPor: null,
+        itens: resolvedItems.map(({ item, backendProduct }) => ({
+          produtoId: backendProduct.id,
+          quantidade: item.quantity,
+        })),
+      }
+
+      const { data: apiOrder } = await api.post('/api/pedidos', payload)
+
+      const order = saveCustomerOrderFromApi({
+        apiOrder,
+        table: mesa.number,
+        cart,
+        note,
+      })
+
+      clearCart()
+
+      navigate(
+        `/pedido-confirmado?id=${encodeURIComponent(order.id)}&mesa=${mesa.number}`,
+        { replace: true },
+      )
+    } catch (requestError) {
+      setError(
+        requestError?.response?.data?.message ||
+          requestError?.message ||
+          'Não foi possível enviar o pedido para a cozinha.',
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (items.length === 0) {
@@ -130,6 +234,12 @@ export default function ConfirmarPedido() {
               <span>Total</span>
               <strong>{money(total)}</strong>
             </div>
+
+            {error && (
+              <div className="customer-flow-error" role="alert">
+                {error}
+              </div>
+            )}
 
             <div className="customer-flow-actions">
               <button

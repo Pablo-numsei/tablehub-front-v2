@@ -151,6 +151,17 @@
   gap: 10px;
 }
 
+.customer-flow-error {
+  margin-bottom: 14px;
+  padding: 13px 14px;
+  border: 1px solid rgba(216,91,91,.28);
+  border-radius: 13px;
+  background: rgba(216,91,91,.08);
+  color: var(--danger);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
 .customer-action-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

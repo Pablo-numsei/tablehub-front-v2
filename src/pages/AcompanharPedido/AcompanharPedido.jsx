@@ -48,6 +48,7 @@ export default function AcompanharPedido() {
   const navigate = useNavigate()
   const params = new URLSearchParams(window.location.search)
   const requestedId = params.get('id')
+  const requestedTable = params.get('mesa')
 
   const initialLocalOrder = requestedId
     ? getCustomerOrder(requestedId)
@@ -93,7 +94,7 @@ export default function AcompanharPedido() {
         table: String(
           apiOrder?.mesa?.number ??
             localOrder?.table ??
-            params.get('mesa') ??
+            requestedTable ??
             '—',
         ).padStart(2, '0'),
         customer: localOrder?.customer || 'Cliente da mesa',
@@ -120,14 +121,12 @@ export default function AcompanharPedido() {
           'Não foi possível atualizar o status do pedido.',
       )
 
-      if (!order && localOrder) {
-        setOrder(localOrder)
-      }
+      setOrder((current) => current || localOrder)
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [requestedId, order])
+  }, [requestedId, requestedTable])
 
   useEffect(() => {
     refreshOrder()

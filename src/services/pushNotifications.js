@@ -21,6 +21,7 @@ const urlBase64ToUint8Array = (base64String) => {
     .replace(/_/g, '/')
 
   const rawData = window.atob(base64)
+
   return Uint8Array.from(
     [...rawData].map((character) => character.charCodeAt(0)),
   )
@@ -33,26 +34,7 @@ export const supportsPushNotifications = () =>
   'serviceWorker' in navigator &&
   'PushManager' in window
 
-export const isOrderPushEnabled = (order) => {
-  const backendId = getBackendId(order)
-  if (!backendId) return false
-
-  return sessionStorage.getItem(pushStorageKey(backendId)) === '1'
-}
-
 const getOrCreatePushSubscription = async () => {
-  const { subscription, serialized } = await getOrCreatePushSubscription()
-
-  return { subscription, serialized }
-}
-
-export const enableOrderPush = async (order) => {
-  const backendId = getBackendId(order)
-
-  if (!backendId) {
-    throw new Error('Este pedido não possui um ID válido no backend.')
-  }
-
   if (!supportsPushNotifications()) {
     throw new Error(
       'Este navegador não oferece suporte a notificações push ou a página não está em um contexto seguro.',
@@ -95,6 +77,29 @@ export const enableOrderPush = async (order) => {
     throw new Error('A inscrição push retornada pelo navegador é inválida.')
   }
 
+  return { subscription, serialized }
+}
+
+export const isOrderPushEnabled = (order) => {
+  const backendId = getBackendId(order)
+
+  if (!backendId) {
+    return false
+  }
+
+  return sessionStorage.getItem(pushStorageKey(backendId)) === '1'
+}
+
+export const enableOrderPush = async (order) => {
+  const backendId = getBackendId(order)
+
+  if (!backendId) {
+    throw new Error('Este pedido não possui um ID válido no backend.')
+  }
+
+  const { subscription, serialized } =
+    await getOrCreatePushSubscription()
+
   await api.post('/api/push/subscriptions', {
     pedidoId: backendId,
     endpoint: serialized.endpoint,
@@ -109,12 +114,12 @@ export const enableOrderPush = async (order) => {
   return subscription
 }
 
-
 export const isStaffPushEnabled = () =>
   localStorage.getItem(STAFF_PUSH_KEY) === '1'
 
 export const enableStaffPush = async () => {
-  const { subscription, serialized } = await getOrCreatePushSubscription()
+  const { subscription, serialized } =
+    await getOrCreatePushSubscription()
 
   await api.post('/api/push/staff-subscriptions', {
     endpoint: serialized.endpoint,

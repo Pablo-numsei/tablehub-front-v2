@@ -19,10 +19,20 @@ export default function Login() {
     setLoading(true)
 
     try {
-      const { data } = await api.post('/auth/login', form)
+      const { data } = await api.post('/api/auth/login', form)
 
       if (data?.token) {
         localStorage.setItem('tablehub_token', data.token)
+        localStorage.setItem(
+          'tablehub_user',
+          JSON.stringify({
+            id: data.id,
+            nome: data.nome,
+            email: data.email,
+            perfilId: data.perfilId,
+            perfil: data.perfil,
+          }),
+        )
       }
 
       navigate('/dashboard')

@@ -2,11 +2,11 @@ import { useState } from 'react'
 import {
   FiArrowLeft,
   FiCreditCard,
-  FiDollarSign,
   FiSmartphone,
 } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
+import api from '../../services/api.js'
 import { money } from '../../data/customerMenu.js'
 import {
   getActiveCustomerOrder,
@@ -16,9 +16,8 @@ import {
 import '../../styles/customer-flow.css'
 
 const methods = [
-  { id: 'Dinheiro', label: 'Dinheiro', icon: FiDollarSign },
-  { id: 'Crédito', label: 'Cartão de crédito', icon: FiCreditCard },
-  { id: 'Débito', label: 'Cartão de débito', icon: FiCreditCard },
+  { id: 'CREDITO', label: 'Cartão de crédito', icon: FiCreditCard },
+  { id: 'DEBITO', label: 'Cartão de débito', icon: FiCreditCard },
   { id: 'PIX', label: 'PIX', icon: FiSmartphone },
 ]
 
@@ -31,6 +30,7 @@ export default function PagamentoCliente() {
     : getActiveCustomerOrder()
   const [method, setMethod] = useState(order?.paymentMethod || '')
   const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState('')
 
   if (!order) {
     return (
@@ -47,15 +47,42 @@ export default function PagamentoCliente() {
 
   const orderQuery = `id=${encodeURIComponent(order.id)}&mesa=${order.table}`
 
-  const confirmPayment = () => {
+  const confirmPayment = async () => {
     if (!method || processing) return
 
-    setProcessing(true)
-    updateCustomerOrderPayment(order.id, method)
+    const backendId =
+      order.backendId ?? Number(String(order.id).replace('#', ''))
 
-    window.setTimeout(() => {
+    if (!backendId) {
+      setError('Este pedido não possui um ID válido no backend.')
+      return
+    }
+
+    setProcessing(true)
+    setError('')
+
+    try {
+      await api.post(`/api/payments/${backendId}/process`, {
+        method,
+        gatewayReference: null,
+      })
+
+      const labels = {
+        CREDITO: 'Crédito',
+        DEBITO: 'Débito',
+        PIX: 'PIX',
+      }
+
+      updateCustomerOrderPayment(order.id, labels[method] || method)
       navigate(`/comprovante?${orderQuery}`, { replace: true })
-    }, 450)
+    } catch (requestError) {
+      setError(
+        requestError?.response?.data?.message ||
+          'Não foi possível registrar o pagamento no backend.',
+      )
+    } finally {
+      setProcessing(false)
+    }
   }
 
   return (
@@ -76,6 +103,12 @@ export default function PagamentoCliente() {
         </section>
 
         <section className="customer-flow-card customer-status-card">
+          {error && (
+            <div className="customer-flow-error" role="alert">
+              {error}
+            </div>
+          )}
+
           <div className="customer-payment-methods">
             {methods.map(({ id, label, icon: Icon }) => (
               <button
@@ -96,7 +129,7 @@ export default function PagamentoCliente() {
           </div>
 
           <div className="customer-demo-notice">
-            Esta etapa é apenas uma simulação de interface. Nenhuma cobrança real será realizada.
+            O registro é salvo no TableHub. Não existe integração com banco, maquininha ou gateway de cobrança real.
           </div>
 
           <div className="customer-flow-actions">

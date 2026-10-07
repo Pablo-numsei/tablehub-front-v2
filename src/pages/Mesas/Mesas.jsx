@@ -1,25 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FiCopy, FiLink, FiPlus, FiX } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
+import api from '../../services/api.js'
 import '../../styles/management.css'
 import './Mesas.css'
 
-const initialTables = [
-  { number: '01', status: 'Livre', order: null },
-  { number: '02', status: 'Ocupada', order: '#1026' },
-  { number: '03', status: 'Ocupada', order: '#1023' },
-  { number: '04', status: 'Ocupada', order: '#1028' },
-  { number: '05', status: 'Livre', order: null },
-  { number: '06', status: 'Reservada', order: '13:30' },
-  { number: '07', status: 'Livre', order: null },
-  { number: '08', status: 'Ocupada', order: '#1022' },
-  { number: '09', status: 'Ocupada', order: '#1027' },
-  { number: '10', status: 'Livre', order: null },
-  { number: '11', status: 'Ocupada', order: '#1025' },
-  { number: '12', status: 'Livre', order: null },
-]
-
-const filters = ['Todas', 'Livre', 'Ocupada', 'Reservada']
+const filters = ['Todas', 'Livre', 'Ocupada']
 
 function FakeQr() {
   return (
@@ -32,10 +18,42 @@ function FakeQr() {
 }
 
 export default function Mesas() {
-  const [tables, setTables] = useState(initialTables)
+  const [tables, setTables] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [filter, setFilter] = useState('Todas')
   const [selectedNumber, setSelectedNumber] = useState(null)
   const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    Promise.all([
+      api.get('/api/mesas'),
+      api.get('/api/dashboard/resumo'),
+    ])
+      .then(([tablesResponse, dashboardResponse]) => {
+        const statusByNumber = new Map(
+          (dashboardResponse.data?.mesas || []).map((item) => [
+            Number(item.numero),
+            item.status,
+          ]),
+        )
+
+        setTables(
+          (Array.isArray(tablesResponse.data) ? tablesResponse.data : [])
+            .filter((table) => table.active !== false)
+            .map((table) => ({
+              id: table.id,
+              number: String(table.number).padStart(2, '0'),
+              status: statusByNumber.get(Number(table.number)) || 'Livre',
+              qrCode: table.qrCode,
+              order: null,
+            })),
+        )
+        setError('')
+      })
+      .catch(() => setError('Não foi possível carregar as mesas do backend.'))
+      .finally(() => setLoading(false))
+  }, [])
 
   const selectedTable = tables.find((table) => table.number === selectedNumber)
 
@@ -48,17 +66,7 @@ export default function Mesas() {
     total: tables.length,
     free: tables.filter((table) => table.status === 'Livre').length,
     occupied: tables.filter((table) => table.status === 'Ocupada').length,
-    reserved: tables.filter((table) => table.status === 'Reservada').length,
-  }
-
-  const setTableStatus = (number, status) => {
-    setTables((current) =>
-      current.map((table) =>
-        table.number === number
-          ? { ...table, status, order: status === 'Livre' ? null : table.order }
-          : table,
-      ),
-    )
+    reserved: 0,
   }
 
   const copyQrLink = async () => {
@@ -86,10 +94,12 @@ export default function Mesas() {
             <p>Visualize ocupação, pedidos ativos e acesso ao cardápio por QR.</p>
           </div>
 
-          <button className="th-btn th-btn--primary" type="button">
+          <button className="th-btn th-btn--primary" type="button" disabled title="Cadastro será habilitado quando o formulário estiver conectado">
             <FiPlus /> Nova mesa
           </button>
         </header>
+
+        {error && <div className="orders-alert" role="alert">{error}</div>}
 
         <section className="table-summary-grid">
           <article><span>Total</span><strong>{counts.total}</strong></article>
@@ -112,7 +122,8 @@ export default function Mesas() {
         </div>
 
         <section className="table-management-grid">
-          {visibleTables.map((table) => (
+          {loading && <div className="management-empty">Carregando mesas...</div>}
+          {!loading && visibleTables.map((table) => (
             <article className={`table-management-card table-management-card--${table.status.toLowerCase()}`} key={table.number}>
               <div className="table-management-card__top">
                 <div>
@@ -158,18 +169,11 @@ export default function Mesas() {
             </button>
 
             <div className="table-modal__status">
-              <span>Status da mesa</span>
+              <span>Status atual</span>
               <div>
-                {['Livre', 'Ocupada', 'Reservada'].map((status) => (
-                  <button
-                    key={status}
-                    type="button"
-                    className={selectedTable.status === status ? 'is-active' : ''}
-                    onClick={() => setTableStatus(selectedTable.number, status)}
-                  >
-                    {status}
-                  </button>
-                ))}
+                <button type="button" className="is-active">
+                  {selectedTable.status}
+                </button>
               </div>
             </div>
 

@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FiMinus, FiPlus, FiShoppingBag } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
+import api from '../../services/api.js'
 import {
   customerCategories as categories,
-  customerProducts as products,
+  customerProducts,
   money,
 } from '../../data/customerMenu.js'
 import { loadCart, saveCart } from '../../utils/customerSession.js'
@@ -16,6 +17,49 @@ export default function MenuCliente() {
   const table = params.get('mesa') || '04'
   const [filter, setFilter] = useState('Todos')
   const [cart, setCart] = useState(() => loadCart())
+  const [products, setProducts] = useState(customerProducts)
+  const [catalogError, setCatalogError] = useState('')
+
+  useEffect(() => {
+    const normalize = (value = '') =>
+      value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase()
+
+    api.get('/api/v1/produtos')
+      .then(({ data }) => {
+        const backendProducts = Array.isArray(data) ? data : []
+
+        setProducts(
+          customerProducts.map((localProduct) => {
+            const backendProduct = backendProducts.find(
+              (item) => normalize(item.name) === normalize(localProduct.name),
+            )
+
+            if (!backendProduct) {
+              return { ...localProduct, available: false }
+            }
+
+            return {
+              ...localProduct,
+              backendId: backendProduct.id,
+              price: Number(backendProduct.price),
+              stock: Number(backendProduct.stockQuantity ?? 0),
+              available:
+                backendProduct.active !== false &&
+                backendProduct.available !== false &&
+                Number(backendProduct.stockQuantity ?? 0) > 0,
+            }
+          }),
+        )
+        setCatalogError('')
+      })
+      .catch(() => {
+        setCatalogError('Não foi possível atualizar o cardápio pelo servidor.')
+      })
+  }, [])
 
   const visible = useMemo(
     () => products.filter((product) => filter === 'Todos' || product.category === filter),
@@ -31,9 +75,12 @@ export default function MenuCliente() {
   }
 
   const add = (id) => {
+    const product = products.find((item) => item.id === id)
+    if (!product?.available) return
+
     updateCart((current) => ({
       ...current,
-      [id]: (current[id] || 0) + 1,
+      [id]: Math.min((current[id] || 0) + 1, product.stock ?? 999),
     }))
   }
 
@@ -78,6 +125,12 @@ export default function MenuCliente() {
       </section>
 
       <section className="customer-menu-content">
+        {catalogError && (
+          <div className="customer-flow-error" role="alert">
+            {catalogError}
+          </div>
+        )}
+
         <div className="customer-menu-tabs">
           {categories.map((category) => (
             <button

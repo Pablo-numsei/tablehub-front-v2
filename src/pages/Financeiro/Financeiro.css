@@ -194,3 +194,21 @@
     display: initial;
   }
 }
+
+
+.finance-api-notice {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  color: var(--text-secondary);
+  background: var(--surface);
+  font-size: .8rem;
+  line-height: 1.55;
+}
+
+.finance-toolbar input:disabled,
+.finance-filters button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}

@@ -8,6 +8,10 @@ import {
 } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
 import api from '../../services/api.js'
+import {
+  enableStaffPush,
+  isStaffPushEnabled,
+} from '../../services/pushNotifications.js'
 import '../../styles/management.css'
 import './Atendimento.css'
 
@@ -54,6 +58,9 @@ export default function Atendimento() {
   const [refreshing, setRefreshing] = useState(false)
   const [updatingId, setUpdatingId] = useState(null)
   const [error, setError] = useState('')
+  const [pushEnabled, setPushEnabled] = useState(() => isStaffPushEnabled())
+  const [pushLoading, setPushLoading] = useState(false)
+  const [pushError, setPushError] = useState('')
 
   const refreshRequests = async ({ silent = false } = {}) => {
     if (silent) setRefreshing(true)
@@ -97,6 +104,26 @@ export default function Atendimento() {
     done: requests.filter((request) => request.status === 'Concluído').length,
   }
 
+  const activateStaffNotifications = async () => {
+    if (pushEnabled || pushLoading) return
+
+    setPushLoading(true)
+    setPushError('')
+
+    try {
+      await enableStaffPush()
+      setPushEnabled(true)
+    } catch (requestError) {
+      setPushError(
+        requestError?.response?.data?.message ||
+          requestError?.message ||
+          'Não foi possível ativar as notificações da equipe.',
+      )
+    } finally {
+      setPushLoading(false)
+    }
+  }
+
   const advanceRequest = async (request) => {
     const target = nextStatus[request.status]
     if (!target || target === request.status) return
@@ -131,18 +158,35 @@ export default function Atendimento() {
             <p>Chamados reais de garçom e pedidos de fechamento da conta.</p>
           </div>
 
-          <button
-            className="th-btn th-btn--glass"
-            type="button"
-            onClick={() => refreshRequests({ silent: true })}
-            disabled={refreshing}
-          >
-            <FiRefreshCw className={refreshing ? 'orders-spin' : ''} />
-            {refreshing ? 'Atualizando' : 'Atualizar'}
-          </button>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button
+              className="th-btn th-btn--primary"
+              type="button"
+              onClick={activateStaffNotifications}
+              disabled={pushEnabled || pushLoading}
+            >
+              <FiBell />
+              {pushEnabled
+                ? 'Notificações ativadas'
+                : pushLoading
+                  ? 'Ativando...'
+                  : 'Ativar notificações'}
+            </button>
+
+            <button
+              className="th-btn th-btn--glass"
+              type="button"
+              onClick={() => refreshRequests({ silent: true })}
+              disabled={refreshing}
+            >
+              <FiRefreshCw className={refreshing ? 'orders-spin' : ''} />
+              {refreshing ? 'Atualizando' : 'Atualizar'}
+            </button>
+          </div>
         </header>
 
         {error && <div className="orders-alert" role="alert">{error}</div>}
+        {pushError && <div className="orders-alert" role="alert">{pushError}</div>}
 
         <section className="service-summary">
           <article><FiBell /><span>Aguardando</span><strong>{counts.open}</strong></article>

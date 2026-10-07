@@ -3,6 +3,8 @@ import api from './api.js'
 const pushStorageKey = (backendId) =>
   `tablehub_push_order_${backendId}`
 
+const STAFF_PUSH_KEY = 'tablehub_push_staff_enabled'
+
 const getBackendId = (order) => {
   if (order?.backendId != null) {
     return Number(order.backendId)
@@ -36,6 +38,12 @@ export const isOrderPushEnabled = (order) => {
   if (!backendId) return false
 
   return sessionStorage.getItem(pushStorageKey(backendId)) === '1'
+}
+
+const getOrCreatePushSubscription = async () => {
+  const { subscription, serialized } = await getOrCreatePushSubscription()
+
+  return { subscription, serialized }
 }
 
 export const enableOrderPush = async (order) => {
@@ -97,6 +105,26 @@ export const enableOrderPush = async (order) => {
   })
 
   sessionStorage.setItem(pushStorageKey(backendId), '1')
+
+  return subscription
+}
+
+
+export const isStaffPushEnabled = () =>
+  localStorage.getItem(STAFF_PUSH_KEY) === '1'
+
+export const enableStaffPush = async () => {
+  const { subscription, serialized } = await getOrCreatePushSubscription()
+
+  await api.post('/api/push/staff-subscriptions', {
+    endpoint: serialized.endpoint,
+    keys: {
+      p256dh: serialized.keys.p256dh,
+      auth: serialized.keys.auth,
+    },
+  })
+
+  localStorage.setItem(STAFF_PUSH_KEY, '1')
 
   return subscription
 }

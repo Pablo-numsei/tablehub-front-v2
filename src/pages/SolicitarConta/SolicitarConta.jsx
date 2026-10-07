@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { FiCheckCircle, FiFileText } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
+import api from '../../services/api.js'
 import { money } from '../../data/customerMenu.js'
 import {
-  createServiceRequest,
   getActiveCustomerOrder,
   getCustomerOrder,
 } from '../../utils/customerSession.js'
@@ -19,15 +19,42 @@ export default function SolicitarConta() {
     : getActiveCustomerOrder()
   const table = order?.table || params.get('mesa') || '04'
   const [sent, setSent] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
 
-  const requestBill = () => {
-    createServiceRequest({
-      type: 'Conta',
-      table,
-      orderId: order?.id || null,
-      detail: 'Solicitação de fechamento da mesa',
-    })
-    setSent(true)
+  const requestBill = async () => {
+    if (sending) return
+    setSending(true)
+    setError('')
+
+    try {
+      const { data: mesas } = await api.get('/api/mesas')
+      const mesa = (Array.isArray(mesas) ? mesas : []).find(
+        (item) => Number(item.number) === Number(table),
+      )
+
+      if (!mesa) throw new Error('Mesa não encontrada no backend.')
+
+      const pedidoId =
+        order?.backendId ?? Number(String(order?.id || '').replace('#', '')) || null
+
+      await api.post('/api/atendimentos', {
+        mesaId: mesa.id,
+        pedidoId,
+        tipo: 'CONTA',
+        detalhe: 'Solicitação de fechamento da mesa',
+      })
+
+      setSent(true)
+    } catch (requestError) {
+      setError(
+        requestError?.response?.data?.message ||
+          requestError?.message ||
+          'Não foi possível solicitar a conta.',
+      )
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -48,11 +75,13 @@ export default function SolicitarConta() {
         </section>
 
         <section className="customer-flow-card customer-status-card">
+          {error && <div className="customer-flow-error" role="alert">{error}</div>}
+
           {sent ? (
             <div className="customer-request-success">
               <FiCheckCircle />
               <h2>Conta solicitada.</h2>
-              <p>A solicitação da mesa {table} foi registrada no protótipo.</p>
+              <p>A solicitação da mesa {table} foi registrada no sistema.</p>
             </div>
           ) : (
             <>
@@ -81,8 +110,9 @@ export default function SolicitarConta() {
                 className="th-btn th-btn--primary th-btn--block"
                 type="button"
                 onClick={requestBill}
+                disabled={sending}
               >
-                Solicitar conta
+                {sending ? 'Enviando...' : 'Solicitar conta'}
               </button>
             </>
           )}

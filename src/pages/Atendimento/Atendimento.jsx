@@ -7,42 +7,9 @@ import {
   FiRefreshCw,
 } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
-import {
-  loadServiceRequests,
-  updateServiceRequestStatus,
-} from '../../utils/customerSession.js'
+import api from '../../services/api.js'
 import '../../styles/management.css'
 import './Atendimento.css'
-
-const demoRequests = [
-  {
-    id: 'REQ-1041',
-    type: 'Garçom',
-    table: '03',
-    orderId: '#1023',
-    detail: 'Preciso de ajuda',
-    status: 'Enviado',
-    createdAt: '2026-09-30T11:52:00.000Z',
-  },
-  {
-    id: 'REQ-1039',
-    type: 'Conta',
-    table: '07',
-    orderId: '#1024',
-    detail: 'Solicitação de fechamento da mesa',
-    status: 'Em atendimento',
-    createdAt: '2026-09-30T11:46:00.000Z',
-  },
-  {
-    id: 'REQ-1036',
-    type: 'Garçom',
-    table: '11',
-    orderId: '#1025',
-    detail: 'Talheres / guardanapos',
-    status: 'Concluído',
-    createdAt: '2026-09-30T11:38:00.000Z',
-  },
-]
 
 const filters = ['Todos', 'Enviado', 'Em atendimento', 'Concluído']
 
@@ -52,6 +19,28 @@ const nextStatus = {
   Concluído: 'Concluído',
 }
 
+const backendStatus = {
+  ENVIADO: 'Enviado',
+  EM_ATENDIMENTO: 'Em atendimento',
+  CONCLUIDO: 'Concluído',
+}
+
+const apiStatus = {
+  'Em atendimento': 'EM_ATENDIMENTO',
+  Concluído: 'CONCLUIDO',
+}
+
+const mapRequest = (request) => ({
+  id: request.id,
+  label: `REQ-${String(request.id).padStart(4, '0')}`,
+  type: request.tipo === 'CONTA' ? 'Conta' : 'Garçom',
+  table: String(request.mesa).padStart(2, '0'),
+  orderId: request.pedidoId ? `#${request.pedidoId}` : null,
+  detail: request.detalhe,
+  status: backendStatus[request.status] || request.status,
+  createdAt: request.criadoEm,
+})
+
 const formatTime = (value) =>
   new Date(value).toLocaleTimeString('pt-BR', {
     hour: '2-digit',
@@ -59,31 +48,39 @@ const formatTime = (value) =>
   })
 
 export default function Atendimento() {
-  const [requests, setRequests] = useState(() => [
-    ...loadServiceRequests(),
-    ...demoRequests,
-  ])
+  const [requests, setRequests] = useState([])
   const [filter, setFilter] = useState('Todos')
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [updatingId, setUpdatingId] = useState(null)
+  const [error, setError] = useState('')
 
-  const refreshRequests = () => {
-    const sessionRequests = loadServiceRequests()
+  const refreshRequests = async ({ silent = false } = {}) => {
+    if (silent) setRefreshing(true)
+    else setLoading(true)
 
-    setRequests((current) => {
-      const demos = current.filter((request) =>
-        demoRequests.some((demo) => demo.id === request.id),
+    try {
+      const { data } = await api.get('/api/atendimentos')
+      setRequests((Array.isArray(data) ? data : []).map(mapRequest))
+      setError('')
+    } catch (requestError) {
+      setError(
+        requestError?.response?.data?.message ||
+          'Não foi possível carregar as solicitações do backend.',
       )
-      return [...sessionRequests, ...demos]
-    })
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
   }
 
   useEffect(() => {
-    const timer = window.setInterval(refreshRequests, 1200)
-    window.addEventListener('storage', refreshRequests)
-
-    return () => {
-      window.clearInterval(timer)
-      window.removeEventListener('storage', refreshRequests)
-    }
+    refreshRequests()
+    const timer = window.setInterval(
+      () => refreshRequests({ silent: true }),
+      3000,
+    )
+    return () => window.clearInterval(timer)
   }, [])
 
   const visible = useMemo(
@@ -100,17 +97,26 @@ export default function Atendimento() {
     done: requests.filter((request) => request.status === 'Concluído').length,
   }
 
-  const advanceRequest = (id) => {
-    setRequests((current) =>
-      current.map((request) => {
-        if (request.id !== id) return request
+  const advanceRequest = async (request) => {
+    const target = nextStatus[request.status]
+    if (!target || target === request.status) return
 
-        const status = nextStatus[request.status]
-        updateServiceRequestStatus(id, status)
+    setUpdatingId(request.id)
+    setError('')
 
-        return { ...request, status }
-      }),
-    )
+    try {
+      await api.patch(`/api/atendimentos/${request.id}/status`, {
+        status: apiStatus[target],
+      })
+      await refreshRequests({ silent: true })
+    } catch (requestError) {
+      setError(
+        requestError?.response?.data?.message ||
+          'Não foi possível atualizar a solicitação.',
+      )
+    } finally {
+      setUpdatingId(null)
+    }
   }
 
   return (
@@ -122,41 +128,32 @@ export default function Atendimento() {
           <div>
             <span className="management-eyebrow">ATENDIMENTO</span>
             <h1>Solicitações das mesas</h1>
-            <p>Centralize chamados de garçom e pedidos de fechamento da conta.</p>
+            <p>Chamados reais de garçom e pedidos de fechamento da conta.</p>
           </div>
 
-          <button className="th-btn th-btn--glass" type="button" onClick={refreshRequests}>
-            <FiRefreshCw /> Atualizar
+          <button
+            className="th-btn th-btn--glass"
+            type="button"
+            onClick={() => refreshRequests({ silent: true })}
+            disabled={refreshing}
+          >
+            <FiRefreshCw className={refreshing ? 'orders-spin' : ''} />
+            {refreshing ? 'Atualizando' : 'Atualizar'}
           </button>
         </header>
 
+        {error && <div className="orders-alert" role="alert">{error}</div>}
+
         <section className="service-summary">
-          <article>
-            <FiBell />
-            <span>Aguardando</span>
-            <strong>{counts.open}</strong>
-          </article>
-          <article>
-            <FiClock />
-            <span>Em atendimento</span>
-            <strong>{counts.attending}</strong>
-          </article>
-          <article>
-            <FiCheck />
-            <span>Concluídas</span>
-            <strong>{counts.done}</strong>
-          </article>
+          <article><FiBell /><span>Aguardando</span><strong>{counts.open}</strong></article>
+          <article><FiClock /><span>Em atendimento</span><strong>{counts.attending}</strong></article>
+          <article><FiCheck /><span>Concluídas</span><strong>{counts.done}</strong></article>
         </section>
 
         <section className="service-toolbar">
           <div className="service-filters">
             {filters.map((status) => (
-              <button
-                key={status}
-                type="button"
-                className={filter === status ? 'is-active' : ''}
-                onClick={() => setFilter(status)}
-              >
+              <button key={status} type="button" className={filter === status ? 'is-active' : ''} onClick={() => setFilter(status)}>
                 {status}
               </button>
             ))}
@@ -164,42 +161,22 @@ export default function Atendimento() {
         </section>
 
         <section className="service-grid">
-          {visible.map((request) => {
-            const Icon = request.type === 'Conta' ? FiFileText : FiBell
+          {loading && <div className="management-empty">Carregando solicitações...</div>}
 
+          {!loading && visible.map((request) => {
+            const Icon = request.type === 'Conta' ? FiFileText : FiBell
             return (
               <article className="service-card" key={request.id}>
                 <div className="service-card__top">
-                  <div className="service-card__icon">
-                    <Icon />
-                  </div>
-
-                  <div>
-                    <small>{request.id}</small>
-                    <h2>{request.type === 'Conta' ? 'Solicitação de conta' : 'Chamar garçom'}</h2>
-                  </div>
-
-                  <span className={`service-status service-status--${request.status
-                    .toLowerCase()
-                    .replace(' ', '-')
-                    .replace('í', 'i')}`}>
-                    {request.status}
-                  </span>
+                  <div className="service-card__icon"><Icon /></div>
+                  <div><small>{request.label}</small><h2>{request.type === 'Conta' ? 'Solicitação de conta' : 'Chamar garçom'}</h2></div>
+                  <span className={`service-status service-status--${request.status.toLowerCase().replace(' ', '-').replace('í', 'i')}`}>{request.status}</span>
                 </div>
 
                 <div className="service-card__meta">
-                  <div>
-                    <span>Mesa</span>
-                    <strong>{request.table}</strong>
-                  </div>
-                  <div>
-                    <span>Pedido</span>
-                    <strong>{request.orderId || '—'}</strong>
-                  </div>
-                  <div>
-                    <span>Horário</span>
-                    <strong>{formatTime(request.createdAt)}</strong>
-                  </div>
+                  <div><span>Mesa</span><strong>{request.table}</strong></div>
+                  <div><span>Pedido</span><strong>{request.orderId || '—'}</strong></div>
+                  <div><span>Horário</span><strong>{formatTime(request.createdAt)}</strong></div>
                 </div>
 
                 <div className="service-card__detail">
@@ -208,19 +185,15 @@ export default function Atendimento() {
                 </div>
 
                 {request.status !== 'Concluído' && (
-                  <button
-                    className="th-btn th-btn--primary th-btn--block"
-                    type="button"
-                    onClick={() => advanceRequest(request.id)}
-                  >
-                    Avançar para {nextStatus[request.status]}
+                  <button className="th-btn th-btn--primary th-btn--block" type="button" disabled={updatingId === request.id} onClick={() => advanceRequest(request)}>
+                    {updatingId === request.id ? 'Atualizando...' : `Avançar para ${nextStatus[request.status]}`}
                   </button>
                 )}
               </article>
             )
           })}
 
-          {visible.length === 0 && (
+          {!loading && visible.length === 0 && (
             <div className="management-empty">Nenhuma solicitação neste filtro.</div>
           )}
         </section>

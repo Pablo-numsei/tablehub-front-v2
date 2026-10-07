@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { FiBell, FiCheckCircle } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
+import api from '../../services/api.js'
 import {
-  createServiceRequest,
   getActiveCustomerOrder,
   getCustomerOrder,
 } from '../../utils/customerSession.js'
@@ -26,15 +26,42 @@ export default function ChamarGarcom() {
   const table = order?.table || params.get('mesa') || '04'
   const [reason, setReason] = useState(reasons[0])
   const [sent, setSent] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
 
-  const sendRequest = () => {
-    createServiceRequest({
-      type: 'Garçom',
-      table,
-      orderId: order?.id || null,
-      detail: reason,
-    })
-    setSent(true)
+  const sendRequest = async () => {
+    if (sending) return
+    setSending(true)
+    setError('')
+
+    try {
+      const { data: mesas } = await api.get('/api/mesas')
+      const mesa = (Array.isArray(mesas) ? mesas : []).find(
+        (item) => Number(item.number) === Number(table),
+      )
+
+      if (!mesa) throw new Error('Mesa não encontrada no backend.')
+
+      const pedidoId =
+        order?.backendId ?? Number(String(order?.id || '').replace('#', '')) || null
+
+      await api.post('/api/atendimentos', {
+        mesaId: mesa.id,
+        pedidoId,
+        tipo: 'GARCOM',
+        detalhe: reason,
+      })
+
+      setSent(true)
+    } catch (requestError) {
+      setError(
+        requestError?.response?.data?.message ||
+          requestError?.message ||
+          'Não foi possível chamar o garçom.',
+      )
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -55,11 +82,13 @@ export default function ChamarGarcom() {
         </section>
 
         <section className="customer-flow-card customer-status-card">
+          {error && <div className="customer-flow-error" role="alert">{error}</div>}
+
           {sent ? (
             <div className="customer-request-success">
               <FiCheckCircle />
               <h2>Solicitação enviada.</h2>
-              <p>O protótipo registrou o chamado da mesa {table}.</p>
+              <p>O chamado da mesa {table} foi registrado no sistema.</p>
             </div>
           ) : (
             <>
@@ -81,8 +110,9 @@ export default function ChamarGarcom() {
                 className="th-btn th-btn--primary th-btn--block"
                 type="button"
                 onClick={sendRequest}
+                disabled={sending}
               >
-                Enviar solicitação
+                {sending ? 'Enviando...' : 'Enviar solicitação'}
               </button>
             </>
           )}

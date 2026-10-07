@@ -36,7 +36,7 @@ export default function SolicitarConta() {
       if (!mesa) throw new Error('Mesa não encontrada no backend.')
 
       const pedidoId =
-        order?.backendId ?? Number(String(order?.id || '').replace('#', '')) || null
+        order?.backendId ?? (Number(String(order?.id || '').replace('#', '')) || null)
 
       await api.post('/api/atendimentos', {
         mesaId: mesa.id,

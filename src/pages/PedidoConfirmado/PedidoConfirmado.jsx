@@ -1,7 +1,12 @@
-import { FiArrowRight, FiCheckCircle, FiClock } from 'react-icons/fi'
+import { useState } from 'react'
+import { FiArrowRight, FiBell, FiCheckCircle, FiClock } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { money } from '../../data/customerMenu.js'
+import {
+  enableOrderPush,
+  isOrderPushEnabled,
+} from '../../services/pushNotifications.js'
 import {
   getActiveCustomerOrder,
   getCustomerOrder,
@@ -15,6 +20,12 @@ export default function PedidoConfirmado() {
   const order = requestedId
     ? getCustomerOrder(requestedId)
     : getActiveCustomerOrder()
+
+  const [pushEnabled, setPushEnabled] = useState(() =>
+    isOrderPushEnabled(order),
+  )
+  const [pushLoading, setPushLoading] = useState(false)
+  const [pushError, setPushError] = useState('')
 
   if (!order) {
     return (
@@ -35,6 +46,26 @@ export default function PedidoConfirmado() {
   }
 
   const orderQuery = `id=${encodeURIComponent(order.id)}&mesa=${order.table}`
+
+  const activateNotifications = async () => {
+    if (pushEnabled || pushLoading) return
+
+    setPushLoading(true)
+    setPushError('')
+
+    try {
+      await enableOrderPush(order)
+      setPushEnabled(true)
+    } catch (error) {
+      setPushError(
+        error?.response?.data?.message ||
+          error?.message ||
+          'Não foi possível ativar as notificações.',
+      )
+    } finally {
+      setPushLoading(false)
+    }
+  }
 
   return (
     <main className="customer-flow-page">
@@ -70,7 +101,27 @@ export default function PedidoConfirmado() {
             </div>
           </div>
 
+          {pushError && (
+            <div className="customer-flow-error" role="alert">
+              {pushError}
+            </div>
+          )}
+
           <div className="customer-flow-actions">
+            <button
+              className="th-btn th-btn--glass th-btn--block"
+              type="button"
+              onClick={activateNotifications}
+              disabled={pushEnabled || pushLoading}
+            >
+              <FiBell />
+              {pushEnabled
+                ? 'Notificações ativadas'
+                : pushLoading
+                  ? 'Ativando notificações...'
+                  : 'Receber atualizações do pedido'}
+            </button>
+
             <button
               className="th-btn th-btn--primary th-btn--block"
               type="button"

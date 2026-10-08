@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   FiBell,
   FiCheck,
@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { money } from '../../data/customerMenu.js'
 import api from '../../services/api.js'
+import { playNotificationSound, unlockNotificationSound } from '../../services/notificationSound.js'
 import {
   getActiveCustomerOrder,
   getCustomerOrder,
@@ -58,6 +59,7 @@ export default function AcompanharPedido() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
+  const previousStatus = useRef(null)
 
   const refreshOrder = useCallback(async ({ manual = false } = {}) => {
     const localOrder = requestedId
@@ -82,6 +84,11 @@ export default function AcompanharPedido() {
       const backendStatus = apiOrder?.status?.name || 'Recebido'
       const customerStatus =
         backendStatusToCustomer[backendStatus] || 'Aguardando'
+
+      if (previousStatus.current && previousStatus.current !== customerStatus) {
+        playNotificationSound()
+      }
+      previousStatus.current = customerStatus
 
       if (localOrder) {
         updateCustomerOrderStatus(localOrder.id, customerStatus)
@@ -129,6 +136,9 @@ export default function AcompanharPedido() {
   }, [requestedId, requestedTable])
 
   useEffect(() => {
+    const unlock = () => unlockNotificationSound()
+    window.addEventListener('pointerdown', unlock, { once: true })
+    window.addEventListener('keydown', unlock, { once: true })
     refreshOrder()
 
     const timer = window.setInterval(
@@ -136,7 +146,11 @@ export default function AcompanharPedido() {
       2000,
     )
 
-    return () => window.clearInterval(timer)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('keydown', unlock)
+    }
   }, [refreshOrder])
 
   const currentIndex = useMemo(

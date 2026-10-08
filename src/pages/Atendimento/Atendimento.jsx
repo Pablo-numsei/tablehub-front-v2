@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   FiBell,
   FiCheck,
@@ -8,6 +8,7 @@ import {
 } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
 import api from '../../services/api.js'
+import { playNotificationSound, unlockNotificationSound } from '../../services/notificationSound.js'
 import {
   enableStaffPush,
   isStaffPushEnabled,
@@ -61,6 +62,7 @@ export default function Atendimento() {
   const [pushEnabled, setPushEnabled] = useState(() => isStaffPushEnabled())
   const [pushLoading, setPushLoading] = useState(false)
   const [pushError, setPushError] = useState('')
+  const knownRequestIds = useRef(null)
 
   const refreshRequests = async ({ silent = false } = {}) => {
     if (silent) setRefreshing(true)
@@ -68,7 +70,13 @@ export default function Atendimento() {
 
     try {
       const { data } = await api.get('/api/atendimentos')
-      setRequests((Array.isArray(data) ? data : []).map(mapRequest))
+      const mapped = (Array.isArray(data) ? data : []).map(mapRequest)
+      const currentIds = new Set(mapped.map((request) => request.id))
+      if (knownRequestIds.current && mapped.some((request) => !knownRequestIds.current.has(request.id))) {
+        playNotificationSound()
+      }
+      knownRequestIds.current = currentIds
+      setRequests(mapped)
       setError('')
     } catch (requestError) {
       setError(
@@ -82,12 +90,19 @@ export default function Atendimento() {
   }
 
   useEffect(() => {
+    const unlock = () => unlockNotificationSound()
+    window.addEventListener('pointerdown', unlock, { once: true })
+    window.addEventListener('keydown', unlock, { once: true })
     refreshRequests()
     const timer = window.setInterval(
       () => refreshRequests({ silent: true }),
       3000,
     )
-    return () => window.clearInterval(timer)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('keydown', unlock)
+    }
   }, [])
 
   const visible = useMemo(
@@ -111,6 +126,7 @@ export default function Atendimento() {
     setPushError('')
 
     try {
+      unlockNotificationSound()
       await enableStaffPush()
       setPushEnabled(true)
     } catch (requestError) {

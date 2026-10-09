@@ -17,15 +17,37 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  event.waitUntil(
-    self.registration.showNotification(payload.title, {
+  const showNotification = self.registration.showNotification(
+    payload.title,
+    {
       body: payload.body,
       tag: payload.tag,
       renotify: true,
       data: {
         url: payload.url || '/',
       },
-    }),
+    },
+  )
+
+  const notifyOpenTableHub = self.clients
+    .matchAll({
+      type: 'window',
+      includeUncontrolled: true,
+    })
+    .then((clientList) => {
+      clientList.forEach((client) => {
+        client.postMessage({
+          type: 'TABLEHUB_NOTIFICATION',
+          payload,
+        })
+      })
+    })
+
+  event.waitUntil(
+    Promise.all([
+      showNotification,
+      notifyOpenTableHub,
+    ]),
   )
 })
 

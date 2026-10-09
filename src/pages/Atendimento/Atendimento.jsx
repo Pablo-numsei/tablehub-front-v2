@@ -8,7 +8,7 @@ import {
 } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
 import api from '../../services/api.js'
-import { playNotificationSound, unlockNotificationSound } from '../../services/notificationSound.js'
+import { playNotificationSound } from '../../services/notificationSound.js'
 import {
   enableStaffPush,
   isStaffPushEnabled,
@@ -72,8 +72,16 @@ export default function Atendimento() {
       const { data } = await api.get('/api/atendimentos')
       const mapped = (Array.isArray(data) ? data : []).map(mapRequest)
       const currentIds = new Set(mapped.map((request) => request.id))
-      if (knownRequestIds.current && mapped.some((request) => !knownRequestIds.current.has(request.id))) {
-        playNotificationSound()
+      if (knownRequestIds.current) {
+        const newRequest = mapped.find(
+          (request) => !knownRequestIds.current.has(request.id),
+        )
+
+        if (newRequest) {
+          playNotificationSound(
+            `atendimento-${newRequest.id}`,
+          )
+        }
       }
       knownRequestIds.current = currentIds
       setRequests(mapped)
@@ -90,9 +98,6 @@ export default function Atendimento() {
   }
 
   useEffect(() => {
-    const unlock = () => unlockNotificationSound()
-    window.addEventListener('pointerdown', unlock, { once: true })
-    window.addEventListener('keydown', unlock, { once: true })
     refreshRequests()
     const timer = window.setInterval(
       () => refreshRequests({ silent: true }),
@@ -100,8 +105,6 @@ export default function Atendimento() {
     )
     return () => {
       window.clearInterval(timer)
-      window.removeEventListener('pointerdown', unlock)
-      window.removeEventListener('keydown', unlock)
     }
   }, [])
 
@@ -126,7 +129,6 @@ export default function Atendimento() {
     setPushError('')
 
     try {
-      unlockNotificationSound()
       await enableStaffPush()
       setPushEnabled(true)
     } catch (requestError) {

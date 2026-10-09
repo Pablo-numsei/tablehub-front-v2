@@ -7,6 +7,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import api from '../../services/api.js'
+import { playNotificationSound } from '../../services/notificationSound.js'
 import { money } from '../../data/customerMenu.js'
 import {
   getActiveCustomerOrder,
@@ -74,6 +75,7 @@ export default function PagamentoCliente() {
       }
 
       updateCustomerOrderPayment(order.id, labels[method] || method)
+      playNotificationSound(`pagamento-${backendId}`)
       navigate(`/comprovante?${orderQuery}`, { replace: true })
     } catch (requestError) {
       setError(

@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { money } from '../../data/customerMenu.js'
 import api from '../../services/api.js'
-import { playNotificationSound, unlockNotificationSound } from '../../services/notificationSound.js'
+import { playNotificationSound } from '../../services/notificationSound.js'
 import {
   getActiveCustomerOrder,
   getCustomerOrder,
@@ -86,7 +86,15 @@ export default function AcompanharPedido() {
         backendStatusToCustomer[backendStatus] || 'Aguardando'
 
       if (previousStatus.current && previousStatus.current !== customerStatus) {
-        playNotificationSound()
+        const statusTag = backendStatus
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+
+        playNotificationSound(
+          `pedido-${backendId}-${statusTag}`,
+        )
       }
       previousStatus.current = customerStatus
 
@@ -136,9 +144,6 @@ export default function AcompanharPedido() {
   }, [requestedId, requestedTable])
 
   useEffect(() => {
-    const unlock = () => unlockNotificationSound()
-    window.addEventListener('pointerdown', unlock, { once: true })
-    window.addEventListener('keydown', unlock, { once: true })
     refreshOrder()
 
     const timer = window.setInterval(
@@ -148,8 +153,6 @@ export default function AcompanharPedido() {
 
     return () => {
       window.clearInterval(timer)
-      window.removeEventListener('pointerdown', unlock)
-      window.removeEventListener('keydown', unlock)
     }
   }, [refreshOrder])
 

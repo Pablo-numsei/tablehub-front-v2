@@ -21,6 +21,7 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(payload.title, {
       body: payload.body,
       tag: payload.tag,
+      renotify: true,
       data: {
         url: payload.url || '/',
       },

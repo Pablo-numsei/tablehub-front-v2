@@ -75,7 +75,7 @@ export default function PagamentoCliente() {
       }
 
       updateCustomerOrderPayment(order.id, labels[method] || method)
-      playNotificationSound(`pagamento-${backendId}`)
+      playNotificationSound(`pagamento-confirmado-${backendId}`)
       navigate(`/comprovante?${orderQuery}`, { replace: true })
     } catch (requestError) {
       setError(

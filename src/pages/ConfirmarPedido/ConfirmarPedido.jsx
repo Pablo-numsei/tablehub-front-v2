@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import { FiArrowLeft, FiCheck } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
-import { customerProducts, money } from '../../data/customerMenu.js'
+import { money } from '../../data/customerMenu.js'
+import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
+import { mapCustomerCatalog, saveCatalog, cartItems, cartTotal } from '../../services/customerCatalog.js'
 import api from '../../services/api.js'
 import {
   clearCart,
@@ -11,38 +13,21 @@ import {
 } from '../../utils/customerSession.js'
 import '../../styles/customer-flow.css'
 
-const normalizeText = (value = '') =>
-  value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-
 export default function ConfirmarPedido() {
   const navigate = useNavigate()
   const params = new URLSearchParams(window.location.search)
   const table = params.get('mesa') || '04'
   const cart = loadCart()
+  const { products, loading: catalogLoading, error: catalogError, setProducts } = useCustomerCatalog()
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const items = useMemo(
-    () =>
-      customerProducts
-        .filter((product) => (cart[product.id] || 0) > 0)
-        .map((product) => ({ ...product, quantity: cart[product.id] })),
-    [cart],
-  )
-
-  const total = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
-  )
+  const items = useMemo(() => cartItems(products, cart), [products, cart])
+  const total = cartTotal(items)
 
   const confirmOrder = async () => {
-    if (items.length === 0 || submitting) return
+    if (items.length === 0 || submitting || catalogLoading || catalogError) return
 
     setSubmitting(true)
     setError('')
@@ -82,7 +67,7 @@ export default function ConfirmarPedido() {
         item,
         backendProduct: backendProducts.find(
           (product) =>
-            normalizeText(product.name) === normalizeText(item.name),
+            product.id === item.id,
         ),
       }))
 
@@ -113,6 +98,15 @@ export default function ConfirmarPedido() {
         )
       }
 
+      const freshCatalog = mapCustomerCatalog(backendProducts)
+      const repriced = cartItems(freshCatalog, cart)
+      saveCatalog(freshCatalog)
+      setProducts(freshCatalog)
+      if (repriced.length !== items.length || repriced.some((item) => items.find((old) => old.id === item.id)?.price !== item.price)) {
+        setError('O cardápio mudou. Confira os itens e o novo total antes de confirmar novamente.')
+        return
+      }
+
       const payload = {
         mesaId: mesa.id,
         criadoPor: null,
@@ -129,6 +123,7 @@ export default function ConfirmarPedido() {
         table: mesa.number,
         cart,
         note,
+        catalog: freshCatalog,
       })
 
       clearCart()
@@ -216,8 +211,9 @@ export default function ConfirmarPedido() {
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
                 placeholder="Ex.: sem cebola, ponto da carne..."
-                maxLength={280}
+                maxLength={255}
               />
+              <small>Informe restrições de preparo diretamente à equipe; este campo fica salvo no seu dispositivo.</small>
             </label>
           </div>
 
@@ -235,9 +231,10 @@ export default function ConfirmarPedido() {
               <strong>{money(total)}</strong>
             </div>
 
-            {error && (
+            {catalogLoading && <p role="status">Conferindo cardápio...</p>}
+            {(error || catalogError) && (
               <div className="customer-flow-error" role="alert">
-                {error}
+                {error || catalogError}
               </div>
             )}
 
@@ -246,7 +243,7 @@ export default function ConfirmarPedido() {
                 className="th-btn th-btn--primary th-btn--block"
                 type="button"
                 onClick={confirmOrder}
-                disabled={submitting}
+                disabled={submitting || catalogLoading || !!catalogError}
               >
                 <FiCheck />
                 {submitting ? 'Enviando...' : 'Confirmar pedido'}

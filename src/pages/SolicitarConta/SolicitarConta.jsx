@@ -3,6 +3,7 @@ import { FiCheckCircle, FiFileText } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import api from '../../services/api.js'
+import { validOrderId, orderAccessError } from '../../services/orderAccess.js'
 import { money } from '../../data/customerMenu.js'
 import {
   getActiveCustomerOrder,
@@ -36,7 +37,7 @@ export default function SolicitarConta() {
       if (!mesa) throw new Error('Mesa não encontrada no backend.')
 
       const pedidoId =
-        order?.backendId ?? (Number(String(order?.id || '').replace('#', '')) || null)
+        validOrderId(order?.backendId ?? order?.id ?? requestedId)
 
       await api.post('/api/atendimentos', {
         mesaId: mesa.id,
@@ -48,9 +49,7 @@ export default function SolicitarConta() {
       setSent(true)
     } catch (requestError) {
       setError(
-        requestError?.response?.data?.message ||
-          requestError?.message ||
-          'Não foi possível solicitar a conta.',
+        orderAccessError(requestError),
       )
     } finally {
       setSending(false)

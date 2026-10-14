@@ -1,160 +1,18 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  FiBell,
-  FiCheck,
-  FiCreditCard,
-  FiFileText,
-  FiRefreshCw,
-} from 'react-icons/fi'
+import { useMemo } from 'react'
+import { FiBell, FiCheck, FiCreditCard, FiFileText, FiRefreshCw } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { money } from '../../data/customerMenu.js'
-import api from '../../services/api.js'
-import { playNotificationSound } from '../../services/notificationSound.js'
-import {
-  getActiveCustomerOrder,
-  getCustomerOrder,
-  updateCustomerOrderStatus,
-} from '../../utils/customerSession.js'
+import { paymentMethodLabel, paymentStatusLabel } from '../../services/orderPayments.js'
+import useCustomerOrder from '../../hooks/useCustomerOrder.js'
 import '../../styles/customer-flow.css'
 
 const statuses = ['Aguardando', 'Preparando', 'Pronto', 'Entregue']
 
-const backendStatusToCustomer = {
-  Recebido: 'Aguardando',
-  'Em preparo': 'Preparando',
-  Pronto: 'Pronto',
-  Entregue: 'Entregue',
-}
-
-const getBackendId = (orderId, localOrder) => {
-  if (localOrder?.backendId != null) {
-    return Number(localOrder.backendId)
-  }
-
-  const parsed = Number(String(orderId || '').replace('#', ''))
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
-}
-
-const formatTime = (value) => {
-  if (!value) return '—'
-
-  return new Date(value).toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
 export default function AcompanharPedido() {
   const navigate = useNavigate()
-  const params = new URLSearchParams(window.location.search)
-  const requestedId = params.get('id')
-  const requestedTable = params.get('mesa')
-
-  const initialLocalOrder = requestedId
-    ? getCustomerOrder(requestedId)
-    : getActiveCustomerOrder()
-
-  const [order, setOrder] = useState(initialLocalOrder)
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState('')
-  const previousStatus = useRef(null)
-
-  const refreshOrder = useCallback(async ({ manual = false } = {}) => {
-    const localOrder = requestedId
-      ? getCustomerOrder(requestedId)
-      : getActiveCustomerOrder()
-
-    const backendId = getBackendId(requestedId, localOrder)
-
-    if (!backendId) {
-      setOrder(localOrder)
-      setLoading(false)
-      return
-    }
-
-    if (manual) setRefreshing(true)
-
-    try {
-      const { data: apiOrder } = await api.get(
-        `/api/pedidos/${backendId}`,
-      )
-
-      const backendStatus = apiOrder?.status?.name || 'Recebido'
-      const customerStatus =
-        backendStatusToCustomer[backendStatus] || 'Aguardando'
-
-      if (previousStatus.current && previousStatus.current !== customerStatus) {
-        const statusTag = backendStatus
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-
-        playNotificationSound(
-          `pedido-${backendId}-${statusTag}`,
-        )
-      }
-      previousStatus.current = customerStatus
-
-      if (localOrder) {
-        updateCustomerOrderStatus(localOrder.id, customerStatus)
-      }
-
-      setOrder({
-        ...(localOrder || {}),
-        id: localOrder?.id || `#${apiOrder.id}`,
-        backendId: apiOrder.id,
-        table: String(
-          apiOrder?.mesa?.number ??
-            localOrder?.table ??
-            requestedTable ??
-            '—',
-        ).padStart(2, '0'),
-        customer: localOrder?.customer || 'Cliente da mesa',
-        time: localOrder?.time || formatTime(apiOrder?.createdAt),
-        status: customerStatus,
-        backendStatus,
-        total: Number(
-          apiOrder?.totalValue ??
-            localOrder?.total ??
-            0,
-        ),
-        paymentMethod: localOrder?.paymentMethod || null,
-        paymentStatus: localOrder?.paymentStatus || 'Pendente',
-        createdAt:
-          apiOrder?.createdAt ||
-          localOrder?.createdAt ||
-          new Date().toISOString(),
-      })
-
-      setError('')
-    } catch (requestError) {
-      setError(
-        requestError?.response?.data?.message ||
-          'Não foi possível atualizar o status do pedido.',
-      )
-
-      setOrder((current) => current || localOrder)
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }, [requestedId, requestedTable])
-
-  useEffect(() => {
-    refreshOrder()
-
-    const timer = window.setInterval(
-      () => refreshOrder(),
-      2000,
-    )
-
-    return () => {
-      window.clearInterval(timer)
-    }
-  }, [refreshOrder])
+  const requestedId = new URLSearchParams(window.location.search).get('id')
+  const { order, payment, loading, refreshing, error, refresh } = useCustomerOrder(requestedId, { pollMs: 5000 })
 
   const currentIndex = useMemo(
     () => statuses.indexOf(order?.status),
@@ -273,14 +131,14 @@ export default function AcompanharPedido() {
 
           <div className="customer-summary-row">
             <span>Pagamento</span>
-            <strong>{order.paymentMethod || 'Pendente'}</strong>
+            <strong>{paymentMethodLabel(payment?.method)} · {paymentStatusLabel(payment?.status)}</strong>
           </div>
 
           <div className="customer-flow-actions" style={{ marginTop: 24 }}>
             <button
               className="th-btn th-btn--glass th-btn--block"
               type="button"
-              onClick={() => refreshOrder({ manual: true })}
+              onClick={() => refresh()}
               disabled={refreshing}
             >
               <FiRefreshCw />
@@ -292,14 +150,14 @@ export default function AcompanharPedido() {
               type="button"
               onClick={() =>
                 navigate(
-                  order.paymentMethod
+                  payment?.status === 'PAGO'
                     ? `/comprovante?${orderQuery}`
                     : `/pagamento?${orderQuery}`,
                 )
               }
             >
               <FiCreditCard />
-              {order.paymentMethod ? 'Ver comprovante' : 'Pagamento'}
+              {payment?.status === 'PAGO' ? 'Ver registro do recebimento' : 'Pagamento'}
             </button>
 
             <div className="customer-action-grid">

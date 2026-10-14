@@ -84,9 +84,9 @@ export default function Recursos() {
       <section className="resources-cta">
         <div className="container resources-cta__panel">
           <span>PRÓXIMA ETAPA</span>
-          <h2>Agora você pode entrar ou criar uma conta.</h2>
-          <Link className="th-btn th-btn--primary th-btn--lg" to="/cadastro">
-            Criar conta <FiArrowRight />
+          <h2>Entre com o acesso fornecido pelo restaurante.</h2>
+          <Link className="th-btn th-btn--primary th-btn--lg" to="/login">
+            Acessar gestão <FiArrowRight />
           </Link>
         </div>
       </section>

@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout.jsx'
 import api from '../../services/api.js'
 
 export default function Register() {
-  const navigate = useNavigate()
   const [form, setForm] = useState({
     nome: '',
     email: '',
@@ -15,6 +14,7 @@ export default function Register() {
   const [profiles, setProfiles] = useState([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState('')
 
   useEffect(() => {
     api.get('/api/perfis')
@@ -43,6 +43,7 @@ export default function Register() {
   const submit = async (event) => {
     event.preventDefault()
     setError('')
+    setSuccess('')
 
     if (form.senha !== form.confirmarSenha) {
       setError('As senhas não coincidem.')
@@ -51,6 +52,11 @@ export default function Register() {
 
     if (!form.perfilId) {
       setError('Selecione um perfil.')
+      return
+    }
+
+    if (form.senha.length < 12 || new TextEncoder().encode(form.senha).length > 72) {
+      setError('Use pelo menos 12 caracteres e até 72 bytes na senha.')
       return
     }
 
@@ -63,7 +69,8 @@ export default function Register() {
         email: form.email,
         senha: form.senha,
       })
-      navigate('/login')
+      setSuccess('Usuário criado. O acesso já pode ser usado na tela de entrada.')
+      setForm((current) => ({ ...current, nome: '', email: '', senha: '', confirmarSenha: '' }))
     } catch (requestError) {
       const response = requestError?.response?.data
       setError(
@@ -81,19 +88,20 @@ export default function Register() {
     <AuthLayout mode="register">
       <form className="auth-panel" onSubmit={submit}>
         <span className="auth-panel__eyebrow">NOVO ACESSO</span>
-        <h2>Crie sua conta</h2>
+        <h2>Cadastrar usuário</h2>
         <p className="auth-panel__sub">Cadastre um usuário para a operação do TableHub.</p>
 
-        {error && <div className="auth-error">{error}</div>}
+        {error && <div className="auth-error" role="alert">{error}</div>}
+        {success && <p role="status">{success}</p>}
 
         <div className="auth-field">
           <label className="th-label" htmlFor="nome">Nome completo</label>
-          <input className="th-input" id="nome" name="nome" value={form.nome} onChange={update} required />
+          <input className="th-input" id="nome" name="nome" autoComplete="name" maxLength={120} value={form.nome} onChange={update} required />
         </div>
 
         <div className="auth-field">
           <label className="th-label" htmlFor="email">E-mail</label>
-          <input className="th-input" id="email" name="email" type="email" value={form.email} onChange={update} required />
+          <input className="th-input" id="email" name="email" type="email" autoComplete="username" maxLength={254} value={form.email} onChange={update} required />
         </div>
 
         <div className="auth-field">
@@ -110,18 +118,19 @@ export default function Register() {
 
         <div className="auth-field">
           <label className="th-label" htmlFor="senha">Senha</label>
-          <input className="th-input" id="senha" name="senha" type="password" value={form.senha} onChange={update} required minLength="6" />
+          <input className="th-input" id="senha" name="senha" type="password" autoComplete="new-password" value={form.senha} onChange={update} required minLength={12} maxLength={72} />
+          <small>Use uma frase de senha com pelo menos 12 caracteres.</small>
         </div>
 
         <div className="auth-field">
           <label className="th-label" htmlFor="confirmarSenha">Confirmar senha</label>
-          <input className="th-input" id="confirmarSenha" name="confirmarSenha" type="password" value={form.confirmarSenha} onChange={update} required minLength="6" />
+          <input className="th-input" id="confirmarSenha" name="confirmarSenha" type="password" autoComplete="new-password" value={form.confirmarSenha} onChange={update} required minLength={12} maxLength={72} />
         </div>
 
         <button className="th-btn th-btn--primary th-btn--block" type="submit" disabled={loading || profiles.length === 0}>
           {loading ? 'Criando...' : 'Criar conta'}
         </button>
-        <p className="auth-switch">Já possui conta? <Link to="/login">Entrar</Link></p>
+        <p className="auth-switch"><Link to="/dashboard">Voltar à gestão</Link></p>
       </form>
     </AuthLayout>
   )

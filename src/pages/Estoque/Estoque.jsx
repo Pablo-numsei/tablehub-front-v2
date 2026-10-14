@@ -69,18 +69,14 @@ export default function Estoque() {
   }, [inventory, filter, query])
 
   const adjustStock = async (item, delta) => {
-    if (updatingId === item.id) return
-    const nextStock = Math.max(0, item.stock + delta)
+    if (updatingId != null || item.stock + delta < 0) return
     setUpdatingId(item.id)
     setError('')
 
     try {
-      const { data } = await api.put(`/api/v1/produtos/${item.id}`, {
-        category: { id: item.categoryId },
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        stockQuantity: nextStock,
+      const { data } = await api.patch(`/api/v1/produtos/${item.id}/estoque`, {
+        delta,
+        expectedStockQuantity: item.stock,
       })
       setInventory((current) =>
         current.map((currentItem) =>
@@ -88,6 +84,7 @@ export default function Estoque() {
         ),
       )
     } catch (requestError) {
+      if (requestError.response?.status === 409) await loadInventory()
       setError(
         requestError?.response?.data?.message ||
           'Não foi possível atualizar o estoque.',
@@ -147,9 +144,9 @@ export default function Estoque() {
                 <div className="inventory-progress" aria-label={`Nível de estoque de ${item.name}`}><span style={{ width: `${percent}%` }} /></div>
                 <div className="inventory-minimum">Alerta visual: <strong>10 {item.unit}</strong></div>
                 <div className="inventory-actions">
-                  <button type="button" disabled={updatingId === item.id} onClick={() => adjustStock(item, -1)}><FiMinus /></button>
+                  <button type="button" aria-label={`Remover uma unidade de ${item.name}`} disabled={updatingId != null || item.stock === 0} onClick={() => adjustStock(item, -1)}><FiMinus /></button>
                   <span>{updatingId === item.id ? 'Salvando...' : 'Ajuste rápido'}</span>
-                  <button type="button" disabled={updatingId === item.id} onClick={() => adjustStock(item, 1)}><FiPlus /></button>
+                  <button type="button" aria-label={`Adicionar uma unidade de ${item.name}`} disabled={updatingId != null} onClick={() => adjustStock(item, 1)}><FiPlus /></button>
                 </div>
               </article>
             )

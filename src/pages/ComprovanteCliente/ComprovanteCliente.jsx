@@ -1,28 +1,27 @@
-import { FiCheckCircle, FiDownload, FiEye } from 'react-icons/fi'
+import { FiCheckCircle, FiEye } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { money } from '../../data/customerMenu.js'
-import {
-  getActiveCustomerOrder,
-  getCustomerOrder,
-} from '../../utils/customerSession.js'
+import useCustomerOrder from '../../hooks/useCustomerOrder.js'
+import { paymentMethodLabel, paymentStatusLabel } from '../../services/orderPayments.js'
 import '../../styles/customer-flow.css'
 
 export default function ComprovanteCliente() {
   const navigate = useNavigate()
   const params = new URLSearchParams(window.location.search)
   const requestedId = params.get('id')
-  const order = requestedId
-    ? getCustomerOrder(requestedId)
-    : getActiveCustomerOrder()
+  const { order, payment, loading, error } = useCustomerOrder(requestedId, { includeItems: true })
 
-  if (!order) {
+  if (loading) return <main className="customer-flow-page"><div className="customer-flow-shell"><p role="status">Consultando o registro do recebimento...</p></div></main>
+
+  if (!order || error) {
     return (
       <main className="customer-flow-page">
         <div className="customer-flow-shell">
           <section className="customer-flow-head">
             <span>COMPROVANTE</span>
             <h1>Pedido não encontrado.</h1>
+            <p role="alert">{error || 'Pedido indisponível nesta sessão.'}</p>
           </section>
         </div>
       </main>
@@ -30,6 +29,7 @@ export default function ComprovanteCliente() {
   }
 
   const orderQuery = `id=${encodeURIComponent(order.id)}&mesa=${order.table}`
+  if (payment?.status !== 'PAGO') return <main className="customer-flow-page"><div className="customer-flow-shell"><section className="customer-flow-card customer-status-card"><h1>Recebimento ainda não confirmado.</h1><p>{paymentStatusLabel(payment?.status)}</p><button className="th-btn th-btn--primary" type="button" onClick={() => navigate(`/pagamento?${orderQuery}`)}>Voltar ao pagamento</button></section></div></main>
   const paidAt = order.paidAt
     ? new Date(order.paidAt).toLocaleString('pt-BR')
     : 'Não registrado'
@@ -50,9 +50,9 @@ export default function ComprovanteCliente() {
             <FiCheckCircle />
           </div>
 
-          <span className="customer-flow-card__eyebrow">COMPROVANTE DE DEMONSTRAÇÃO</span>
-          <h1>Pagamento registrado.</h1>
-          <p>Nenhuma cobrança real foi processada neste protótipo.</p>
+          <span className="customer-flow-card__eyebrow">REGISTRO DE RECEBIMENTO</span>
+          <h1>Confirmado pela equipe.</h1>
+          <p>Registro interno do restaurante. Não substitui comprovante bancário ou documento fiscal.</p>
 
           <div className="customer-receipt-meta">
             <div>
@@ -65,7 +65,7 @@ export default function ComprovanteCliente() {
             </div>
             <div>
               <span>Forma</span>
-              <strong>{order.paymentMethod || 'Não informada'}</strong>
+              <strong>{paymentMethodLabel(payment.method)}</strong>
             </div>
             <div>
               <span>Registro</span>
@@ -77,20 +77,16 @@ export default function ComprovanteCliente() {
             {order.items.map((item) => (
               <div key={item.productId}>
                 <span>{item.quantity}x {item.name}</span>
-                <strong>{money(item.quantity * item.price)}</strong>
+                <strong>{money(item.subtotal ?? item.quantity * item.price)}</strong>
               </div>
             ))}
           </div>
 
           <div className="customer-summary-total">
-            <span>Total</span>
-            <strong>{money(order.total)}</strong>
+            <span>Valor confirmado</span>
+            <strong>{money(payment.amount)}</strong>
           </div>
 
-          <div className="customer-demo-notice">
-            <FiDownload />
-            Exportação em PDF ficará para a integração final.
-          </div>
 
           <div className="customer-flow-actions">
             <button

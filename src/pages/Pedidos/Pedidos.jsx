@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   FiArrowRight,
   FiRefreshCw,
@@ -6,6 +6,9 @@ import {
   FiX,
 } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
+import { useAuth } from '../../components/auth/AuthProvider.jsx'
+import { canAdvanceOrder } from '../../services/authSession.js'
+import { loadOrderPayment, paymentMethodLabel, paymentStatusLabel } from '../../services/orderPayments.js'
 import { money } from '../../data/customerMenu.js'
 import api from '../../services/api.js'
 import { updateCustomerOrderStatus } from '../../utils/customerSession.js'
@@ -60,6 +63,7 @@ const apiOrderToManagement = (order, items = []) => ({
 })
 
 export default function Pedidos() {
+  const { user } = useAuth()
   const [orders, setOrders] = useState([])
   const [filter, setFilter] = useState('Todos')
   const [query, setQuery] = useState('')
@@ -68,8 +72,17 @@ export default function Pedidos() {
   const [refreshing, setRefreshing] = useState(false)
   const [updatingId, setUpdatingId] = useState(null)
   const [error, setError] = useState('')
+  const [payment, setPayment] = useState(null)
+  const [paymentLoading, setPaymentLoading] = useState(false)
+  const [paymentError, setPaymentError] = useState('')
+  const [received, setReceived] = useState(false)
+  const [confirmingPayment, setConfirmingPayment] = useState(false)
+  const loadingOrders = useRef(false)
+  const canConfirmPayment = ['ADMINISTRADOR', 'GARCOM'].includes(user?.role)
 
   const loadOrders = async ({ silent = false } = {}) => {
+    if (loadingOrders.current) return
+    loadingOrders.current = true
     if (silent) setRefreshing(true)
     else setLoading(true)
 
@@ -109,6 +122,7 @@ export default function Pedidos() {
           'Não foi possível carregar os pedidos do backend.',
       )
     } finally {
+      loadingOrders.current = false
       setLoading(false)
       setRefreshing(false)
     }
@@ -118,12 +132,48 @@ export default function Pedidos() {
     loadOrders()
 
     const timer = window.setInterval(
-      () => loadOrders({ silent: true }),
+      () => { if (document.visibilityState !== 'hidden') loadOrders({ silent: true }) },
       5000,
     )
 
     return () => window.clearInterval(timer)
   }, [])
+
+  useEffect(() => {
+    setReceived(false)
+    setPayment(null)
+    setPaymentError('')
+    if (!selectedId || !canConfirmPayment) return
+    let active = true
+    let timer
+    const controller = new AbortController()
+    const run = async () => {
+      setPaymentLoading(true)
+      try {
+        const value = await loadOrderPayment(selectedId, { signal: controller.signal })
+        if (active) { setPayment(value); setPaymentError('') }
+      } catch (failure) {
+        if (active) setPaymentError(failure.response?.data?.message || 'Não foi possível consultar o pagamento.')
+      } finally {
+        if (active) { setPaymentLoading(false); timer = window.setTimeout(run, 5000) }
+      }
+    }
+    run()
+    return () => { active = false; controller.abort(); window.clearTimeout(timer) }
+  }, [selectedId, canConfirmPayment])
+
+  const confirmReceipt = async () => {
+    if (!selectedId || !received || !canConfirmPayment || confirmingPayment || payment?.status !== 'PENDENTE') return
+    setConfirmingPayment(true)
+    setPaymentError('')
+    try {
+      const { data } = await api.post(`/api/payments/${selectedId}/confirm`)
+      setPayment(data)
+      setReceived(false)
+    } catch (failure) {
+      setPaymentError(failure.response?.data?.message || 'Não foi possível confirmar o recebimento.')
+    } finally { setConfirmingPayment(false) }
+  }
 
   const selectedOrder = orders.find(
     (order) => order.backendId === selectedId,
@@ -149,6 +199,7 @@ export default function Pedidos() {
     const targetStatus = nextStatus[order.status]
 
     if (
+      !canAdvanceOrder(user?.role, order.status) ||
       !targetStatus ||
       targetStatus === order.status ||
       updatingId === order.backendId
@@ -353,7 +404,24 @@ export default function Pedidos() {
               <strong>{selectedOrder.total}</strong>
             </div>
 
-            {selectedOrder.status !== 'Entregue' && (
+            {canConfirmPayment && (
+              <section className="order-drawer__items" aria-label="Recebimento">
+                <span>RECEBIMENTO</span>
+                {paymentLoading && !payment && <p role="status">Consultando pagamento...</p>}
+                {paymentError && <p role="alert">{paymentError}</p>}
+                {payment ? <p>{paymentMethodLabel(payment.method)} · {money(payment.amount)} · {paymentStatusLabel(payment.status)}</p> : !paymentLoading && <p>O cliente ainda não solicitou pagamento.</p>}
+                {payment?.status === 'PENDENTE' && <>
+                  <label><input type="checkbox" checked={received} onChange={(event) => setReceived(event.target.checked)} /> Conferi o recebimento integral no caixa ou no comprovante.</label>
+                  <button className="th-btn th-btn--primary th-btn--block" type="button"
+                    disabled={!received || confirmingPayment} onClick={confirmReceipt}>
+                    {confirmingPayment ? 'Confirmando...' : 'Confirmar recebimento'}
+                  </button>
+                  <small>Esta ação registra o recebimento manual; confira a transação antes de confirmar.</small>
+                </>}
+              </section>
+            )}
+
+            {canAdvanceOrder(user?.role, selectedOrder.status) && (
               <button
                 className="th-btn th-btn--primary th-btn--block"
                 type="button"

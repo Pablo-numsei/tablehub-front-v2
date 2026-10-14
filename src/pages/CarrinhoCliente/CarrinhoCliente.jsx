@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import { FiArrowLeft, FiArrowRight, FiMinus, FiPlus } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
-import { customerProducts, money } from '../../data/customerMenu.js'
+import { money } from '../../data/customerMenu.js'
+import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
+import { cartItems, cartTotal } from '../../services/customerCatalog.js'
 import { loadCart, saveCart } from '../../utils/customerSession.js'
 import '../../styles/customer-flow.css'
 
@@ -11,24 +13,17 @@ export default function CarrinhoCliente() {
   const params = new URLSearchParams(window.location.search)
   const table = params.get('mesa') || '04'
   const [cart, setCart] = useState(() => loadCart())
+  const { products, loading, error } = useCustomerCatalog()
 
-  const items = useMemo(
-    () =>
-      customerProducts
-        .filter((product) => (cart[product.id] || 0) > 0)
-        .map((product) => ({ ...product, quantity: cart[product.id] })),
-    [cart],
-  )
-
-  const total = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
-  )
+  const items = useMemo(() => cartItems(products, cart), [products, cart])
+  const total = cartTotal(items)
 
   const changeQuantity = (id, delta) => {
+    const product = products.find((item) => item.id === id)
+    if (delta > 0 && (!product?.available || loading || error)) return
     setCart((current) => {
       const next = { ...current }
-      const quantity = (next[id] || 0) + delta
+      const quantity = Math.min((next[id] || 0) + delta, Math.min(product?.stock ?? 100, 100))
 
       if (quantity <= 0) delete next[id]
       else next[id] = quantity
@@ -55,6 +50,8 @@ export default function CarrinhoCliente() {
           <p>Revise os itens antes de confirmar o pedido.</p>
         </section>
 
+        {loading && <p role="status">Conferindo preços e disponibilidade...</p>}
+        {error && <p role="alert">{error}</p>}
         {items.length === 0 ? (
           <div className="customer-flow-empty">
             <p>Seu carrinho está vazio.</p>
@@ -122,6 +119,7 @@ export default function CarrinhoCliente() {
                   className="th-btn th-btn--primary th-btn--block"
                   type="button"
                   onClick={() => navigate(`/confirmar-pedido?mesa=${table}`)}
+                  disabled={loading || !!error}
                 >
                   Continuar pedido <FiArrowRight />
                 </button>

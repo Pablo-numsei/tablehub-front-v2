@@ -1,13 +1,20 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout.jsx'
 import api from '../../services/api.js'
+import { canAccessRoute, landingPage, saveAuthSession } from '../../services/authSession.js'
+import { useAuth } from '../../components/auth/AuthProvider.jsx'
 
 export default function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { user } = useAuth()
   const [form, setForm] = useState({ email: '', senha: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [remember, setRemember] = useState(false)
+
+  if (user) return <Navigate to={landingPage(user.role)} replace />
 
   const update = (event) => {
     setForm((current) => ({ ...current, [event.target.name]: event.target.value }))
@@ -21,23 +28,15 @@ export default function Login() {
     try {
       const { data } = await api.post('/api/auth/login', form)
 
-      if (data?.token) {
-        localStorage.setItem('tablehub_token', data.token)
-        localStorage.setItem(
-          'tablehub_user',
-          JSON.stringify({
-            id: data.id,
-            nome: data.nome,
-            email: data.email,
-            perfilId: data.perfilId,
-            perfil: data.perfil,
-          }),
-        )
-      }
-
-      navigate('/dashboard')
-    } catch {
-      setError('Não foi possível entrar. Verifique os dados ou a API.')
+      const session = saveAuthSession(data, remember)
+      const destination = canAccessRoute(session.user.role, location.state?.from)
+        ? location.state.from : landingPage(session.user.role)
+      navigate(destination, { replace: true })
+    } catch (requestError) {
+      setError(requestError?.response?.status === 429
+        ? 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.'
+        : requestError?.response ? 'E-mail ou senha inválidos, ou acesso indisponível.'
+          : requestError?.message || 'Não foi possível entrar. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -50,28 +49,27 @@ export default function Login() {
         <h2>Bem-vindo de volta</h2>
         <p className="auth-panel__sub">Entre para continuar no TableHub.</p>
 
-        {error && <div className="auth-error">{error}</div>}
+        {error && <div className="auth-error" role="alert">{error}</div>}
 
         <div className="auth-field">
           <label className="th-label" htmlFor="email">E-mail</label>
-          <input className="th-input" id="email" name="email" type="email" value={form.email} onChange={update} placeholder="seu@email.com" required />
+          <input className="th-input" id="email" name="email" type="email" autoComplete="username" maxLength={254} value={form.email} onChange={update} placeholder="seu@email.com" required />
         </div>
 
         <div className="auth-field">
           <label className="th-label" htmlFor="senha">Senha</label>
-          <input className="th-input" id="senha" name="senha" type="password" value={form.senha} onChange={update} placeholder="Sua senha" required />
+          <input className="th-input" id="senha" name="senha" type="password" autoComplete="current-password" value={form.senha} onChange={update} placeholder="Sua senha" required />
         </div>
 
         <div className="auth-meta">
-          <label><input type="checkbox" className="me-2" />Lembrar de mim</label>
-          <a href="#recuperar">Esqueci minha senha</a>
+          <label><input type="checkbox" className="me-2" checked={remember} onChange={(event) => setRemember(event.target.checked)} />Manter acesso neste dispositivo</label>
         </div>
 
         <button className="th-btn th-btn--primary th-btn--block" type="submit" disabled={loading}>
           {loading ? 'Entrando...' : 'Entrar'}
         </button>
 
-        <p className="auth-switch">Não possui conta? <Link to="/cadastro">Criar conta</Link></p>
+        <p className="auth-switch">Para obter ou recuperar o acesso, contate o administrador do restaurante.</p>
       </form>
     </AuthLayout>
   )

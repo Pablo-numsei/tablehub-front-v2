@@ -1,7 +1,9 @@
 import axios from 'axios'
+import { clearAuthSession, getStaffToken } from './authSession.js'
+import { getOrderAccess, orderIdForRequest } from './orderAccess.js'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+  baseURL: import.meta.env?.VITE_API_URL || 'http://localhost:8080',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -9,13 +11,20 @@ const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('tablehub_token')
+  const token = getStaffToken()
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  const orderToken = getOrderAccess(orderIdForRequest(config))
+  if (orderToken) config.headers['X-Order-Token'] = orderToken
 
   return config
+})
+
+api.interceptors.response.use((response) => response, (error) => {
+  if (error.response?.status === 401 && error.config?.headers?.Authorization) clearAuthSession()
+  return Promise.reject(error)
 })
 
 export default api

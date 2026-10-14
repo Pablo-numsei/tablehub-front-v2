@@ -50,8 +50,8 @@ export default function Home() {
             </p>
 
             <div className="hero-actions hero-stagger">
-              <Link to="/cadastro" className="th-btn th-btn--primary th-btn--lg">
-                Começar agora <FiArrowRight />
+              <Link to="/login" className="th-btn th-btn--primary th-btn--lg">
+                Acessar gestão <FiArrowRight />
               </Link>
 
               <Link to="/como-funciona" className="th-btn th-btn--glass th-btn--lg">

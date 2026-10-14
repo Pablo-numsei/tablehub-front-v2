@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   FiArrowLeft,
   FiCreditCard,
@@ -7,13 +7,10 @@ import {
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import api from '../../services/api.js'
-import { playNotificationSound } from '../../services/notificationSound.js'
+import useCustomerOrder from '../../hooks/useCustomerOrder.js'
+import { paymentMethodLabel, paymentStatusLabel } from '../../services/orderPayments.js'
+import { orderAccessError } from '../../services/orderAccess.js'
 import { money } from '../../data/customerMenu.js'
-import {
-  getActiveCustomerOrder,
-  getCustomerOrder,
-  updateCustomerOrderPayment,
-} from '../../utils/customerSession.js'
 import '../../styles/customer-flow.css'
 
 const methods = [
@@ -26,12 +23,15 @@ export default function PagamentoCliente() {
   const navigate = useNavigate()
   const params = new URLSearchParams(window.location.search)
   const requestedId = params.get('id')
-  const order = requestedId
-    ? getCustomerOrder(requestedId)
-    : getActiveCustomerOrder()
-  const [method, setMethod] = useState(order?.paymentMethod || '')
+  const { order, payment, backendId, loading, error: loadError, refresh } = useCustomerOrder(requestedId, { pollMs: 5000 })
+  const [method, setMethod] = useState('')
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState('')
+  useEffect(() => { if (payment?.method) setMethod(payment.method) }, [payment?.method])
+  const pending = payment?.status === 'PENDENTE'
+  const paid = payment?.status === 'PAGO'
+
+  if (loading && !order) return <main className="customer-flow-page"><div className="customer-flow-shell"><p role="status">Consultando pedido...</p></div></main>
 
   if (!order) {
     return (
@@ -40,6 +40,7 @@ export default function PagamentoCliente() {
           <section className="customer-flow-head">
             <span>PAGAMENTO</span>
             <h1>Pedido não encontrado.</h1>
+            <p role="alert">{loadError || 'Volte à aba em que o pedido foi criado ou peça ajuda à equipe.'}</p>
           </section>
         </div>
       </main>
@@ -49,10 +50,7 @@ export default function PagamentoCliente() {
   const orderQuery = `id=${encodeURIComponent(order.id)}&mesa=${order.table}`
 
   const confirmPayment = async () => {
-    if (!method || processing) return
-
-    const backendId =
-      order.backendId ?? Number(String(order.id).replace('#', ''))
+    if (!method || processing || pending || paid || loadError) return
 
     if (!backendId) {
       setError('Este pedido não possui um ID válido no backend.')
@@ -65,22 +63,11 @@ export default function PagamentoCliente() {
     try {
       await api.post(`/api/payments/${backendId}/process`, {
         method,
-        gatewayReference: null,
       })
-
-      const labels = {
-        CREDITO: 'Crédito',
-        DEBITO: 'Débito',
-        PIX: 'PIX',
-      }
-
-      updateCustomerOrderPayment(order.id, labels[method] || method)
-      playNotificationSound(`pagamento-confirmado-${backendId}`)
-      navigate(`/comprovante?${orderQuery}`, { replace: true })
+      await refresh()
     } catch (requestError) {
       setError(
-        requestError?.response?.data?.message ||
-          'Não foi possível registrar o pagamento no backend.',
+        orderAccessError(requestError),
       )
     } finally {
       setProcessing(false)
@@ -100,14 +87,14 @@ export default function PagamentoCliente() {
 
         <section className="customer-flow-head customer-status-card">
           <span>PAGAMENTO</span>
-          <h1>Como deseja pagar?</h1>
-          <p>Escolha uma forma de pagamento para concluir a etapa visual do protótipo.</p>
+          <h1>{paid ? 'Recebimento confirmado.' : pending ? 'Solicitação enviada.' : 'Como deseja pagar?'}</h1>
+          <p>O pagamento acontece com a equipe. A confirmação aparece aqui após a conferência do recebimento.</p>
         </section>
 
         <section className="customer-flow-card customer-status-card">
-          {error && (
+          {(error || loadError) && (
             <div className="customer-flow-error" role="alert">
-              {error}
+              {error || loadError}
             </div>
           )}
 
@@ -118,6 +105,8 @@ export default function PagamentoCliente() {
                 type="button"
                 className={`customer-choice-button ${method === id ? 'is-active' : ''}`}
                 onClick={() => setMethod(id)}
+                aria-pressed={method === id}
+                disabled={pending || paid || processing}
               >
                 <Icon />
                 <span>{label}</span>
@@ -130,18 +119,20 @@ export default function PagamentoCliente() {
             <strong>{money(order.total)}</strong>
           </div>
 
+          {payment && <p role="status">{paymentMethodLabel(payment.method)} · {paymentStatusLabel(payment.status)}</p>}
+
           <div className="customer-demo-notice">
-            O registro é salvo no TableHub. Não existe integração com banco, maquininha ou gateway de cobrança real.
+            Escolher uma forma não efetua cobrança nem comprova transferência. Procure a equipe para realizar o pagamento.
           </div>
 
           <div className="customer-flow-actions">
             <button
               className="th-btn th-btn--primary th-btn--block"
               type="button"
-              onClick={confirmPayment}
-              disabled={!method || processing}
+              onClick={paid ? () => navigate(`/comprovante?${orderQuery}`) : confirmPayment}
+              disabled={!paid && (!method || processing || pending || !!loadError)}
             >
-              {processing ? 'Registrando...' : 'Confirmar forma de pagamento'}
+              {paid ? 'Ver registro do recebimento' : processing ? 'Enviando...' : pending ? 'Aguardando confirmação da equipe' : 'Solicitar pagamento à equipe'}
             </button>
 
             <button

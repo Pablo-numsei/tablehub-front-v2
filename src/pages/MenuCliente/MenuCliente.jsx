@@ -1,13 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { FiMinus, FiPlus, FiShoppingBag } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
-import api from '../../services/api.js'
-import {
-  customerCategories as categories,
-  customerProducts,
-  money,
-} from '../../data/customerMenu.js'
+import { money } from '../../data/customerMenu.js'
+import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
 import { loadCart, saveCart } from '../../utils/customerSession.js'
 import './MenuCliente.css'
 
@@ -17,53 +13,12 @@ export default function MenuCliente() {
   const table = params.get('mesa') || '04'
   const [filter, setFilter] = useState('Todos')
   const [cart, setCart] = useState(() => loadCart())
-  const [products, setProducts] = useState(customerProducts)
-  const [catalogError, setCatalogError] = useState('')
-
-  useEffect(() => {
-    const normalize = (value = '') =>
-      value
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .trim()
-        .toLowerCase()
-
-    api.get('/api/v1/produtos')
-      .then(({ data }) => {
-        const backendProducts = Array.isArray(data) ? data : []
-
-        setProducts(
-          customerProducts.map((localProduct) => {
-            const backendProduct = backendProducts.find(
-              (item) => normalize(item.name) === normalize(localProduct.name),
-            )
-
-            if (!backendProduct) {
-              return { ...localProduct, available: false }
-            }
-
-            return {
-              ...localProduct,
-              backendId: backendProduct.id,
-              price: Number(backendProduct.price),
-              stock: Number(backendProduct.stockQuantity ?? 0),
-              available:
-                backendProduct.active !== false &&
-                backendProduct.available !== false &&
-                Number(backendProduct.stockQuantity ?? 0) > 0,
-            }
-          }),
-        )
-        setCatalogError('')
-      })
-      .catch(() => {
-        setCatalogError('Não foi possível atualizar o cardápio pelo servidor.')
-      })
-  }, [])
+  const { products, loading, error: catalogError } = useCustomerCatalog()
+  const categories = useMemo(() => ['Todos', ...new Set(products.map((product) => product.category))], [products])
 
   const visible = useMemo(
     () => products.filter((product) => filter === 'Todos' || product.category === filter),
-    [filter],
+    [products, filter],
   )
 
   const updateCart = (updater) => {
@@ -76,11 +31,11 @@ export default function MenuCliente() {
 
   const add = (id) => {
     const product = products.find((item) => item.id === id)
-    if (!product?.available) return
+    if (!product?.available || loading || catalogError) return
 
     updateCart((current) => ({
       ...current,
-      [id]: Math.min((current[id] || 0) + 1, product.stock ?? 999),
+      [id]: Math.min((current[id] || 0) + 1, Math.min(product.stock, 100)),
     }))
   }
 
@@ -131,6 +86,7 @@ export default function MenuCliente() {
           </div>
         )}
 
+        {loading && <p role="status">Atualizando cardápio...</p>}
         <div className="customer-menu-tabs">
           {categories.map((category) => (
             <button
@@ -170,16 +126,16 @@ export default function MenuCliente() {
                   {!product.available ? (
                     <span className="customer-product-unavailable">Esgotado</span>
                   ) : qty === 0 ? (
-                    <button type="button" onClick={() => add(product.id)}>
+                    <button type="button" onClick={() => add(product.id)} disabled={loading || !!catalogError}>
                       Adicionar
                     </button>
                   ) : (
                     <div className="customer-quantity">
-                      <button type="button" onClick={() => remove(product.id)}>
+                      <button type="button" onClick={() => remove(product.id)} aria-label={`Remover uma unidade de ${product.name}`}>
                         <FiMinus />
                       </button>
                       <span>{qty}</span>
-                      <button type="button" onClick={() => add(product.id)}>
+                      <button type="button" onClick={() => add(product.id)} aria-label={`Adicionar uma unidade de ${product.name}`}>
                         <FiPlus />
                       </button>
                     </div>

@@ -39,9 +39,6 @@ export default function Navbar() {
           <NavLink to="/recursos" onClick={() => setOpen(false)}>Recursos</NavLink>
           <ThemeToggle />
           <NavLink to="/login" onClick={() => setOpen(false)}>Entrar</NavLink>
-          <NavLink className="th-btn th-btn--primary" to="/cadastro" onClick={() => setOpen(false)}>
-            Começar
-          </NavLink>
         </nav>
       </div>
     </header>

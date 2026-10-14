@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { FiEdit3, FiPlus, FiSearch, FiToggleLeft, FiToggleRight } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
-import { customerCategories, customerProducts } from '../../data/customerMenu.js'
+import CatalogDialogs from './CatalogDialogs.jsx'
+import { customerProducts } from '../../data/customerMenu.js'
 import api from '../../services/api.js'
 import '../../styles/management.css'
 import './Cardapio.css'
@@ -10,50 +11,75 @@ const money = (value) =>
   Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 const normalize = (value = '') =>
-  value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
+  String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
 
 const imageForProduct = (name) =>
   customerProducts.find((item) => normalize(item.name) === normalize(name))
 
+const toProduct = (product) => {
+  const visual = imageForProduct(product.name)
+  return {
+    id: product.id,
+    name: product.name,
+    description: product.description || '',
+    category: product.category?.name || 'Sem categoria',
+    categoryId: product.category?.id,
+    price: Number(product.price),
+    stock: Number(product.stockQuantity ?? 0),
+    available:
+      product.active !== false &&
+      product.available !== false &&
+      Number(product.stockQuantity ?? 0) > 0,
+    image: visual?.image || '',
+    imageFit: visual?.imageFit,
+  }
+}
+
 export default function Cardapio() {
   const [products, setProducts] = useState([])
+  const [categories, setCategories] = useState([])
   const [filter, setFilter] = useState('Todos')
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [dialog, setDialog] = useState(null)
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
-    api.get('/api/v1/produtos')
-      .then(({ data }) => {
+    let active = true
+    setLoading(true)
+    Promise.all([
+      api.get('/api/v1/produtos'),
+      api.get('/api/v1/categorias'),
+    ])
+      .then(([productsResponse, categoriesResponse]) => {
+        if (!active) return
         setProducts(
-          (Array.isArray(data) ? data : []).map((product) => {
-            const visual = imageForProduct(product.name)
-            return {
-              id: product.id,
-              name: product.name,
-              category: product.category?.name || 'Sem categoria',
-              price: Number(product.price),
-              stock: Number(product.stockQuantity ?? 0),
-              available:
-                product.active !== false &&
-                product.available !== false &&
-                Number(product.stockQuantity ?? 0) > 0,
-              image: visual?.image || '',
-              imageFit: visual?.imageFit,
-            }
-          }),
+          (Array.isArray(productsResponse.data) ? productsResponse.data : [])
+            .map(toProduct),
+        )
+        setCategories(
+          (Array.isArray(categoriesResponse.data) ? categoriesResponse.data : [])
+            .filter((category) => category.active !== false),
         )
         setError('')
       })
-      .catch(() => setError('Não foi possível carregar o cardápio do backend.'))
-      .finally(() => setLoading(false))
-  }, [])
+      .catch((requestError) => {
+        if (active) {
+          setError(
+            requestError?.response?.data?.message ||
+            'Não foi possível carregar o cardápio e as categorias do backend.',
+          )
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => { active = false }
+  }, [reloadKey])
 
-  const categories = useMemo(
-    () => [
-      'Todos',
-      ...Array.from(new Set(products.map((product) => product.category))),
-    ],
+  const filters = useMemo(
+    () => ['Todos', ...new Set(products.map((product) => product.category))],
     [products],
   )
 
@@ -63,8 +89,8 @@ export default function Cardapio() {
       const matchesCategory = filter === 'Todos' || product.category === filter
       const matchesSearch =
         !normalized ||
-        product.name.toLowerCase().includes(normalized) ||
-        product.category.toLowerCase().includes(normalized)
+        normalize(product.name).includes(normalized) ||
+        normalize(product.category).includes(normalized)
       return matchesCategory && matchesSearch
     })
   }, [products, filter, query])
@@ -82,10 +108,20 @@ export default function Cardapio() {
           </div>
 
           <div className="menu-admin-actions">
-            <button className="th-btn th-btn--glass" type="button" disabled title="Ainda não existe endpoint de categorias no backend">
+            <button
+              className="th-btn th-btn--glass"
+              type="button"
+              onClick={() => setDialog({ kind: 'category' })}
+              disabled={loading}
+            >
               <FiPlus /> Categoria
             </button>
-            <button className="th-btn th-btn--primary" type="button" disabled title="Formulário de cadastro será conectado em uma próxima etapa">
+            <button
+              className="th-btn th-btn--primary"
+              type="button"
+              onClick={() => setDialog({ kind: 'product', product: null })}
+              disabled={loading || categories.length === 0}
+            >
               <FiPlus /> Novo produto
             </button>
           </div>
@@ -96,13 +132,16 @@ export default function Cardapio() {
         <section className="menu-toolbar">
           <label className="menu-search">
             <FiSearch />
-            <input type="search" placeholder="Buscar produto..." value={query} onChange={(event) => setQuery(event.target.value)} />
+            <input type="search" placeholder="Buscar produto..." value={query}
+              onChange={(event) => setQuery(event.target.value)} />
           </label>
 
           <div className="menu-tabs">
-            {categories.map((category) => (
-              <button key={category} type="button" className={filter === category ? 'is-active' : ''} onClick={() => setFilter(category)}>
-                {category}
+            {filters.map((status) => (
+              <button key={status} type="button"
+                className={filter === status ? 'is-active' : ''}
+                onClick={() => setFilter(status)}>
+                {status}
               </button>
             ))}
           </div>
@@ -115,15 +154,8 @@ export default function Cardapio() {
             <article className="menu-product-card" key={product.id}>
               <div className="menu-product-card__image">
                 {product.image ? (
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    loading="lazy"
-                    style={{
-                      objectFit: product.imageFit || 'cover',
-                      objectPosition: 'center',
-                    }}
-                  />
+                  <img src={product.image} alt={product.name} loading="lazy"
+                    style={{ objectFit: product.imageFit || 'cover', objectPosition: 'center' }} />
                 ) : null}
               </div>
 
@@ -137,8 +169,9 @@ export default function Cardapio() {
                     {product.available ? <FiToggleRight /> : <FiToggleLeft />}
                     {product.available ? `Disponível · ${product.stock} un.` : 'Indisponível'}
                   </span>
-
-                  <button className="menu-edit-button" type="button" disabled title="Use Estoque para alterar a quantidade">
+                  <button className="menu-edit-button" type="button"
+                    onClick={() => setDialog({ kind: 'product', product })}
+                    disabled={loading}>
                     <FiEdit3 /> Editar
                   </button>
                 </div>
@@ -151,6 +184,19 @@ export default function Cardapio() {
           )}
         </section>
       </section>
+
+      {dialog && (
+        <CatalogDialogs
+          dialog={dialog}
+          categories={categories}
+          onClose={() => setDialog(null)}
+          onSaved={() => {
+            setDialog(null)
+            setFilter('Todos')
+            setReloadKey((key) => key + 1)
+          }}
+        />
+      )}
     </main>
   )
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { FiCopy, FiLink, FiPlus, FiX } from 'react-icons/fi'
+import { QRCodeSVG } from 'qrcode.react'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
 import api from '../../services/api.js'
 import '../../styles/management.css'
@@ -7,12 +8,19 @@ import './Mesas.css'
 
 const filters = ['Todas', 'Livre', 'Ocupada']
 
-function FakeQr() {
+const menuUrlForTable = (number) =>
+  `${window.location.origin}/menu?mesa=${Number(number)}`
+
+function TableQr({ number, size = 150 }) {
   return (
-    <div className="table-qr" aria-label="Prévia do QR Code">
-      {Array.from({ length: 25 }).map((_, index) => (
-        <span key={index} className={[1, 3, 5, 7, 9, 13, 17, 19, 21, 23].includes(index) ? 'is-green' : ''} />
-      ))}
+    <div className="table-qr" aria-label={`QR Code da mesa ${Number(number)}`}>
+      <QRCodeSVG
+        value={menuUrlForTable(number)}
+        size={size}
+        level="M"
+        bgColor="#ffffff"
+        fgColor="#101826"
+      />
     </div>
   )
 }
@@ -71,7 +79,7 @@ export default function Mesas() {
 
   const copyQrLink = async () => {
     if (!selectedTable) return
-    const url = `${window.location.origin}/menu?mesa=${selectedTable.number}`
+    const url = menuUrlForTable(selectedTable.number)
 
     try {
       await navigator.clipboard.writeText(url)
@@ -130,7 +138,7 @@ export default function Mesas() {
                   <small>MESA</small>
                   <strong>{table.number}</strong>
                 </div>
-                <FakeQr />
+                <TableQr number={table.number} size={46} />
               </div>
 
               <span className={`table-state table-state--${table.status.toLowerCase()}`}>
@@ -161,7 +169,7 @@ export default function Mesas() {
             </p>
 
             <div className="table-modal__qr">
-              <FakeQr />
+              <TableQr number={selectedTable.number} size={150} />
             </div>
 
             <button className="th-btn th-btn--glass th-btn--block" type="button" onClick={copyQrLink}>

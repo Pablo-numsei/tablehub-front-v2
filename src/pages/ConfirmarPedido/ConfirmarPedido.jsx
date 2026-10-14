@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { money } from '../../data/customerMenu.js'
 import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
+import useTableContext from '../../hooks/useTableContext.js'
 import { mapCustomerCatalog, saveCatalog, cartItems, cartTotal } from '../../services/customerCatalog.js'
 import api from '../../services/api.js'
 import {
@@ -16,7 +17,8 @@ import '../../styles/customer-flow.css'
 export default function ConfirmarPedido() {
   const navigate = useNavigate()
   const params = new URLSearchParams(window.location.search)
-  const table = params.get('mesa') || '04'
+  const table = params.get('mesa') || ''
+  const { ready: tableReady, error: tableError, loading: tableLoading } = useTableContext(table)
   const cart = loadCart()
   const { products, loading: catalogLoading, error: catalogError, setProducts } = useCustomerCatalog()
   const [note, setNote] = useState('')
@@ -27,7 +29,7 @@ export default function ConfirmarPedido() {
   const total = cartTotal(items)
 
   const confirmOrder = async () => {
-    if (items.length === 0 || submitting || catalogLoading || catalogError) return
+    if (!tableReady || items.length === 0 || submitting || catalogLoading || catalogError) return
 
     setSubmitting(true)
     setError('')
@@ -232,9 +234,11 @@ export default function ConfirmarPedido() {
             </div>
 
             {catalogLoading && <p role="status">Conferindo cardápio...</p>}
-            {(error || catalogError) && (
+            {tableLoading && <p role="status">Validando a mesa...</p>}
+            {!tableLoading && !tableReady && !tableError && <p role="alert">Escaneie o QR Code atualizado da mesa antes de enviar o pedido.</p>}
+            {(error || catalogError || tableError) && (
               <div className="customer-flow-error" role="alert">
-                {error || catalogError}
+                {error || catalogError || tableError}
               </div>
             )}
 
@@ -243,7 +247,7 @@ export default function ConfirmarPedido() {
                 className="th-btn th-btn--primary th-btn--block"
                 type="button"
                 onClick={confirmOrder}
-                disabled={submitting || catalogLoading || !!catalogError}
+                disabled={!tableReady || submitting || catalogLoading || !!catalogError}
               >
                 <FiCheck />
                 {submitting ? 'Enviando...' : 'Confirmar pedido'}

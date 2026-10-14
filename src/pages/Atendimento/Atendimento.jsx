@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   FiBell,
   FiCheck,
@@ -63,13 +63,29 @@ export default function Atendimento() {
   const [pushLoading, setPushLoading] = useState(false)
   const [pushError, setPushError] = useState('')
   const knownRequestIds = useRef(null)
+  const mounted = useRef(false)
+  const refreshController = useRef(null)
+  const refreshVersion = useRef(0)
+  const updating = useRef(false)
 
-  const refreshRequests = async ({ silent = false } = {}) => {
+  const invalidateRefresh = useCallback(() => {
+    refreshVersion.current += 1
+    refreshController.current?.abort()
+    refreshController.current = null
+    if (mounted.current) { setLoading(false); setRefreshing(false) }
+  }, [])
+
+  const refreshRequests = useCallback(async ({ silent = false } = {}) => {
+    if (!mounted.current || document.visibilityState === 'hidden' || updating.current || refreshController.current) return
+    const controller = new AbortController()
+    const version = ++refreshVersion.current
+    refreshController.current = controller
     if (silent) setRefreshing(true)
     else setLoading(true)
 
     try {
-      const { data } = await api.get('/api/atendimentos')
+      const { data } = await api.get('/api/atendimentos', { signal: controller.signal })
+      if (!mounted.current || controller.signal.aborted || version !== refreshVersion.current) return
       const mapped = (Array.isArray(data) ? data : []).map(mapRequest)
       const currentIds = new Set(mapped.map((request) => request.id))
       if (knownRequestIds.current) {
@@ -87,26 +103,51 @@ export default function Atendimento() {
       setRequests(mapped)
       setError('')
     } catch (requestError) {
+      if (!mounted.current || controller.signal.aborted || version !== refreshVersion.current) return
       setError(
         requestError?.response?.data?.message ||
           'Não foi possível carregar as solicitações do backend.',
       )
     } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
-
-  useEffect(() => {
-    refreshRequests()
-    const timer = window.setInterval(
-      () => refreshRequests({ silent: true }),
-      3000,
-    )
-    return () => {
-      window.clearInterval(timer)
+      if (refreshController.current === controller) refreshController.current = null
+      if (mounted.current && version === refreshVersion.current) {
+        setLoading(false)
+        setRefreshing(false)
+      }
     }
   }, [])
+
+  useEffect(() => {
+    mounted.current = true
+    let active = true
+    let timer
+    let cycle = 0
+    const run = async ({ silent = true } = {}) => {
+      const currentCycle = cycle
+      if (!active || document.visibilityState === 'hidden') return
+      await refreshRequests({ silent })
+      if (active && currentCycle === cycle && document.visibilityState !== 'hidden') {
+        window.clearTimeout(timer)
+        timer = window.setTimeout(run, 3000)
+      }
+    }
+    const onVisibilityChange = () => {
+      cycle += 1
+      window.clearTimeout(timer)
+      if (document.visibilityState === 'hidden') invalidateRefresh()
+      else run({ silent: knownRequestIds.current !== null })
+    }
+    run({ silent: false })
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      active = false
+      mounted.current = false
+      cycle += 1
+      window.clearTimeout(timer)
+      invalidateRefresh()
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [refreshRequests, invalidateRefresh])
 
   const visible = useMemo(
     () =>
@@ -144,23 +185,31 @@ export default function Atendimento() {
 
   const advanceRequest = async (request) => {
     const target = nextStatus[request.status]
-    if (!target || target === request.status) return
+    if (!target || target === request.status || updating.current) return
 
+    updating.current = true
+    invalidateRefresh()
     setUpdatingId(request.id)
     setError('')
+    let actionError = ''
 
     try {
-      await api.patch(`/api/atendimentos/${request.id}/status`, {
+      const { data } = await api.patch(`/api/atendimentos/${request.id}/status`, {
         status: apiStatus[target],
       })
-      await refreshRequests({ silent: true })
+      if (mounted.current) {
+        const updatedRequest = mapRequest(data)
+        setRequests((current) => current.map((item) => item.id === request.id ? updatedRequest : item))
+      }
     } catch (requestError) {
-      setError(
-        requestError?.response?.data?.message ||
-          'Não foi possível atualizar a solicitação.',
-      )
+      actionError = requestError?.response?.data?.message || 'Não foi possível atualizar a solicitação.'
     } finally {
-      setUpdatingId(null)
+      updating.current = false
+      if (mounted.current) {
+        setUpdatingId(null)
+        await refreshRequests({ silent: true })
+        if (actionError && mounted.current) setError(actionError)
+      }
     }
   }
 
@@ -195,7 +244,7 @@ export default function Atendimento() {
               className="th-btn th-btn--glass"
               type="button"
               onClick={() => refreshRequests({ silent: true })}
-              disabled={refreshing}
+              disabled={refreshing || updatingId !== null}
             >
               <FiRefreshCw className={refreshing ? 'orders-spin' : ''} />
               {refreshing ? 'Atualizando' : 'Atualizar'}
@@ -247,7 +296,7 @@ export default function Atendimento() {
                 </div>
 
                 {request.status !== 'Concluído' && (
-                  <button className="th-btn th-btn--primary th-btn--block" type="button" disabled={updatingId === request.id} onClick={() => advanceRequest(request)}>
+                  <button className="th-btn th-btn--primary th-btn--block" type="button" disabled={updatingId !== null} onClick={() => advanceRequest(request)}>
                     {updatingId === request.id ? 'Atualizando...' : `Avançar para ${nextStatus[request.status]}`}
                   </button>
                 )}

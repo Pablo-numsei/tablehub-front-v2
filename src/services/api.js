@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { clearAuthSession, getStaffToken } from './authSession.js'
 import { getOrderAccess, orderIdForRequest } from './orderAccess.js'
+import { getTableContext, tableIdForRequest } from './tableAccess.js'
 
 const api = axios.create({
   baseURL: import.meta.env?.VITE_API_URL || 'http://localhost:8080',
@@ -18,6 +19,8 @@ api.interceptors.request.use((config) => {
   }
   const orderToken = getOrderAccess(orderIdForRequest(config))
   if (orderToken) config.headers['X-Order-Token'] = orderToken
+  const tableContext = getTableContext(tableIdForRequest(config))
+  if (tableContext) config.headers['X-Table-Token'] = tableContext.tableToken
 
   return config
 })

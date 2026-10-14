@@ -1,16 +1,23 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FiMinus, FiPlus, FiShoppingBag } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { money } from '../../data/customerMenu.js'
 import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
+import useTableContext from '../../hooks/useTableContext.js'
 import { loadCart, saveCart } from '../../utils/customerSession.js'
 import './MenuCliente.css'
 
 export default function MenuCliente() {
   const navigate = useNavigate()
   const params = new URLSearchParams(window.location.search)
-  const table = params.get('mesa') || '04'
+  const requestedTable = params.get('mesa') || ''
+  const qr = params.get('qr')
+  const { context, ready, loading: tableLoading, error: tableError } = useTableContext(requestedTable, qr)
+  const table = context?.mesa.number || requestedTable
+  useEffect(() => {
+    if (qr && ready) navigate(`/menu?mesa=${context.mesa.number}`, { replace: true })
+  }, [qr, ready, context, navigate])
   const [filter, setFilter] = useState('Todos')
   const [cart, setCart] = useState(() => loadCart())
   const { products, loading, error: catalogError } = useCustomerCatalog()
@@ -31,7 +38,7 @@ export default function MenuCliente() {
 
   const add = (id) => {
     const product = products.find((item) => item.id === id)
-    if (!product?.available || loading || catalogError) return
+    if (!ready || !product?.available || loading || catalogError) return
 
     updateCart((current) => ({
       ...current,
@@ -66,7 +73,7 @@ export default function MenuCliente() {
         </div>
 
         <div className="customer-menu-header__actions">
-          <div className="customer-menu-table">MESA {table}</div>
+          <div className="customer-menu-table">{table ? `MESA ${table}` : 'CARDÁPIO'}</div>
           <ThemeToggle compact />
         </div>
       </header>
@@ -75,11 +82,15 @@ export default function MenuCliente() {
         <div>
           <span>CARDÁPIO DIGITAL</span>
           <h1>Escolha seus itens.</h1>
-          <p>Seu pedido será associado automaticamente à mesa {table}.</p>
+          <p>{ready ? `Seu pedido será associado à mesa ${table}.` : 'Consulte o cardápio. Para fazer pedidos, escaneie o QR Code da sua mesa.'}</p>
         </div>
       </section>
 
       <section className="customer-menu-content">
+        {tableLoading && <p role="status">Validando a mesa...</p>}
+        {tableError && <div className="customer-flow-error" role="alert">{tableError}</div>}
+        {!tableLoading && !ready && !tableError && <p role="status">Escaneie o QR Code atualizado da mesa para pedir ou chamar a equipe.</p>}
+        {ready && <button className="th-btn th-btn--glass" type="button" onClick={() => navigate(`/chamar-garcom?mesa=${table}`)}>Chamar garçom</button>}
         {catalogError && (
           <div className="customer-flow-error" role="alert">
             {catalogError}
@@ -126,7 +137,7 @@ export default function MenuCliente() {
                   {!product.available ? (
                     <span className="customer-product-unavailable">Esgotado</span>
                   ) : qty === 0 ? (
-                    <button type="button" onClick={() => add(product.id)} disabled={loading || !!catalogError}>
+                    <button type="button" onClick={() => add(product.id)} disabled={!ready || loading || !!catalogError}>
                       Adicionar
                     </button>
                   ) : (
@@ -135,7 +146,7 @@ export default function MenuCliente() {
                         <FiMinus />
                       </button>
                       <span>{qty}</span>
-                      <button type="button" onClick={() => add(product.id)} aria-label={`Adicionar uma unidade de ${product.name}`}>
+                      <button type="button" onClick={() => add(product.id)} disabled={!ready} aria-label={`Adicionar uma unidade de ${product.name}`}>
                         <FiPlus />
                       </button>
                     </div>
@@ -151,6 +162,7 @@ export default function MenuCliente() {
         <button
           className="customer-cart-bar"
           type="button"
+          disabled={!ready}
           onClick={() => navigate(`/carrinho?mesa=${table}`)}
         >
           <FiShoppingBag />

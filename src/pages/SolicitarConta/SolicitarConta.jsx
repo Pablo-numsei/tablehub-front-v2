@@ -3,6 +3,7 @@ import { FiCheckCircle, FiFileText } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import api from '../../services/api.js'
+import useTableContext from '../../hooks/useTableContext.js'
 import { validOrderId, orderAccessError } from '../../services/orderAccess.js'
 import { money } from '../../data/customerMenu.js'
 import {
@@ -15,16 +16,17 @@ export default function SolicitarConta() {
   const navigate = useNavigate()
   const params = new URLSearchParams(window.location.search)
   const requestedId = params.get('id')
-  const order = requestedId
-    ? getCustomerOrder(requestedId)
-    : getActiveCustomerOrder()
-  const table = order?.table || params.get('mesa') || '04'
+  const candidate = requestedId ? getCustomerOrder(requestedId) : getActiveCustomerOrder()
+  const requestedTable = params.get('mesa')
+  const order = candidate && (!requestedTable || Number(candidate.table) === Number(requestedTable)) ? candidate : null
+  const table = order?.table || requestedTable || ''
+  const { ready: tableReady, loading: tableLoading, error: tableError } = useTableContext(String(table))
   const [sent, setSent] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
 
   const requestBill = async () => {
-    if (sending) return
+    if (sending || (!order && !tableReady)) return
     setSending(true)
     setError('')
 
@@ -75,6 +77,8 @@ export default function SolicitarConta() {
 
         <section className="customer-flow-card customer-status-card">
           {error && <div className="customer-flow-error" role="alert">{error}</div>}
+          {!order && tableError && <div className="customer-flow-error" role="alert">{tableError}</div>}
+          {!order && !tableLoading && !tableReady && !tableError && <p role="alert">Escaneie o QR Code atualizado da sua mesa para solicitar a conta.</p>}
 
           {sent ? (
             <div className="customer-request-success">
@@ -109,7 +113,7 @@ export default function SolicitarConta() {
                 className="th-btn th-btn--primary th-btn--block"
                 type="button"
                 onClick={requestBill}
-                disabled={sending}
+                disabled={sending || (!order && !tableReady)}
               >
                 {sending ? 'Enviando...' : 'Solicitar conta'}
               </button>

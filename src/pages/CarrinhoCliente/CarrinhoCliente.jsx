@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { money } from '../../data/customerMenu.js'
 import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
+import useTableContext from '../../hooks/useTableContext.js'
 import { cartItems, cartTotal } from '../../services/customerCatalog.js'
 import { loadCart, saveCart } from '../../utils/customerSession.js'
 import '../../styles/customer-flow.css'
@@ -11,7 +12,8 @@ import '../../styles/customer-flow.css'
 export default function CarrinhoCliente() {
   const navigate = useNavigate()
   const params = new URLSearchParams(window.location.search)
-  const table = params.get('mesa') || '04'
+  const table = params.get('mesa') || ''
+  const { ready: tableReady, error: tableError, loading: tableLoading } = useTableContext(table)
   const [cart, setCart] = useState(() => loadCart())
   const { products, loading, error } = useCustomerCatalog()
 
@@ -52,6 +54,8 @@ export default function CarrinhoCliente() {
 
         {loading && <p role="status">Conferindo preços e disponibilidade...</p>}
         {error && <p role="alert">{error}</p>}
+        {tableError && <p role="alert">{tableError}</p>}
+        {!tableLoading && !tableReady && !tableError && <p role="alert">Escaneie o QR Code atualizado da mesa para continuar.</p>}
         {items.length === 0 ? (
           <div className="customer-flow-empty">
             <p>Seu carrinho está vazio.</p>
@@ -119,7 +123,7 @@ export default function CarrinhoCliente() {
                   className="th-btn th-btn--primary th-btn--block"
                   type="button"
                   onClick={() => navigate(`/confirmar-pedido?mesa=${table}`)}
-                  disabled={loading || !!error}
+                  disabled={!tableReady || loading || !!error}
                 >
                   Continuar pedido <FiArrowRight />
                 </button>

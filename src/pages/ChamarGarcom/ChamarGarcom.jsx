@@ -3,6 +3,7 @@ import { FiBell, FiCheckCircle } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import api from '../../services/api.js'
+import useTableContext from '../../hooks/useTableContext.js'
 import { validOrderId, orderAccessError } from '../../services/orderAccess.js'
 import {
   getActiveCustomerOrder,
@@ -21,17 +22,18 @@ export default function ChamarGarcom() {
   const navigate = useNavigate()
   const params = new URLSearchParams(window.location.search)
   const requestedId = params.get('id')
-  const order = requestedId
-    ? getCustomerOrder(requestedId)
-    : getActiveCustomerOrder()
-  const table = order?.table || params.get('mesa') || '04'
+  const candidate = requestedId ? getCustomerOrder(requestedId) : getActiveCustomerOrder()
+  const requestedTable = params.get('mesa')
+  const order = candidate && (!requestedTable || Number(candidate.table) === Number(requestedTable)) ? candidate : null
+  const table = order?.table || requestedTable || ''
+  const { ready: tableReady, loading: tableLoading, error: tableError } = useTableContext(String(table))
   const [reason, setReason] = useState(reasons[0])
   const [sent, setSent] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
 
   const sendRequest = async () => {
-    if (sending) return
+    if (sending || (!order && !tableReady)) return
     setSending(true)
     setError('')
 
@@ -82,6 +84,8 @@ export default function ChamarGarcom() {
 
         <section className="customer-flow-card customer-status-card">
           {error && <div className="customer-flow-error" role="alert">{error}</div>}
+          {!order && tableError && <div className="customer-flow-error" role="alert">{tableError}</div>}
+          {!order && !tableLoading && !tableReady && !tableError && <p role="alert">Escaneie o QR Code atualizado da sua mesa para chamar a equipe.</p>}
 
           {sent ? (
             <div className="customer-request-success">
@@ -109,7 +113,7 @@ export default function ChamarGarcom() {
                 className="th-btn th-btn--primary th-btn--block"
                 type="button"
                 onClick={sendRequest}
-                disabled={sending}
+                disabled={sending || (!order && !tableReady)}
               >
                 {sending ? 'Enviando...' : 'Enviar solicitação'}
               </button>

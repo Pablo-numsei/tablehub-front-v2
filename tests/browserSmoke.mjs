@@ -32,6 +32,13 @@ const failures = []
 const pause = (duration) => new Promise((resolve) => setTimeout(resolve, duration))
 const product = { id: 101, name: 'Hambúrguer com Bacon', category: { id: 1, name: 'Hambúrgueres' }, price: 39.90, stockQuantity: 10, active: true, available: true }
 const table = { id: 1, number: 4, active: true }
+const tables = [table, ...Array.from({ length: 8 }, (_, index) => ({ id: 101 + index, number: 21 + index, active: true }))]
+const products = [product]
+const categories = [{ id: 1, name: 'Hambúrgueres', active: true }]
+const attendances = []
+const qrToken = 'synthetic.signed.table-qr-1'
+const tableToken = 'synthetic-table-context-1'
+const extraOrder = { id: 99, mesa: tables[8], status: { id: 4, name: 'Entregue', flowOrder: 4 }, totalValue: 19.99, confirmed: true, createdAt: '2026-10-13T10:00:00' }
 let order
 let payment
 let apiCalls = 0
@@ -57,17 +64,72 @@ const apiResponse = (request) => {
   apiCalls++
   const body = request.postData ? JSON.parse(request.postData) : {}
   if (uri === '/api/auth/login') return [200, syntheticStaff(body.email)]
-  if (uri === '/api/v1/produtos') return [200, [product]]
-  if (uri === '/api/mesas') return [200, [table]]
+  if (uri === '/api/v1/produtos' && method === 'GET') return [200, products]
+  if (uri === '/api/v1/produtos' && method === 'POST') {
+    assert.ok(staff)
+    const created = { ...body, id: 102, category: categories.find((value) => value.id === body.category.id), active: true, available: true }
+    products.push(created)
+    return [201, created]
+  }
+  if (uri === '/api/v1/produtos/101' && method === 'PUT') {
+    assert.ok(staff)
+    if (body.stockQuantity !== product.stockQuantity) return [409, { message: 'O estoque mudou. Confira novamente.' }]
+    Object.assign(product, body, { category: categories.find((value) => value.id === body.category.id) })
+    return [200, product]
+  }
+  if (uri === '/api/v1/produtos/101') return [200, product]
+  if (uri === '/api/v1/categorias' && method === 'GET') return staff ? [200, categories] : [401, {}]
+  if (uri === '/api/v1/categorias' && method === 'POST') {
+    assert.ok(staff)
+    const created = { id: categories.length + 1, name: body.nome, description: body.descricao, active: true }
+    categories.push(created)
+    return [201, created]
+  }
+  if (uri === '/api/mesas' && method === 'GET') return [200, tables]
+  if (uri === '/api/mesas' && method === 'POST') {
+    assert.ok(staff)
+    if (tables.some((value) => value.number === body.number)) return [409, { message: 'Já existe uma mesa com esse número.' }]
+    const created = { id: 500, number: body.number, active: true }
+    tables.push(created)
+    return [201, created]
+  }
+  if (uri === '/api/mesas/1/qr') return staff ? [200, { mesa: { id: 1, number: 4 }, qrToken }] : [401, {}]
+  if (uri === '/api/mesas/contexto') return body.qrToken === qrToken
+    ? [200, { mesa: { id: 1, number: 4 }, tableToken, expiresAt: new Date(Date.now() + 7200000).toISOString() }]
+    : [403, { message: 'Contexto da mesa inválido.' }]
+  if (uri === '/api/mesas/painel') return staff ? [200, tables.map((value) => {
+    const current = value.id === 1 ? order : value.id === extraOrder.mesa.id ? extraOrder : null
+    const paid = value.id === 1 && payment?.status === 'PAGO'
+    const opened = current && (current.status.name !== 'Entregue' || !paid)
+    return { id: value.id, number: value.number, status: opened ? 'Ocupada' : 'Livre', orders: opened ? [{ id: current.id, status: current.status.name, totalValue: current.totalValue, paid }] : [] }
+  })] : [401, {}]
+  if (uri === '/api/atendimentos' && method === 'GET') return staff ? [200, attendances] : [401, {}]
+  if (uri === '/api/atendimentos' && method === 'POST') {
+    if (!staff && body.pedidoId == null && header('X-Table-Token') !== tableToken) return [403, { message: 'Contexto da mesa inválido.' }]
+    if (!staff && body.pedidoId != null && header('X-Order-Token') !== capability) return [403, {}]
+    const existing = attendances.find((value) => value.status !== 'CONCLUIDO' && value.tipo === body.tipo && value.pedidoId === (body.pedidoId ?? null) && value.detalhe === body.detalhe)
+    if (existing) return [200, existing]
+    const created = { id: attendances.length + 1, mesa: 4, pedidoId: body.pedidoId ?? null, tipo: body.tipo, detalhe: body.detalhe, status: 'ENVIADO', criadoEm: '2026-10-14T12:00:00' }
+    attendances.push(created)
+    return [201, created]
+  }
+  if (/^\/api\/atendimentos\/\d+\/status$/.test(uri) && method === 'PATCH') {
+    assert.ok(staff)
+    const current = attendances.find((value) => value.id === Number(uri.split('/')[3]))
+    current.status = body.status
+    return [200, current]
+  }
   if (uri === '/api/push/public-key') return [200, { enabled: false, publicKey: '' }]
   if (uri === '/api/dashboard/resumo') return staff ? [200, { pedidosHoje: order ? 1 : 0, faturamentoHoje: payment?.status === 'PAGO' ? 39.90 : 0, ticketMedio: 0, mesasOcupadas: 1, totalMesas: 1, pedidosPorStatus: [], pedidosRecentes: [], movimentoPorHora: [], mesas: [{ numero: 4, status: 'Ocupada' }] }] : [401, {}]
   if (uri === '/api/pedidos' && method === 'POST') {
+    assert.equal(header('X-Table-Token'), tableToken, 'Checkout must carry its table context')
+    assert.equal(body.mesaId, 1, 'The display number must resolve to the real table ID')
     assert.equal(body.itens[0].produtoId, 101, 'Checkout must use the server product ID')
     order = { id: 1, mesa: table, status: { id: 1, name: 'Recebido', flowOrder: 1 }, totalValue: 39.90, confirmed: true, createdAt: '2026-10-13T12:00:00' }
     product.stockQuantity = 9
     return [201, { ...order, accessToken: capability }]
   }
-  if (uri === '/api/pedidos') return staff ? [200, order ? [order] : []] : [401, {}]
+  if (uri === '/api/pedidos') return staff ? [200, [...(order ? [order] : []), extraOrder]] : [401, {}]
   if (uri === '/api/v1/produtos/101/estoque' && method === 'PATCH') {
     assert.ok(staff)
     assert.equal(body.expectedStockQuantity, product.stockQuantity)
@@ -77,7 +139,13 @@ const apiResponse = (request) => {
   }
   const isOwned = staff || header('X-Order-Token') === capability
   if (/^\/api\/(pedidos\/\d+|itens-pedido\/pedido\/\d+|payments\/\d+)/.test(uri)) {
-    if (!isOwned || !uri.includes('/1')) return [403, { message: 'Acesso não permitido.' }]
+    if (!isOwned) return [403, { message: 'Acesso não permitido.' }]
+    if (uri.endsWith('/99') && staff) {
+      if (uri === '/api/pedidos/99') return [200, extraOrder]
+      if (uri === '/api/payments/99') return [200, null]
+      if (uri === '/api/itens-pedido/pedido/99') return [200, [{ id: 99, produto: { id: 101, name: product.name }, quantidade: 1, precoUnitario: 19.99, subtotal: 19.99 }]]
+    }
+    if (!uri.includes('/1')) return [403, { message: 'Acesso não permitido.' }]
     if (uri === '/api/pedidos/1') return [200, order]
     if (uri === '/api/itens-pedido/pedido/1') return [200, [{ id: 1, produto: { id: 101, name: product.name }, quantidade: 1, precoUnitario: 39.90, subtotal: 39.90 }]]
     if (uri === '/api/payments/1/process') {
@@ -107,6 +175,7 @@ const waitFor = async (expression, description) => {
 }
 const click = (label) => evaluate(`Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes(${JSON.stringify(label)}))?.click()`)
 const navigate = async (route) => { await send('Page.navigate', { url: origin + route }); await waitFor("document.readyState === 'complete'", route) }
+const input = (selector, value) => evaluate(`{ const element=document.querySelector(${JSON.stringify(selector)}); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(element,${JSON.stringify(value)}); element.dispatchEvent(new Event('input',{bubbles:true})); }`)
 
 try {
   let port
@@ -128,7 +197,7 @@ try {
       try {
         const [status, body] = apiResponse(event.params.request)
         await send('Fetch.fulfillRequest', { requestId: event.params.requestId, responseCode: status,
-          responseHeaders: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Access-Control-Allow-Origin', value: origin }, { name: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-Order-Token' }, { name: 'Access-Control-Allow-Methods', value: 'GET, POST, PATCH, OPTIONS' }],
+          responseHeaders: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Access-Control-Allow-Origin', value: origin }, { name: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-Order-Token, X-Table-Token' }, { name: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, PATCH, OPTIONS' }],
           body: body == null ? '' : Buffer.from(JSON.stringify(body)).toString('base64') })
       } catch (error) { failures.push(error.message); await send('Fetch.failRequest', { requestId: event.params.requestId, errorReason: 'Failed' }).catch(() => {}) }
     } else if (event.method === 'Runtime.exceptionThrown') failures.push(event.params.exceptionDetails.exception?.description || event.params.exceptionDetails.text)
@@ -141,8 +210,25 @@ try {
   await waitFor("location.pathname === '/login'", 'anonymous management redirect')
   console.log('PASS: anonymous management route redirects to login')
   await navigate('/menu?mesa=04')
+  await waitFor("document.querySelector('.customer-product-card button') && document.querySelector('.customer-product-card button').disabled && document.body.innerText.includes('Escaneie')", 'numeric link is read only')
+  assert.equal(order, undefined)
+  await navigate('/menu')
+  await waitFor("document.body.innerText.includes('Consulte o cardápio')", 'public catalog without default table')
+  assert.ok(!(await evaluate('document.body.innerText')).includes('MESA 04'))
+  console.log('PASS: numeric and missing table links cannot create a default-table order')
+  await navigate('/menu?mesa=04&qr=' + encodeURIComponent(qrToken))
   await waitFor("document.querySelector('.customer-product-card button') && !document.querySelector('.customer-product-card button').disabled", 'menu availability')
   assert.ok((await evaluate('document.body.innerText')).includes('39,90'))
+  await waitFor("!location.search.includes('qr=')", 'QR exchanged and removed from navigation')
+  await click('Chamar garçom')
+  await waitFor("location.pathname === '/chamar-garcom'", 'pre-order waiter request')
+  await waitFor("!Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes('Enviar solicitação')).disabled", 'table-authorized request')
+  await click('Enviar solicitação')
+  await waitFor("document.body.innerText.includes('Solicitação enviada.')", 'waiter request sent')
+  assert.equal(attendances.length, 1)
+  console.log('PASS: QR context authorizes a pre-order waiter request for its table')
+  await navigate('/menu?mesa=04')
+  await waitFor("document.querySelector('.customer-product-card button') && !document.querySelector('.customer-product-card button').disabled", 'retained table context')
   await click('Adicionar')
   await evaluate("document.querySelector('.customer-cart-bar').click()")
   await waitFor("location.pathname === '/carrinho'", 'cart')
@@ -158,10 +244,10 @@ try {
   await waitFor("Array.from(document.querySelectorAll('button')).some(button => button.textContent.trim() === 'PIX')", 'payment methods')
   await click('PIX')
   await click('Solicitar pagamento')
-  await waitFor("document.body.innerText.includes('Solicitação enviada.')", 'pending payment')
+  await waitFor("document.body.innerText.includes('Solicitação de simulação enviada.')", 'pending payment')
   assert.equal(payment.status, 'PENDENTE')
   await navigate('/comprovante?id=%231&mesa=04')
-  await waitFor("document.body.innerText.includes('Recebimento ainda não confirmado.')", 'receipt blocked')
+  await waitFor("document.body.innerText.includes('Simulação ainda não confirmada.')", 'receipt blocked')
   console.log('PASS: guest payment is pending and cannot produce a confirmed receipt')
 
   await navigate('/login')
@@ -172,13 +258,13 @@ try {
   await navigate('/pedidos')
   await waitFor("document.querySelector('.order-card')", 'management orders')
   await click('Ver detalhes')
-  await waitFor("document.body.innerText.includes('Conferi o recebimento integral')", 'staff payment approval')
+  await waitFor("document.body.innerText.includes('Conferi o valor e a forma desta simulação')", 'staff payment approval')
   await evaluate("document.querySelector('.order-drawer input[type=checkbox]').click()")
-  await click('Confirmar recebimento')
+  await click('Confirmar pagamento simulado')
   await waitFor("document.body.innerText.includes('Confirmado pela equipe')", 'confirmed manual receipt')
   assert.equal(payment.status, 'PAGO')
   await navigate('/comprovante?id=%231&mesa=04')
-  await waitFor("document.body.innerText.includes('39,90') && !document.body.innerText.includes('Recebimento ainda não confirmado.')", 'confirmed receipt')
+  await waitFor("document.body.innerText.includes('39,90') && !document.body.innerText.includes('Simulação ainda não confirmada.')", 'confirmed receipt')
   console.log('PASS: staff confirms receipt and guest sees the persisted receipt')
 
   await navigate('/estoque')
@@ -187,14 +273,81 @@ try {
   await waitFor("document.querySelector('.inventory-stock strong')?.textContent === '10'", 'atomic stock update')
   assert.equal(product.stockQuantity, 10)
   console.log('PASS: stock adjustment uses delta and expected quantity')
+  await navigate('/mesas')
+  await waitFor("document.querySelectorAll('.table-management-card').length === 9", 'all tables including ninth')
+  assert.ok(await evaluate("Array.from(document.querySelectorAll('.table-management-card')).find(card => card.querySelector('.table-management-card__top strong').textContent === '28')?.textContent.includes('#99')"))
+  assert.ok(await evaluate("Array.from(document.querySelectorAll('.table-management-card')).find(card => card.querySelector('.table-management-card__top strong').textContent === '28')?.textContent.includes('Ocupada')"))
+  console.log('PASS: the ninth table shows its delivered order with pending payment')
+  await click('Nova mesa')
+  await waitFor("document.querySelector('.table-create-form input')", 'table form')
+  await input('.table-create-form input', '88')
+  await click('Cadastrar mesa')
+  await waitFor("!document.querySelector('.table-create-form') && document.querySelectorAll('.table-management-card').length === 10", 'new table persisted in fixture')
+  assert.ok(tables.some((value) => value.number === 88))
+  console.log('PASS: administrator creates a table using the number-only API')
+  await evaluate("Array.from(document.querySelectorAll('.table-management-card')).find(card => card.querySelector('.table-management-card__top strong').textContent === '04').querySelector('button').click()")
+  await waitFor("document.querySelector('.table-qr-link input')?.value.includes('qr=')", 'signed QR available')
+  assert.equal(new URL(await evaluate("document.querySelector('.table-qr-link input').value")).searchParams.get('qr'), qrToken)
+  console.log('PASS: management generates the signed QR with a quiet zone')
+  await navigate('/clientes')
+  await waitFor("document.querySelectorAll('.client-card').length === 2", 'anonymous order history')
+  assert.ok((await evaluate('document.body.innerText')).includes('Pedidos anônimos'))
+  assert.ok(!(await evaluate('document.body.innerText')).includes('Mariana Costa'))
+  console.log('PASS: history displays persisted anonymous orders without fictional people')
+  await navigate('/atendimento')
+  await waitFor("document.body.innerText.includes('REQ-0001')", 'waiter panel receives request')
+  await click('Avançar para Em atendimento')
+  await waitFor("document.querySelector('.service-status')?.textContent === 'Em atendimento'", 'request advancing')
+  await click('Avançar para Concluído')
+  await waitFor("document.querySelector('.service-status')?.textContent === 'Concluído'", 'request completed')
+  assert.equal(attendances[0].status, 'CONCLUIDO')
+  console.log('PASS: staff advances a waiter request through the persisted fixture statuses')
+  await navigate('/cardapio')
+  await waitFor("document.querySelector('.menu-edit-button')", 'catalog loaded')
+  await click('Categoria')
+  await waitFor("document.querySelector('.catalog-dialog__form input[type=text]')", 'category form')
+  await input('.catalog-dialog__form input[type=text]', 'Bebidas de teste')
+  await click('Salvar')
+  await waitFor("!document.querySelector('.catalog-dialog')", 'category saved')
+  assert.equal(categories.length, 2)
+  await click('Novo produto')
+  await waitFor("document.querySelector('.catalog-dialog__form input[inputmode=decimal]')", 'product form')
+  await input('.catalog-dialog__form input[type=text]', 'Produto teste 19,99')
+  await input('.catalog-dialog__form input[inputmode=decimal]', '19,99')
+  await input('.catalog-dialog__form input[type=number]', '3')
+  await click('Salvar')
+  await waitFor("!document.querySelector('.catalog-dialog') && document.body.innerText.includes('Produto teste 19,99')", 'product with valid decimal price saved')
+  assert.equal(products.at(-1).price, 19.99)
+  console.log('PASS: category and product creation accept a valid comma price')
+  await evaluate("document.querySelector('.menu-edit-button').click()")
+  await waitFor("document.querySelector('.catalog-dialog__form input[inputmode=decimal]')", 'product edit form')
+  product.stockQuantity += 2
+  await input('.catalog-dialog__form input[inputmode=decimal]', '29,90')
+  await click('Salvar')
+  await waitFor(`document.querySelector('.catalog-dialog__form input[type=number]')?.value === '${product.stockQuantity}' && document.querySelector('.catalog-dialog [role=alert]')`, 'conflict refreshes expected stock')
+  assert.equal(await evaluate("document.querySelector('.catalog-dialog__form input[inputmode=decimal]').value"), '29,90')
+  await click('Salvar')
+  await waitFor("!document.querySelector('.catalog-dialog')", 'edit retry accepted')
+  assert.equal(product.price, 29.90)
+  await input('.menu-search input', 'bácon')
+  await waitFor("document.querySelectorAll('.menu-edit-button').length === 1", 'accented catalog search')
+  console.log('PASS: product edit preserves price draft after stock conflict and accented search works')
   await send('Emulation.setDeviceMetricsOverride', { width: 375, height: 812, deviceScaleFactor: 1, mobile: true })
   await navigate('/menu?mesa=04')
   await waitFor("document.querySelector('.customer-product-card')", 'mobile menu')
   assert.ok(await evaluate('document.documentElement.scrollWidth <= 377'), 'Mobile menu overflows horizontally')
   console.log('PASS: menu at 375px has no horizontal overflow')
+  await send('Emulation.setDeviceMetricsOverride', { width: 375, height: 560, deviceScaleFactor: 1, mobile: true })
+  await navigate('/mesas')
+  await waitFor("document.querySelectorAll('.table-management-card').length === 10", 'mobile tables')
+  await evaluate("Array.from(document.querySelectorAll('.table-management-card')).find(card => card.querySelector('.table-management-card__top strong').textContent === '04').querySelector('button').click()")
+  await waitFor("document.querySelector('.table-qr-link input')", 'mobile signed QR')
+  assert.ok(await evaluate("document.querySelector('.table-modal').getBoundingClientRect().height <= 522 && getComputedStyle(document.querySelector('.table-modal')).overflowY === 'auto'"), 'Mobile QR dialog is cut off')
+  assert.ok(await evaluate('document.documentElement.scrollWidth <= 377'), 'Mobile tables overflow horizontally')
+  console.log('PASS: signed QR dialog fits a short mobile viewport with internal scrolling')
   assert.deepEqual(failures, [], 'Browser console or synthetic API failures')
   assert.ok(apiCalls > 10)
-  console.log('Browser smoke completed: 6 scenarios passed; synthetic API, no real database.')
+  console.log('Browser smoke completed: 16 scenarios passed; synthetic API, no real database.')
 } finally {
   if (socket?.readyState === WebSocket.OPEN) { await send('Browser.close').catch(() => {}); socket.close() }
   if (!browser.killed) browser.kill()

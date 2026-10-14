@@ -4,14 +4,12 @@ import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
 import CatalogDialogs from './CatalogDialogs.jsx'
 import { customerProducts } from '../../data/customerMenu.js'
 import api from '../../services/api.js'
+import { normalizeCatalogText as normalize } from '../../utils/catalogForm.js'
 import '../../styles/management.css'
 import './Cardapio.css'
 
 const money = (value) =>
   Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-
-const normalize = (value = '') =>
-  String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
 
 const imageForProduct = (name) =>
   customerProducts.find((item) => normalize(item.name) === normalize(name))
@@ -84,7 +82,7 @@ export default function Cardapio() {
   )
 
   const visibleProducts = useMemo(() => {
-    const normalized = query.trim().toLowerCase()
+    const normalized = normalize(query)
     return products.filter((product) => {
       const matchesCategory = filter === 'Todos' || product.category === filter
       const matchesSearch =

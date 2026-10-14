@@ -87,7 +87,7 @@ export default function PedidoConfirmado() {
           <h1>Enviado para a cozinha.</h1>
           <p>
             Seu pedido {order.id} foi registrado. Você pode acompanhar o preparo
-            e registrar uma forma de pagamento nesta demonstração.
+            e testar um pagamento simulado, sem cobrança real.
           </p>
 
           <div className="customer-result-summary">
@@ -127,7 +127,7 @@ export default function PedidoConfirmado() {
               type="button"
               onClick={() => navigate(`/pagamento?${orderQuery}`)}
             >
-              Ir para pagamento <FiArrowRight />
+              Ir para pagamento simulado <FiArrowRight />
             </button>
 
             <button

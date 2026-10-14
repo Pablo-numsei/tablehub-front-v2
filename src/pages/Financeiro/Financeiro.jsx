@@ -83,7 +83,7 @@ export default function Financeiro() {
           <div>
             <span className="management-eyebrow">FINANCEIRO</span>
             <h1>Movimentação</h1>
-            <p>Indicadores financeiros reais registrados no TableHub.</p>
+            <p>Registros persistidos no TableHub. O fluxo desta entrega demonstra pagamentos simulados, sem cobrança bancária.</p>
           </div>
 
           <button
@@ -106,7 +106,7 @@ export default function Financeiro() {
         <section className="finance-summary">
           <article>
             <FiTrendingUp />
-            <span>Faturamento hoje</span>
+            <span>Registros pagos hoje</span>
             <strong>{loading ? '—' : money(summary.revenue)}</strong>
           </article>
 
@@ -130,9 +130,9 @@ export default function Financeiro() {
         </section>
 
         <div className="finance-api-notice">
-          A API atual já fornece faturamento e ticket médio. A listagem de
-          pagamentos, o total pendente e a quantidade de pagamentos aguardam
-          um endpoint de consulta no backend.
+          Os totais usam os registros confirmados no sistema e não representam
+          conciliação bancária. O histórico detalhado e os indicadores pendentes
+          ainda não estão disponíveis nesta tela.
         </div>
 
         <section className="finance-toolbar">
@@ -189,8 +189,8 @@ export default function Financeiro() {
 
           {visible.length === 0 && (
             <div className="management-empty">
-              Nenhuma transação fictícia é exibida. As movimentações aparecerão
-              aqui quando o endpoint de listagem de pagamentos estiver disponível.
+              O histórico detalhado de pagamentos ainda não está disponível.
+              Consulte o registro de cada pedido no painel Pedidos.
             </div>
           )}
         </section>

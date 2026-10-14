@@ -73,9 +73,9 @@ export default function Dashboard() {
         detail: 'Pedidos registrados no banco',
       },
       {
-        label: 'Faturamento',
+        label: 'Pagamentos confirmados',
         value: formatMoney(dashboard.faturamentoHoje),
-        detail: 'Pagamentos PAGO processados hoje',
+        detail: 'Registros do fluxo simulado confirmados hoje',
       },
       {
         label: 'Ticket médio',
@@ -105,7 +105,7 @@ export default function Dashboard() {
           <div>
             <span className="dashboard-header__eyebrow">VISÃO GERAL</span>
             <h1>Dashboard</h1>
-            <p>Dados operacionais carregados diretamente do TableHub.</p>
+            <p>Dados persistidos no TableHub. Pagamentos usam o fluxo simulado desta entrega, sem cobrança bancária.</p>
           </div>
 
           <button

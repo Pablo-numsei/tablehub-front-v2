@@ -405,18 +405,19 @@ export default function Pedidos() {
             </div>
 
             {canConfirmPayment && (
-              <section className="order-drawer__items" aria-label="Recebimento">
-                <span>RECEBIMENTO</span>
-                {paymentLoading && !payment && <p role="status">Consultando pagamento...</p>}
+              <section className="order-drawer__items" aria-label="Pagamento simulado">
+                <span>PAGAMENTO SIMULADO</span>
+                <p>Demonstração sem cobrança real. A confirmação registra somente uma simulação no sistema.</p>
+                {paymentLoading && !payment && <p role="status">Consultando pagamento simulado...</p>}
                 {paymentError && <p role="alert">{paymentError}</p>}
-                {payment ? <p>{paymentMethodLabel(payment.method)} · {money(payment.amount)} · {paymentStatusLabel(payment.status)}</p> : !paymentLoading && <p>O cliente ainda não solicitou pagamento.</p>}
+                {payment ? <p>Simulado · {paymentMethodLabel(payment.method)} · {money(payment.amount)} · {paymentStatusLabel(payment.status)}</p> : !paymentLoading && <p>O cliente ainda não solicitou uma simulação de pagamento.</p>}
                 {payment?.status === 'PENDENTE' && <>
-                  <label><input type="checkbox" checked={received} onChange={(event) => setReceived(event.target.checked)} /> Conferi o recebimento integral no caixa ou no comprovante.</label>
+                  <label><input type="checkbox" checked={received} onChange={(event) => setReceived(event.target.checked)} /> Conferi o valor e a forma desta simulação; nenhum recebimento real está sendo comprovado.</label>
                   <button className="th-btn th-btn--primary th-btn--block" type="button"
                     disabled={!received || confirmingPayment} onClick={confirmReceipt}>
-                    {confirmingPayment ? 'Confirmando...' : 'Confirmar recebimento'}
+                    {confirmingPayment ? 'Confirmando...' : 'Confirmar pagamento simulado'}
                   </button>
-                  <small>Esta ação registra o recebimento manual; confira a transação antes de confirmar.</small>
+                  <small>Esta ação não cobra o cliente nem confirma uma transferência bancária.</small>
                 </>}
               </section>
             )}

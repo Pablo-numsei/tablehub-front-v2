@@ -86,9 +86,9 @@ export default function PagamentoCliente() {
         </header>
 
         <section className="customer-flow-head customer-status-card">
-          <span>PAGAMENTO</span>
-          <h1>{paid ? 'Recebimento confirmado.' : pending ? 'Solicitação enviada.' : 'Como deseja pagar?'}</h1>
-          <p>O pagamento acontece com a equipe. A confirmação aparece aqui após a conferência do recebimento.</p>
+          <span>PAGAMENTO SIMULADO</span>
+          <h1>{paid ? 'Simulação confirmada.' : pending ? 'Solicitação de simulação enviada.' : 'Como deseja simular o pagamento?'}</h1>
+          <p>Esta demonstração não realiza cobrança. A equipe confirma apenas o registro simulado no sistema.</p>
         </section>
 
         <section className="customer-flow-card customer-status-card">
@@ -119,10 +119,10 @@ export default function PagamentoCliente() {
             <strong>{money(order.total)}</strong>
           </div>
 
-          {payment && <p role="status">{paymentMethodLabel(payment.method)} · {paymentStatusLabel(payment.status)}</p>}
+          {payment && <p role="status">Simulado · {paymentMethodLabel(payment.method)} · {paymentStatusLabel(payment.status)}</p>}
 
           <div className="customer-demo-notice">
-            Escolher uma forma não efetua cobrança nem comprova transferência. Procure a equipe para realizar o pagamento.
+            Pagamento simulado: nenhuma cobrança, transferência PIX ou transação de cartão é efetuada. O registro não comprova pagamento real.
           </div>
 
           <div className="customer-flow-actions">
@@ -132,7 +132,7 @@ export default function PagamentoCliente() {
               onClick={paid ? () => navigate(`/comprovante?${orderQuery}`) : confirmPayment}
               disabled={!paid && (!method || processing || pending || !!loadError)}
             >
-              {paid ? 'Ver registro do recebimento' : processing ? 'Enviando...' : pending ? 'Aguardando confirmação da equipe' : 'Solicitar pagamento à equipe'}
+              {paid ? 'Ver comprovante simulado' : processing ? 'Enviando...' : pending ? 'Simulação aguardando equipe' : 'Solicitar pagamento simulado'}
             </button>
 
             <button

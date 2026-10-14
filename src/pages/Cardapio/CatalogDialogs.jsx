@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { FiX } from 'react-icons/fi'
 import api from '../../services/api.js'
+import { parseCatalogPrice } from '../../utils/catalogForm.js'
 import './CatalogDialogs.css'
-
-const parsePrice = (value) => Number(String(value).replace(',', '.').trim())
 
 export default function CatalogDialogs({ dialog, categories, onClose, onSaved }) {
   const editing = dialog.kind === 'product' && !!dialog.product
@@ -17,6 +16,7 @@ export default function CatalogDialogs({ dialog, categories, onClose, onSaved })
   const [stock, setStock] = useState(product ? String(product.stock) : '0')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const closeIfIdle = () => { if (!saving) onClose() }
 
   const submit = async (event) => {
     event.preventDefault()
@@ -39,14 +39,9 @@ export default function CatalogDialogs({ dialog, categories, onClose, onSaved })
           descricao: normalizedDescription,
         })
       } else {
-        const parsedPrice = parsePrice(price)
+        const parsedPrice = parseCatalogPrice(price)
         const parsedStock = Number(stock)
         const parsedCategoryId = Number(categoryId)
-
-        if (!Number.isFinite(parsedPrice) || parsedPrice <= 0 ||
-          Math.round(parsedPrice * 100) !== parsedPrice * 100) {
-          throw new Error('Informe um preço válido com no máximo duas casas decimais.')
-        }
 
         if (!Number.isInteger(parsedStock) || parsedStock < 0) {
           throw new Error('O estoque precisa ser um número inteiro não negativo.')
@@ -73,6 +68,19 @@ export default function CatalogDialogs({ dialog, categories, onClose, onSaved })
 
       onSaved()
     } catch (requestError) {
+      if (editing && requestError.response?.status === 409) {
+        try {
+          const { data } = await api.get(`/api/v1/produtos/${product.id}`)
+          if (Number.isInteger(data?.stockQuantity) && data.stockQuantity >= 0 && data.stockQuantity !== Number(stock)) {
+            setStock(String(data.stockQuantity))
+            setError('O estoque mudou durante a edição e foi atualizado neste formulário. Seus outros dados foram preservados. Confira e salve novamente para confirmar.')
+            return
+          }
+        } catch {
+          setError('O estoque mudou e não foi possível consultar o valor atual. Seus dados continuam no formulário; tente salvar novamente quando a conexão voltar.')
+          return
+        }
+      }
       setError(
         requestError?.response?.data?.message ||
         requestError?.response?.data?.detail ||
@@ -89,20 +97,20 @@ export default function CatalogDialogs({ dialog, categories, onClose, onSaved })
     : editing ? 'Editar produto' : 'Novo produto'
 
   return (
-    <div className="catalog-dialog-backdrop" onClick={onClose}>
+    <div className="catalog-dialog-backdrop" onClick={closeIfIdle}>
       <section
         role="dialog"
         aria-modal="true"
         aria-label={title}
         className="catalog-dialog"
         onClick={(event) => event.stopPropagation()}
-        onKeyDown={(event) => { if (event.key === 'Escape') onClose() }}
+        onKeyDown={(event) => { if (event.key === 'Escape') { event.stopPropagation(); closeIfIdle() } }}
       >
         <button
           type="button"
           className="catalog-dialog__close"
           aria-label="Fechar"
-          onClick={onClose}
+          onClick={closeIfIdle}
           disabled={saving}
         >
           <FiX />
@@ -119,6 +127,7 @@ export default function CatalogDialogs({ dialog, categories, onClose, onSaved })
               value={name}
               onChange={(event) => setName(event.target.value)}
               required
+              disabled={saving}
               maxLength={dialog.kind === 'category' ? 100 : 150}
               placeholder={dialog.kind === 'category' ? 'Ex.: Lanches' : 'Ex.: Hambúrguer Artesanal'}
             />
@@ -132,6 +141,7 @@ export default function CatalogDialogs({ dialog, categories, onClose, onSaved })
                   value={categoryId}
                   onChange={(event) => setCategoryId(event.target.value)}
                   required
+                  disabled={saving}
                 >
                   {categories.map((category) => (
                     <option value={category.id} key={category.id}>{category.name}</option>
@@ -147,6 +157,7 @@ export default function CatalogDialogs({ dialog, categories, onClose, onSaved })
                     value={price}
                     onChange={(event) => setPrice(event.target.value)}
                     required
+                    disabled={saving}
                     placeholder="29,90"
                   />
                 </label>
@@ -159,6 +170,7 @@ export default function CatalogDialogs({ dialog, categories, onClose, onSaved })
                     value={stock}
                     onChange={(event) => setStock(event.target.value)}
                     readOnly={editing}
+                    disabled={saving}
                     required
                   />
                 </label>
@@ -177,6 +189,7 @@ export default function CatalogDialogs({ dialog, categories, onClose, onSaved })
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={3}
+              disabled={saving}
               maxLength={dialog.kind === 'category' ? 300 : 500}
               placeholder="Descrição opcional"
             />
@@ -185,7 +198,7 @@ export default function CatalogDialogs({ dialog, categories, onClose, onSaved })
           {error && <p className="catalog-dialog__error" role="alert">{error}</p>}
 
           <div className="catalog-dialog__actions">
-            <button type="button" className="th-btn th-btn--glass" onClick={onClose} disabled={saving}>
+            <button type="button" className="th-btn th-btn--glass" onClick={closeIfIdle} disabled={saving}>
               Cancelar
             </button>
             <button type="submit" className="th-btn th-btn--primary" disabled={saving}>

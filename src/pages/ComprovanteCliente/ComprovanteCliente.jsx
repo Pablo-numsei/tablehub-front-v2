@@ -12,14 +12,14 @@ export default function ComprovanteCliente() {
   const requestedId = params.get('id')
   const { order, payment, loading, error } = useCustomerOrder(requestedId, { includeItems: true })
 
-  if (loading) return <main className="customer-flow-page"><div className="customer-flow-shell"><p role="status">Consultando o registro do recebimento...</p></div></main>
+  if (loading) return <main className="customer-flow-page"><div className="customer-flow-shell"><p role="status">Consultando o registro do pagamento simulado...</p></div></main>
 
   if (!order || error) {
     return (
       <main className="customer-flow-page">
         <div className="customer-flow-shell">
           <section className="customer-flow-head">
-            <span>COMPROVANTE</span>
+            <span>COMPROVANTE SIMULADO</span>
             <h1>Pedido não encontrado.</h1>
             <p role="alert">{error || 'Pedido indisponível nesta sessão.'}</p>
           </section>
@@ -29,7 +29,7 @@ export default function ComprovanteCliente() {
   }
 
   const orderQuery = `id=${encodeURIComponent(order.id)}&mesa=${order.table}`
-  if (payment?.status !== 'PAGO') return <main className="customer-flow-page"><div className="customer-flow-shell"><section className="customer-flow-card customer-status-card"><h1>Recebimento ainda não confirmado.</h1><p>{paymentStatusLabel(payment?.status)}</p><button className="th-btn th-btn--primary" type="button" onClick={() => navigate(`/pagamento?${orderQuery}`)}>Voltar ao pagamento</button></section></div></main>
+  if (payment?.status !== 'PAGO') return <main className="customer-flow-page"><div className="customer-flow-shell"><section className="customer-flow-card customer-status-card"><span className="customer-flow-card__eyebrow">PAGAMENTO SIMULADO</span><h1>Simulação ainda não confirmada.</h1><p>{paymentStatusLabel(payment?.status)}</p><p>Nenhuma cobrança real foi realizada.</p><button className="th-btn th-btn--primary" type="button" onClick={() => navigate(`/pagamento?${orderQuery}`)}>Voltar ao pagamento simulado</button></section></div></main>
   const paidAt = order.paidAt
     ? new Date(order.paidAt).toLocaleString('pt-BR')
     : 'Não registrado'
@@ -50,9 +50,9 @@ export default function ComprovanteCliente() {
             <FiCheckCircle />
           </div>
 
-          <span className="customer-flow-card__eyebrow">REGISTRO DE RECEBIMENTO</span>
-          <h1>Confirmado pela equipe.</h1>
-          <p>Registro interno do restaurante. Não substitui comprovante bancário ou documento fiscal.</p>
+          <span className="customer-flow-card__eyebrow">COMPROVANTE SIMULADO</span>
+          <h1>Simulação confirmada pela equipe.</h1>
+          <p>Pagamento simulado, sem cobrança real. Este registro de demonstração não é comprovante bancário nem documento fiscal.</p>
 
           <div className="customer-receipt-meta">
             <div>
@@ -83,7 +83,7 @@ export default function ComprovanteCliente() {
           </div>
 
           <div className="customer-summary-total">
-            <span>Valor confirmado</span>
+            <span>Valor simulado</span>
             <strong>{money(payment.amount)}</strong>
           </div>
 

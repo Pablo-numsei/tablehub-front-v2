@@ -142,7 +142,7 @@ export default function Estoque() {
                 </div>
                 <div className="inventory-stock"><strong>{item.stock}</strong><span>{item.unit}</span></div>
                 <div className="inventory-progress" aria-label={`Nível de estoque de ${item.name}`}><span style={{ width: `${percent}%` }} /></div>
-                <div className="inventory-minimum">Alerta visual: <strong>10 {item.unit}</strong></div>
+                <div className="inventory-minimum">Alerta de estoque baixo: <strong>10 {item.unit}</strong></div>
                 <div className="inventory-actions">
                   <button type="button" aria-label={`Remover uma unidade de ${item.name}`} disabled={updatingId != null || item.stock === 0} onClick={() => adjustStock(item, -1)}><FiMinus /></button>
                   <span>{updatingId === item.id ? 'Salvando...' : 'Ajuste rápido'}</span>

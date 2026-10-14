@@ -1,7 +1,7 @@
 export const customerProducts = [
   {
     id: 1,
-    name: 'Hambúrguer com Bacon',
+    name: 'Hambúrguer Artesanal',
     category: 'Hambúrgueres',
     price: 31.9,
     available: true,

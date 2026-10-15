@@ -8,6 +8,7 @@ import {
   FiTrendingDown,
 } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
+import DesperdicioPanel from './DesperdicioPanel.jsx'
 import api from '../../services/api.js'
 import '../../styles/management.css'
 import './Estoque.css'
@@ -153,6 +154,8 @@ export default function Estoque() {
           })}
           {!loading && visible.length === 0 && <div className="management-empty">Nenhum item encontrado.</div>}
         </section>
+
+        <DesperdicioPanel inventory={inventory} onRegistered={loadInventory} />
       </section>
     </main>
   )

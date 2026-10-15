@@ -14,3 +14,11 @@ export const validateWasteInput = (product, quantity) => {
   }
   return ''
 }
+
+export const validateWasteCost = (value) => {
+  const normalized = String(value ?? '').trim().replace(',', '.')
+  if (!/^\d{1,10}(?:\.\d{1,2})?$/.test(normalized)) {
+    return 'Informe o custo unitario em reais, com ate duas casas decimais.'
+  }
+  return ''
+}

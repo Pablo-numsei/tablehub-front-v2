@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { FiAlertTriangle, FiClipboard, FiRefreshCw, FiTrendingDown } from 'react-icons/fi'
 import api from '../../services/api.js'
-import { WASTE_REASONS, validateWasteInput } from '../../utils/desperdicios.js'
+import { WASTE_REASONS, validateWasteCost, validateWasteInput } from '../../utils/desperdicios.js'
 import './DesperdicioPanel.css'
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -21,6 +21,7 @@ function serverError(error, fallback) {
 export default function DesperdicioPanel({ inventory, onRegistered }) {
   const [productId, setProductId] = useState('')
   const [quantity, setQuantity] = useState('1')
+  const [unitCost, setUnitCost] = useState('')
   const [reason, setReason] = useState('VENCIMENTO')
   const [observation, setObservation] = useState('')
   const [history, setHistory] = useState([])
@@ -61,7 +62,7 @@ export default function DesperdicioPanel({ inventory, onRegistered }) {
     if (saving) return
     setFormError('')
     setSuccess('')
-    const invalid = validateWasteInput(product, quantity)
+    const invalid = validateWasteInput(product, quantity) || validateWasteCost(unitCost)
     if (invalid) {
       setFormError(invalid)
       return
@@ -73,10 +74,12 @@ export default function DesperdicioPanel({ inventory, onRegistered }) {
         produtoId: product.id,
         quantidade: Number(quantity),
         estoqueEsperado: product.stock,
+        custoUnitarioInformado: Number(unitCost.trim().replace(',', '.')),
         motivo: reason,
         observacao: observation.trim() || null,
       })
       setQuantity('1')
+      setUnitCost('')
       setObservation('')
       setSuccess(
         'Perda registrada: ' + response.data.quantidade + ' un. de ' +
@@ -110,7 +113,7 @@ export default function DesperdicioPanel({ inventory, onRegistered }) {
       <div className="waste-summary">
         <article><FiClipboard aria-hidden="true" /><span>Registros nos ultimos 30 dias</span><strong>{loading && !summary ? '...' : summary?.registros ?? '—'}</strong></article>
         <article><FiAlertTriangle aria-hidden="true" /><span>Unidades perdidas (30 dias)</span><strong>{loading && !summary ? '...' : summary?.unidades ?? '—'}</strong></article>
-        <article><FiTrendingDown aria-hidden="true" /><span>Valor estimado (preco de venda)</span><strong>{summary ? currency.format(Number(summary.prejuizo || 0)) : '—'}</strong></article>
+        <article><FiTrendingDown aria-hidden="true" /><span>Custo registrado das perdas (30 dias)</span><strong>{summary ? currency.format(Number(summary.prejuizo || 0)) : '—'}</strong></article>
       </div>
 
       {fetchError && <div className="waste-alert" role="alert">{fetchError}</div>}
@@ -132,6 +135,10 @@ export default function DesperdicioPanel({ inventory, onRegistered }) {
         <label>
           Quantidade descartada
           <input type="number" min="1" max={product?.stock || undefined} step="1" inputMode="numeric" value={quantity} onChange={(event) => setQuantity(event.target.value)} required disabled={saving} />
+        </label>
+        <label>
+          Custo unitário informado (R$)
+          <input type="number" min="0" step="0.01" placeholder="Ex.: 3.50" inputMode="decimal" value={unitCost} onChange={(event) => setUnitCost(event.target.value)} required disabled={saving} />
         </label>
         <label>
           Motivo
@@ -160,7 +167,7 @@ export default function DesperdicioPanel({ inventory, onRegistered }) {
       {!loading && history.length > 0 && (
         <div className="waste-table-wrap">
           <table className="waste-table">
-            <thead><tr><th>Data</th><th>Produto</th><th>Quantidade</th><th>Motivo</th><th>Valor estimado</th><th>Registrado por</th></tr></thead>
+            <thead><tr><th>Data</th><th>Produto</th><th>Quantidade</th><th>Motivo</th><th>Perda pelo custo informado</th><th>Registrado por</th></tr></thead>
             <tbody>
               {history.map((entry) => (
                 <tr key={entry.id}>

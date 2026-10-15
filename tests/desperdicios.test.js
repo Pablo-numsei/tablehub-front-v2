@@ -21,9 +21,9 @@ test('aceita quantidade inteira que cabe no estoque', () => {
   assert.equal(validateWasteInput({ stock: 3 }, '2'), '')
 })
 
-test('mantem motivos conhecidos pela API', () => {
+test('mantem motivos aprovados pelo CHECK do SQL Server', () => {
   assert.deepEqual(WASTE_REASONS.map((reason) => reason.value), [
-    'VENCIMENTO', 'PREPARO', 'DANO', 'OUTROS',
+    'VENCIMENTO', 'PREPARO', 'DANIFICADO', 'OUTRO',
   ])
 })
 

@@ -175,7 +175,7 @@ export default function DesperdicioPanel({ inventory, onRegistered }) {
                   <td><strong>{entry.produtoNome}</strong>{entry.observacao && <small>{entry.observacao}</small>}</td>
                   <td>{entry.quantidade} un.</td>
                   <td>{motiveLabel[entry.motivo] || entry.motivo}</td>
-                  <td>{currency.format(Number(entry.valorTotal))}</td>
+                  <td>{entry.valorTotal == null ? 'Não informado' : currency.format(Number(entry.valorTotal))}</td>
                   <td>{entry.registradoPor}</td>
                 </tr>
               ))}

@@ -1,8 +1,8 @@
 export const WASTE_REASONS = [
   { value: 'VENCIMENTO', label: 'Vencimento' },
   { value: 'PREPARO', label: 'Perda no preparo' },
-  { value: 'DANO', label: 'Dano / avaria' },
-  { value: 'OUTROS', label: 'Outros' },
+  { value: 'DANIFICADO', label: 'Dano / avaria' },
+  { value: 'OUTRO', label: 'Outros' },
 ]
 
 export const validateWasteInput = (product, quantity) => {

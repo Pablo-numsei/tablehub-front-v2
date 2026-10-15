@@ -129,11 +129,13 @@ export default function ComoFunciona() {
 
       <section className="how-intro">
         <div className="container how-intro__content">
-          <span>COMO FUNCIONA</span>
-          <h1>Um pedido atravessa o restaurante sem perder o contexto.</h1>
+          <span>CONHEÇA O TABLEHUB</span>
+          <h1>Do pedido à entrega, tudo conectado em um só sistema.</h1>
           <p>
-            O foco desta página é mostrar o fluxo do TableHub. A experiência permanece
-            sincronizada ao scroll, mas agora todos os momentos acontecem no centro da tela.
+            O TableHub conecta clientes, cozinha e equipe de atendimento.
+            Pelo QR Code da mesa, o cliente consulta o cardápio digital,
+            realiza pedidos e acompanha o preparo. A equipe gerencia
+            pedidos, mesas, estoque e atendimentos em um único sistema.
           </p>
         </div>
       </section>
@@ -142,9 +144,9 @@ export default function ComoFunciona() {
         <div className="how-stage">
           <div ref={sceneRef} className="how-scene">
             <div ref={introRef} className="how-story__intro">
-              <span>FLUXO TABLEHUB</span>
-              <h2>Do QR à gestão.</h2>
-              <p>Role para acompanhar cada etapa.</p>
+              <span>A EXPERIÊNCIA TABLEHUB</span>
+              <h2>Do QR Code à gestão do restaurante.</h2>
+              <p>Uma jornada integrada para clientes e equipe.</p>
             </div>
 
             <article ref={qrRef} className="how-card how-card--qr">
@@ -152,15 +154,15 @@ export default function ComoFunciona() {
                 {Array.from({ length: 9 }).map((_, i) => <span key={i} />)}
               </div>
               <div>
-                <small>01 · MESA</small>
-                <h3>Escaneie o QR</h3>
-                <p>O cliente abre o cardápio associado à própria mesa.</p>
+                <small>01 · ACESSO À MESA</small>
+                <h3>Escaneie o QR Code</h3>
+                <p>O QR Code identifica a mesa e permite consultar o cardápio digital sem instalar aplicativos.</p>
               </div>
             </article>
 
             <article ref={orderRef} className="how-card">
-              <small>02 · PEDIDO</small>
-              <h3>Pedido #1028</h3>
+              <small>02 · PEDIDO DIGITAL · EXEMPLO</small>
+              <h3>Escolha, confira e envie</h3>
               <ul className="how-order-list">
                 <li><span>2x Smash Table</span><strong>R$ 48</strong></li>
                 <li><span>1x Batata</span><strong>R$ 18</strong></li>
@@ -170,11 +172,12 @@ export default function ComoFunciona() {
             </article>
 
             <article ref={kitchenRef} className="how-card">
-              <small>03 · COZINHA</small>
-              <h3>Status em tempo real</h3>
+              <small>03 · COZINHA E ENTREGA</small>
+              <h3>Acompanhe cada etapa</h3>
               <div className="how-status is-done"><FiCheck /> Recebido</div>
-              <div className="how-status is-active">Preparando</div>
+              <div className="how-status is-active">Em preparo</div>
               <div className="how-status">Pronto</div>
+              <div className="how-status">Entregue</div>
             </article>
 
             <article ref={ecosystemRef} className="how-ecosystem">
@@ -183,10 +186,11 @@ export default function ComoFunciona() {
               <span className="how-eco how-eco--two">Mesas</span>
               <span className="how-eco how-eco--three">Financeiro</span>
               <span className="how-eco how-eco--four">Estoque</span>
-              <span className="how-eco how-eco--five">Clientes</span>
+              <span className="how-eco how-eco--five">Atendimento</span>
               <div className="how-ecosystem__copy">
-                <small>04 · GESTÃO</small>
-                <h3>O pedido termina. Os dados continuam.</h3>
+                <small>04 · GESTÃO INTEGRADA</small>
+                <h3>Mais controle para o restaurante.</h3>
+                <p>Pedidos, mesas, estoque e solicitações de atendimento ficam conectados. Os pagamentos desta versão são simulados.</p>
               </div>
             </article>
           </div>

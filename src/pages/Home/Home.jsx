@@ -60,12 +60,8 @@ export default function Home() {
             </div>
 
             <div className="hero-page-links hero-stagger">
-              <Link to="/como-funciona">
-                <small>01</small>
-                <span>Como funciona</span>
-              </Link>
               <Link to="/recursos">
-                <small>02</small>
+                <small>01</small>
                 <span>Recursos</span>
               </Link>
             </div>

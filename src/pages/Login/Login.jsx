@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PasswordResetModal from './PasswordResetModal.jsx'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout.jsx'
 import api from '../../services/api.js'
@@ -13,6 +14,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [remember, setRemember] = useState(false)
+  const [resetOpen, setResetOpen] = useState(false)
 
   if (user) return <Navigate to={landingPage(user.role)} replace />
 
@@ -63,14 +65,18 @@ export default function Login() {
 
         <div className="auth-meta">
           <label><input type="checkbox" className="me-2" checked={remember} onChange={(event) => setRemember(event.target.checked)} />Manter acesso neste dispositivo</label>
+          <button className="auth-reset-trigger" type="button" onClick={() => setResetOpen(true)}>
+            Esqueceu a senha?
+          </button>
         </div>
 
         <button className="th-btn th-btn--primary th-btn--block" type="submit" disabled={loading}>
           {loading ? 'Entrando...' : 'Entrar'}
         </button>
 
-        <p className="auth-switch">Para obter ou recuperar o acesso, contate o administrador do restaurante.</p>
+        <p className="auth-switch">Não possui conta? Solicite acesso ao administrador do restaurante.</p>
       </form>
+      {resetOpen && <PasswordResetModal onClose={() => setResetOpen(false)} />}
     </AuthLayout>
   )
 }

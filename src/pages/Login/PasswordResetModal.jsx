@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { FiMail, FiX } from 'react-icons/fi'
 import api from '../../services/api.js'
+import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import './PasswordResetModal.css'
 
 export default function PasswordResetModal({ onClose }) {
@@ -83,6 +84,9 @@ export default function PasswordResetModal({ onClose }) {
         aria-describedby="reset-modal-description"
       >
         <header className="reset-modal__header">
+          <div className="reset-modal__theme">
+            <ThemeToggle compact />
+          </div>
           <h2 id="reset-modal-title">Esqueceu a senha?</h2>
           <button type="button" className="reset-modal__close" aria-label="Fechar" onClick={onClose}>
             <FiX />

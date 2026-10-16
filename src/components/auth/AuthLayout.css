@@ -278,3 +278,23 @@
     border-radius: 22px;
   }
 }
+
+/* Theme control shared by login and password-reset pages. */
+.auth-theme-toggle {
+  position: absolute;
+  top: 34px;
+  right: 42px;
+  z-index: 6;
+}
+
+@media (max-width: 560px) {
+  .auth-theme-toggle {
+    top: 22px;
+    right: 20px;
+  }
+
+  .auth-theme-toggle .theme-toggle {
+    min-height: 36px;
+    padding: 0 10px;
+  }
+}

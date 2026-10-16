@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { animate } from 'animejs'
 import { Link } from 'react-router-dom'
 import { FiBarChart2, FiGrid, FiShoppingBag } from 'react-icons/fi'
+import ThemeToggle from '../layout/ThemeToggle.jsx'
 import './AuthLayout.css'
 
 export default function AuthLayout({ children, mode = 'login' }) {
@@ -34,6 +35,10 @@ export default function AuthLayout({ children, mode = 'login' }) {
         <span className="th-brand__mark">T</span>
         <span>TableHub</span>
       </Link>
+
+      <div className="auth-theme-toggle">
+        <ThemeToggle />
+      </div>
 
       <section className="auth-visual">
         <div ref={sceneRef} className="auth-scene">

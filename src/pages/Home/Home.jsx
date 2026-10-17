@@ -1,19 +1,23 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { animate, stagger } from 'animejs'
 import {
   FiArrowRight,
   FiCreditCard,
+  FiCamera,
   FiGrid,
   FiPackage,
   FiSmartphone,
   FiUserPlus,
 } from 'react-icons/fi'
 import Navbar from '../../components/layout/Navbar.jsx'
+import TableQrScanner from '../../components/customer/TableQrScanner.jsx'
 import api from '../../services/api.js'
 import './Home.css'
 
 export default function Home() {
+  const navigate = useNavigate()
+  const [scannerOpen, setScannerOpen] = useState(false)
   const [signup, setSignup] = useState({ username: '', email: '', password: '' })
   const [signupLoading, setSignupLoading] = useState(false)
   const [signupError, setSignupError] = useState('')
@@ -149,6 +153,13 @@ export default function Home() {
                 </button>
               </form>
 
+              {signupSuccess && (
+                <button className="th-btn th-btn--glass th-btn--block customer-signup-scan" type="button"
+                  onClick={() => setScannerOpen(true)}>
+                  <FiCamera aria-hidden="true" /> Escanear QR Code da mesa
+                </button>
+              )}
+
               <Link className="customer-signup-skip" to="/menu">
                 Continuar sem cadastro <FiArrowRight aria-hidden="true" />
               </Link>
@@ -176,6 +187,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+      {scannerOpen && <TableQrScanner onClose={() => setScannerOpen(false)} onDetected={(route) => {
+        setScannerOpen(false)
+        navigate(route)
+      }} />}
     </main>
   )
 }

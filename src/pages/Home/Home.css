@@ -328,6 +328,17 @@
   gap: 10px;
 }
 
+.customer-signup-scan {
+  margin-top: 14px;
+  border-color: var(--border-active);
+  font-weight: 750;
+}
+
+.customer-signup-scan:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
 .customer-signup-skip {
   display: flex;
   justify-content: center;

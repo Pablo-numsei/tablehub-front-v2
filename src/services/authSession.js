@@ -23,6 +23,10 @@ export const landingPage = (role) => normalizeRole(role) === 'COZINHA' ? '/pedid
 export const canAccessRoute = (role, path) =>
   MANAGEMENT_ROUTES.find((route) => route.path === path)?.roles.includes(normalizeRole(role)) === true
 
+// Only staff roles allowed to manage payments should see payment controls.
+export const canManagePayments = (role) =>
+  ['ADMINISTRADOR', 'GARCOM'].includes(normalizeRole(role))
+
 export const canAdvanceOrder = (role, currentStatus) => {
   const next = { Recebido: 'Em preparo', 'Em preparo': 'Pronto', Pronto: 'Entregue' }[currentStatus]
   if (!next) return false

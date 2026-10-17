@@ -1,7 +1,7 @@
 import test, { beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  canAccessRoute, canAdvanceOrder, clearAuthSession, decodeStaffToken,
+  canAccessRoute, canAdvanceOrder, canManagePayments, clearAuthSession, decodeStaffToken,
   landingPage, normalizeRole, readAuthSession, saveAuthSession,
 } from '../src/services/authSession.js'
 
@@ -28,6 +28,15 @@ test('role policy denies unlisted roles and routes, including public registratio
   assert.equal(canAccessRoute('Cliente', '/pedidos'), false)
   assert.equal(canAccessRoute('Administrador', '//evil.example'), false)
   assert.equal(landingPage('Cozinha'), '/pedidos')
+})
+
+test('financial actions are hidden from kitchen and unavailable to unrecognized roles', () => {
+  assert.equal(canManagePayments('COZINHA'), false)
+  assert.equal(canManagePayments('Cozinha'), false)
+  assert.equal(canManagePayments('Cliente'), false)
+  assert.equal(canManagePayments(undefined), false)
+  assert.equal(canManagePayments('Garçom'), true)
+  assert.equal(canManagePayments('ADMINISTRADOR'), true)
 })
 
 test('status actions match kitchen, waiter and administrator responsibilities', () => {

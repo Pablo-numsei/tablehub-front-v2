@@ -7,7 +7,7 @@ import {
 } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
 import { useAuth } from '../../components/auth/AuthProvider.jsx'
-import { canAdvanceOrder } from '../../services/authSession.js'
+import { canAdvanceOrder, canManagePayments } from '../../services/authSession.js'
 import { loadOrderPayment, paymentMethodLabel, paymentStatusLabel } from '../../services/orderPayments.js'
 import { money } from '../../data/customerMenu.js'
 import api from '../../services/api.js'
@@ -78,7 +78,7 @@ export default function Pedidos() {
   const [received, setReceived] = useState(false)
   const [confirmingPayment, setConfirmingPayment] = useState(false)
   const loadingOrders = useRef(false)
-  const canConfirmPayment = ['ADMINISTRADOR', 'GARCOM'].includes(user?.role)
+  const canConfirmPayment = canManagePayments(user?.role)
 
   const loadOrders = async ({ silent = false } = {}) => {
     if (loadingOrders.current) return

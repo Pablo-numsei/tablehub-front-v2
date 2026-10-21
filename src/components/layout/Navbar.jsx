@@ -38,7 +38,9 @@ export default function Navbar() {
           <NavLink to="/como-funciona" onClick={() => setOpen(false)}>Como funciona</NavLink>
           <NavLink to="/recursos" onClick={() => setOpen(false)}>Recursos</NavLink>
           <ThemeToggle />
-          <NavLink to="/login" onClick={() => setOpen(false)}>Entrar</NavLink>
+          <NavLink to="/login-cliente" onClick={() => setOpen(false)}>Entrar cliente</NavLink>
+          <NavLink to="/cadastro-cliente" onClick={() => setOpen(false)}>Criar conta</NavLink>
+          <NavLink to="/login" onClick={() => setOpen(false)}>Gestão</NavLink>
         </nav>
       </div>
     </header>

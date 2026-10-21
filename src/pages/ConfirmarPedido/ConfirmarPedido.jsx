@@ -113,6 +113,7 @@ export default function ConfirmarPedido() {
       const payload = {
         mesaId: mesa.id,
         criadoPor: null,
+        observacoes: note.trim() || null,
         itens: resolvedItems.map(({ item, backendProduct }) => ({
           produtoId: backendProduct.id,
           quantidade: item.quantity,
@@ -221,7 +222,7 @@ export default function ConfirmarPedido() {
                 placeholder="Ex.: sem cebola, ponto da carne..."
                 maxLength={255}
               />
-              <small>Informe restrições de preparo diretamente à equipe; este campo fica salvo no seu dispositivo.</small>
+              <small>A observação será enviada à cozinha junto com o pedido (até 255 caracteres).</small>
             </label>
           </div>
 

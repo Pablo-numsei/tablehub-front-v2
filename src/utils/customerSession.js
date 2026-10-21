@@ -107,6 +107,7 @@ export const saveCustomerOrderFromApi = ({
   table,
   cart,
   note = '',
+  identity = null,
   catalog = readCatalog(),
 }) => {
   const items = cartItems(catalog, cart).map((product) => ({
@@ -129,7 +130,8 @@ export const saveCustomerOrderFromApi = ({
       : `#${String(Date.now()).slice(-6)}`,
     backendId,
     table: String(table).padStart(2, '0'),
-    customer: 'Cliente da mesa',
+    customer: apiOrder?.nomeCliente || identity?.name || 'Cliente da mesa',
+    wantsWhatsApp: Boolean(identity?.whatsapp),
     time: new Date(createdAt).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit',
@@ -150,6 +152,13 @@ export const saveCustomerOrderFromApi = ({
   write(ACTIVE_ORDER_KEY, order.id)
 
   return order
+}
+
+export const cancelCustomerOrderWhatsApp = (id) => {
+  const orders = loadCustomerOrders()
+  const updated = orders.map(order => order.id === id ? { ...order, wantsWhatsApp: false } : order)
+  write(ORDERS_KEY, JSON.stringify(updated))
+  return updated.find(order => order.id === id) || null
 }
 
 export const updateCustomerOrderStatus = (id, status) => {
@@ -197,7 +206,8 @@ export const saveCustomerOrderSnapshot = (apiOrder, apiItems, payment) => {
   const order = {
     id, backendId: apiOrder.id,
     table: String(apiOrder.mesa?.number ?? old?.table ?? '').padStart(2, '0'),
-    customer: 'Cliente da mesa',
+    customer: apiOrder?.nomeCliente || old?.customer || 'Cliente da mesa',
+    wantsWhatsApp: old?.wantsWhatsApp || false,
     note: old?.note || '',
     time: new Date(apiOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
     createdAt: apiOrder.createdAt,

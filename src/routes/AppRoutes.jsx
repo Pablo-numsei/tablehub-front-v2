@@ -18,6 +18,7 @@ import Atendimento from '../pages/Atendimento/Atendimento.jsx'
 import MenuCliente from '../pages/MenuCliente/MenuCliente.jsx'
 import CarrinhoCliente from '../pages/CarrinhoCliente/CarrinhoCliente.jsx'
 import ConfirmarPedido from '../pages/ConfirmarPedido/ConfirmarPedido.jsx'
+import IdentificarPedido from '../pages/IdentificarPedido/IdentificarPedido.jsx'
 import PedidoConfirmado from '../pages/PedidoConfirmado/PedidoConfirmado.jsx'
 import PagamentoCliente from '../pages/PagamentoCliente/PagamentoCliente.jsx'
 import ComprovanteCliente from '../pages/ComprovanteCliente/ComprovanteCliente.jsx'
@@ -51,6 +52,7 @@ export default function AppRoutes() {
       </Route>
       <Route path="/menu" element={<MenuCliente />} />
       <Route path="/carrinho" element={<CarrinhoCliente />} />
+      <Route path="/identificar-pedido" element={<IdentificarPedido />} />
       <Route path="/confirmar-pedido" element={<ConfirmarPedido />} />
       <Route path="/pedido-confirmado" element={<PedidoConfirmado />} />
       <Route path="/pagamento" element={<PagamentoCliente />} />

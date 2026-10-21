@@ -511,3 +511,18 @@
     margin-top: 44px;
   }
 }
+
+/* Consent summary shown only after the order was persisted. */
+.customer-whatsapp-summary {
+  padding: 14px 16px;
+  margin: 14px 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-size: .9rem;
+}
+.customer-whatsapp-summary strong {
+  color: var(--text);
+}

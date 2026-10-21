@@ -135,7 +135,7 @@
 
 .order-card__main {
   display: grid;
-  grid-template-columns: 110px 1fr 110px 160px 110px;
+  grid-template-columns: 92px 90px minmax(130px, 1fr) 95px 140px 110px;
   align-items: center;
   gap: 18px;
 }
@@ -262,7 +262,7 @@
 .order-drawer__meta {
   margin: 30px 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
 
@@ -308,9 +308,10 @@
   }
 
   .order-card__main {
-    grid-template-columns: 90px 1fr 100px 140px;
+    grid-template-columns: 90px 95px 1fr 140px;
   }
 
+  .order-card__main > div:nth-child(4),
   .order-card__main > div:last-child {
     display: none;
   }
@@ -354,6 +355,7 @@
     grid-template-columns: 1fr 1fr;
   }
 
+  .order-card__main > div:nth-child(4),
   .order-card__main > div:last-child {
     display: grid;
   }

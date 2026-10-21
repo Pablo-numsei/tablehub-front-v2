@@ -48,6 +48,12 @@ const syntheticStaff = (email) => {
   const token = `${Buffer.from('{}').toString('base64url')}.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.synthetic-signature`
   return { id: 7, nome: 'Operador de teste', email, perfilId: 1, perfil: 'Administrador', token }
 }
+const syntheticCustomer = () => {
+  const claims = { purpose: 'customer', clienteId: 27, sub: 'pablo123',
+    exp: Math.floor(Date.now() / 1000) + 600 }
+  return `${Buffer.from('{}').toString('base64url')}.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.synthetic-customer-signature`
+}
+const customerToken = syntheticCustomer()
 const send = (method, params = {}) => new Promise((resolve, reject) => {
   const id = ++sequence
   const timeout = setTimeout(() => { pending.delete(id); reject(new Error(`CDP timeout: ${method}`)) }, 15000)
@@ -64,6 +70,20 @@ const apiResponse = (request) => {
   apiCalls++
   const body = request.postData ? JSON.parse(request.postData) : {}
   if (uri === '/api/auth/login') return [200, syntheticStaff(body.email)]
+  if (uri === '/api/clientes/cadastro' && method === 'POST') {
+    assert.equal(body.nomeUsuario, 'pablo123')
+    assert.equal(body.pin, '0472')
+    return [201, { id: 27, nomeUsuario: 'pablo123', message: 'Conta criada.' }]
+  }
+  if (uri === '/api/clientes/login' && method === 'POST') {
+    assert.equal(body.nomeUsuario, 'pablo123')
+    assert.equal(body.pin, '0472')
+    return [200, { id: 27, nomeUsuario: 'pablo123', token: customerToken }]
+  }
+  if (uri === '/api/clientes/me') {
+    return header('Authorization') === 'Bearer ' + customerToken
+      ? [200, { id: 27, nomeUsuario: 'pablo123' }] : [401, {}]
+  }
   if (uri === '/api/v1/produtos' && method === 'GET') return [200, products]
   if (uri === '/api/v1/produtos' && method === 'POST') {
     assert.ok(staff)
@@ -123,9 +143,10 @@ const apiResponse = (request) => {
   if (uri === '/api/dashboard/resumo') return staff ? [200, { pedidosHoje: order ? 1 : 0, faturamentoHoje: payment?.status === 'PAGO' ? 39.90 : 0, ticketMedio: 0, mesasOcupadas: 1, totalMesas: 1, pedidosPorStatus: [], pedidosRecentes: [], movimentoPorHora: [], mesas: [{ numero: 4, status: 'Ocupada' }] }] : [401, {}]
   if (uri === '/api/pedidos' && method === 'POST') {
     assert.equal(header('X-Table-Token'), tableToken, 'Checkout must carry its table context')
+    assert.equal(header('X-Customer-Token'), customerToken, 'Anonymous orders require a signed customer session')
     assert.equal(body.mesaId, 1, 'The display number must resolve to the real table ID')
     assert.equal(body.itens[0].produtoId, 101, 'Checkout must use the server product ID')
-    order = { id: 1, mesa: table, status: { id: 1, name: 'Recebido', flowOrder: 1 }, totalValue: 39.90, confirmed: true, createdAt: '2026-10-13T12:00:00' }
+    order = { id: 1, nomeCliente: 'pablo123', mesa: table, status: { id: 1, name: 'Recebido', flowOrder: 1 }, totalValue: 39.90, confirmed: true, createdAt: '2026-10-13T12:00:00' }
     product.stockQuantity = 9
     return [201, { ...order, accessToken: capability }]
   }
@@ -219,6 +240,7 @@ try {
   await navigate('/menu?mesa=04&qr=' + encodeURIComponent(qrToken))
   await waitFor("document.querySelector('.customer-product-card button') && !document.querySelector('.customer-product-card button').disabled", 'menu availability')
   assert.ok((await evaluate('document.body.innerText')).includes('39,90'))
+  assert.ok((await evaluate('document.body.innerText')).includes('Entrar para pedir'), 'Guest menu must be a read-only storefront')
   await waitFor("!location.search.includes('qr=')", 'QR exchanged and removed from navigation')
   await click('Chamar garçom')
   await waitFor("location.pathname === '/chamar-garcom'", 'pre-order waiter request')
@@ -229,6 +251,15 @@ try {
   console.log('PASS: QR context authorizes a pre-order waiter request for its table')
   await navigate('/menu?mesa=04')
   await waitFor("document.querySelector('.customer-product-card button') && !document.querySelector('.customer-product-card button').disabled", 'retained table context')
+  await click('Entrar para pedir')
+  await waitFor("location.pathname === '/login-cliente'", 'customer PIN login')
+  await evaluate("document.querySelector('a[href=\"/cadastro-cliente\"]').click()")
+  await waitFor("location.pathname === '/cadastro-cliente'", 'customer PIN registration')
+  await input('#customer-name', 'pablo123')
+  await input('#customer-pin', '0472')
+  await input('#customer-pin-confirm', '0472')
+  await click('Criar conta e continuar')
+  await waitFor("location.pathname === '/menu' && document.querySelector('.customer-product-card button')?.textContent.includes('Adicionar')", 'customer logged in after signup')
   await click('Adicionar')
   await evaluate("document.querySelector('.customer-cart-bar').click()")
   await waitFor("location.pathname === '/carrinho'", 'cart')
@@ -238,7 +269,7 @@ try {
   await waitFor("!Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes('Confirmar pedido'))?.disabled", 'checkout ready')
   await click('Confirmar pedido')
   await waitFor("location.pathname === '/pedido-confirmado'", 'order creation')
-  console.log('PASS: menu → cart → checkout uses official ID and price')
+  console.log('PASS: QR storefront → PIN signup → cart → checkout uses official ID and price')
 
   await navigate('/pagamento?id=%231&mesa=04')
   await waitFor("Array.from(document.querySelectorAll('button')).some(button => button.textContent.trim() === 'PIX')", 'payment methods')

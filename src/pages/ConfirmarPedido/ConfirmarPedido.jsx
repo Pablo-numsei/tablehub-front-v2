@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import { FiArrowLeft, FiCheck } from 'react-icons/fi'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { money } from '../../data/customerMenu.js'
 import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
 import useTableContext from '../../hooks/useTableContext.js'
 import { mapCustomerCatalog, saveCatalog, cartItems, cartTotal } from '../../services/customerCatalog.js'
 import api from '../../services/api.js'
+import { readCustomerSession } from '../../services/customerSession.js'
 import {
   clearCart,
   loadCart,
@@ -143,6 +144,11 @@ export default function ConfirmarPedido() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (!readCustomerSession()) {
+    return <Navigate to="/login-cliente" replace
+      state={{ from: `/menu?mesa=${encodeURIComponent(table)}` }} />
   }
 
   if (items.length === 0) {

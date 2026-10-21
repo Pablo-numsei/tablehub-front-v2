@@ -7,6 +7,7 @@ import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
 import useTableContext from '../../hooks/useTableContext.js'
 import { mapCustomerCatalog, saveCatalog, cartItems, cartTotal } from '../../services/customerCatalog.js'
 import api from '../../services/api.js'
+import { loadQuickIdentity, clearQuickIdentity } from '../../services/quickIdentification.js'
 import {
   clearCart,
   loadCart,
@@ -20,6 +21,7 @@ export default function ConfirmarPedido() {
   const table = params.get('mesa') || ''
   const { ready: tableReady, error: tableError, loading: tableLoading } = useTableContext(table)
   const cart = loadCart()
+  const identity = loadQuickIdentity(table)
   const { products, loading: catalogLoading, error: catalogError, setProducts } = useCustomerCatalog()
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -29,7 +31,7 @@ export default function ConfirmarPedido() {
   const total = cartTotal(items)
 
   const confirmOrder = async () => {
-    if (!tableReady || items.length === 0 || submitting || catalogLoading || catalogError) return
+    if (!tableReady || !identity?.name || items.length === 0 || submitting || catalogLoading || catalogError) return
 
     setSubmitting(true)
     setError('')
@@ -112,6 +114,9 @@ export default function ConfirmarPedido() {
       const payload = {
         mesaId: mesa.id,
         criadoPor: null,
+        nomeCliente: identity.name,
+        telefone: identity.whatsapp ? identity.phone : null,
+        receberWhatsApp: Boolean(identity.whatsapp),
         itens: resolvedItems.map(({ item, backendProduct }) => ({
           produtoId: backendProduct.id,
           quantidade: item.quantity,
@@ -125,10 +130,12 @@ export default function ConfirmarPedido() {
         table: mesa.number,
         cart,
         note,
+        identity,
         catalog: freshCatalog,
       })
 
       clearCart()
+      clearQuickIdentity()
 
       navigate(
         `/pedido-confirmado?id=${encodeURIComponent(order.id)}&mesa=${mesa.number}`,
@@ -171,6 +178,28 @@ export default function ConfirmarPedido() {
               Voltar ao cardápio
             </button>
           </div>
+        </div>
+      </main>
+    )
+  }
+
+  if (!identity?.name) {
+    return (
+      <main className="customer-flow-page">
+        <div className="customer-flow-shell">
+          <header className="customer-flow-topbar">
+            <div className="customer-flow-brand">TableHub</div>
+            <ThemeToggle compact />
+          </header>
+          <section className="customer-flow-head">
+            <span>IDENTIFICAÇÃO</span>
+            <h1>Informe seu nome para continuar.</h1>
+            <p>Não é necessário criar uma conta para pedir.</p>
+          </section>
+          <button className="th-btn th-btn--primary" type="button"
+            onClick={() => navigate(`/identificar-pedido?mesa=${encodeURIComponent(table)}`)}>
+            Identificação rápida
+          </button>
         </div>
       </main>
     )
@@ -222,6 +251,18 @@ export default function ConfirmarPedido() {
           <aside className="customer-flow-card">
             <span className="customer-flow-card__eyebrow">MESA</span>
             <h2>{String(table).padStart(2, '0')}</h2>
+            <div className="customer-summary-row">
+              <span>Pedido de</span>
+              <strong>{identity.name}</strong>
+            </div>
+            <div className="customer-summary-row">
+              <span>WhatsApp</span>
+              <strong>{identity.whatsapp ? 'Solicitado' : 'Não solicitado'}</strong>
+            </div>
+            <button type="button" className="th-btn th-btn--glass th-btn--block"
+              onClick={() => navigate(`/identificar-pedido?mesa=${encodeURIComponent(table)}`)}>
+              Editar identificação
+            </button>
 
             <div className="customer-summary-row">
               <span>Itens</span>

@@ -121,7 +121,7 @@ export default function PedidoConfirmado() {
             </div>
           </div>
 
-          <div className="customer-auth-info">
+          <div className="customer-whatsapp-summary">
             Pedido de <strong>{order.customer || 'Cliente da mesa'}</strong>.
             {whatsAppActive
               ? ' Você autorizou receber atualizações por WhatsApp (o envio depende da disponibilidade do serviço).'

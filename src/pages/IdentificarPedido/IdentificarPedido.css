@@ -1,0 +1,38 @@
+.customer-identify {
+  max-width: 790px;
+}
+.customer-identify__form {
+  display: grid;
+  gap: 18px;
+}
+.customer-identify__field { display: grid; gap: 8px; }
+.customer-identify__field strong { font-size: .95rem; color: var(--text); }
+.customer-identify__field small { color: var(--text-secondary); font-weight: 400; }
+.customer-identify__field input {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 14px;
+  width: 100%;
+  min-height: 48px;
+}
+.customer-identify__field input:focus-visible {
+  outline: 3px solid var(--primary-soft);
+  border-color: var(--border-active);
+}
+.customer-identify__whatsapp {
+  display: flex; gap: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-elevated);
+  border-radius: 14px;
+  padding: 18px;
+}
+.customer-identify__whatsapp > svg { flex-shrink: 0; color: var(--primary-strong); width: 24px; height: 24px; }
+.customer-identify__whatsapp p { color: var(--text-secondary); font-size: .87rem; margin: 6px 0 12px; }
+.customer-identify__whatsapp small { color: var(--text-secondary); line-height: 1.5; display: block; margin-top: 8px; }
+.customer-identify__consent { display: flex; gap: 10px; align-items: flex-start; font-size: .88rem; }
+.customer-identify__consent input { margin-top: 3px; accent-color: var(--primary); }
+@media (max-width: 580px) {
+  .customer-identify__whatsapp { padding: 13px; gap: 10px; }
+}

@@ -129,7 +129,7 @@ export const saveCustomerOrderFromApi = ({
       : `#${String(Date.now()).slice(-6)}`,
     backendId,
     table: String(table).padStart(2, '0'),
-    customer: 'Cliente da mesa',
+    customer: apiOrder?.nomeCliente || 'Cliente da mesa',
     time: new Date(createdAt).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit',
@@ -197,7 +197,7 @@ export const saveCustomerOrderSnapshot = (apiOrder, apiItems, payment) => {
   const order = {
     id, backendId: apiOrder.id,
     table: String(apiOrder.mesa?.number ?? old?.table ?? '').padStart(2, '0'),
-    customer: 'Cliente da mesa',
+    customer: apiOrder?.nomeCliente || old?.customer || 'Cliente da mesa',
     note: old?.note || '',
     time: new Date(apiOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
     createdAt: apiOrder.createdAt,

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { FiArrowRight, FiBell, FiCheckCircle, FiClock } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
+import api from '../../services/api.js'
 import { money } from '../../data/customerMenu.js'
 import {
   enableOrderPush,
@@ -10,6 +11,7 @@ import {
 import {
   getActiveCustomerOrder,
   getCustomerOrder,
+  cancelCustomerOrderWhatsApp,
 } from '../../utils/customerSession.js'
 import '../../styles/customer-flow.css'
 
@@ -21,6 +23,9 @@ export default function PedidoConfirmado() {
     ? getCustomerOrder(requestedId)
     : getActiveCustomerOrder()
 
+  const [whatsAppActive, setWhatsAppActive] = useState(Boolean(order?.wantsWhatsApp))
+  const [whatsAppLoading, setWhatsAppLoading] = useState(false)
+  const [whatsAppError, setWhatsAppError] = useState('')
   const [pushEnabled, setPushEnabled] = useState(() =>
     isOrderPushEnabled(order),
   )
@@ -46,6 +51,21 @@ export default function PedidoConfirmado() {
   }
 
   const orderQuery = `id=${encodeURIComponent(order.id)}&mesa=${order.table}`
+
+  const cancelWhatsApp = async () => {
+    if (!whatsAppActive || whatsAppLoading) return
+    setWhatsAppLoading(true)
+    setWhatsAppError('')
+    try {
+      await api.post(`/api/pedidos/${order.backendId}/whatsapp/cancelar`)
+      cancelCustomerOrderWhatsApp(order.id)
+      setWhatsAppActive(false)
+    } catch (failure) {
+      setWhatsAppError(failure.response?.data?.message || 'Não foi possível cancelar o WhatsApp agora.')
+    } finally {
+      setWhatsAppLoading(false)
+    }
+  }
 
   const activateNotifications = async () => {
     if (pushEnabled || pushLoading) return
@@ -100,6 +120,22 @@ export default function PedidoConfirmado() {
               <strong><FiClock /> {order.time}</strong>
             </div>
           </div>
+
+          <div className="customer-auth-info">
+            Pedido de <strong>{order.customer || 'Cliente da mesa'}</strong>.
+            {whatsAppActive
+              ? ' Você autorizou receber atualizações por WhatsApp (o envio depende da disponibilidade do serviço).'
+              : ' Atualizações pelo site continuam disponíveis.'}
+          </div>
+          {whatsAppActive && (
+            <div className="customer-flow-actions">
+              {whatsAppError && <p className="customer-flow-error" role="alert">{whatsAppError}</p>}
+              <button className="th-btn th-btn--glass th-btn--block" type="button"
+                disabled={whatsAppLoading} onClick={cancelWhatsApp}>
+                {whatsAppLoading ? 'Cancelando WhatsApp...' : 'Parar mensagens pelo WhatsApp'}
+              </button>
+            </div>
+          )}
 
           {pushError && (
             <div className="customer-flow-error" role="alert">

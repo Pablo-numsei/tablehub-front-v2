@@ -146,7 +146,11 @@ const apiResponse = (request) => {
     assert.equal(header('X-Customer-Token'), customerToken, 'Anonymous orders require a signed customer session')
     assert.equal(body.mesaId, 1, 'The display number must resolve to the real table ID')
     assert.equal(body.itens[0].produtoId, 101, 'Checkout must use the server product ID')
-    order = { id: 1, nomeCliente: 'pablo123', mesa: table, status: { id: 1, name: 'Recebido', flowOrder: 1 }, totalValue: 39.90, confirmed: true, createdAt: '2026-10-13T12:00:00' }
+    assert.equal(body.observacoes, 'carne bem passada', 'Kitchen note must be sent to backend')
+    order = { id: 1, nomeCliente: 'pablo123', observacoes: body.observacoes,
+      mesa: table, status: { id: 1, name: 'Recebido', flowOrder: 1 },
+      totalValue: 39.90, confirmed: true, createdAt: '2026-10-21T18:45:00',
+      createdAtUtc: '2026-10-21T23:45:00Z' }
     product.stockQuantity = 9
     return [201, { ...order, accessToken: capability }]
   }
@@ -270,6 +274,8 @@ try {
   await click('Continuar pedido')
   await waitFor("location.pathname === '/confirmar-pedido'", 'checkout')
   await waitFor("!Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes('Confirmar pedido'))?.disabled", 'checkout ready')
+  await evaluate("{ const element = document.querySelector('.customer-note'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(element, 'carne bem passada'); element.dispatchEvent(new Event('input', { bubbles: true })); }")
+  await waitFor("document.querySelector('.customer-note')?.value === 'carne bem passada'", 'customer note filled')
   await click('Confirmar pedido')
   await waitFor("location.pathname === '/pedido-confirmado'", 'order creation')
   console.log('PASS: QR storefront → PIN signup → cart → checkout uses official ID and price')
@@ -301,7 +307,10 @@ try {
   await waitFor("location.pathname === '/dashboard'", 'staff login')
   await navigate('/pedidos')
   await waitFor("document.querySelector('.order-card')", 'management orders')
+  await waitFor("document.body.innerText.includes('carne bem passada')", 'kitchen note visible in staff list')
+  await waitFor("document.querySelector('.order-card')?.innerText.includes('20:45')", 'UTC shown in São Paulo restaurant timezone')
   await click('Ver detalhes')
+  await waitFor("document.querySelector('.order-drawer__notes')?.innerText.includes('carne bem passada')", 'kitchen note visible in details')
   await waitFor("document.body.innerText.includes('Conferi o valor e a forma desta simulação')", 'staff payment approval')
   await evaluate("document.querySelector('.order-drawer input[type=checkbox]').click()")
   await click('Confirmar pagamento simulado')

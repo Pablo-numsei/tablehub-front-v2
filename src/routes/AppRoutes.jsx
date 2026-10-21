@@ -3,6 +3,8 @@ import Home from '../pages/Home/Home.jsx'
 import ComoFunciona from '../pages/ComoFunciona/ComoFunciona.jsx'
 import Recursos from '../pages/Recursos/Recursos.jsx'
 import Login from '../pages/Login/Login.jsx'
+import LoginCliente from '../pages/ClienteAuth/LoginCliente.jsx'
+import CadastroCliente from '../pages/ClienteAuth/CadastroCliente.jsx'
 import ResetPassword from '../pages/ResetPassword/ResetPassword.jsx'
 import Register from '../pages/Register/Register.jsx'
 import Dashboard from '../pages/Dashboard/Dashboard.jsx'
@@ -33,6 +35,8 @@ export default function AppRoutes() {
       <Route path="/recursos" element={<Recursos />} />
 
       <Route path="/login" element={<Login />} />
+      <Route path="/login-cliente" element={<LoginCliente />} />
+      <Route path="/cadastro-cliente" element={<CadastroCliente />} />
       <Route path="/redefinir-senha" element={<ResetPassword />} />
       <Route element={<RequireAuth />}>
         <Route path="/cadastro" element={<Register />} />

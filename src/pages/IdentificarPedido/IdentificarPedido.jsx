@@ -38,9 +38,16 @@ export default function IdentificarPedido() {
     let active = true
     api.get('/api/whatsapp/status')
       .then(({ data }) => {
-        if (active) setWhatsAppAvailable(data?.available === true)
+        if (active) {
+          const available = data?.available === true
+          setWhatsAppAvailable(available)
+          if (!available) setForm(current => ({ ...current, whatsapp: false }))
+        }
       })
-      .catch(() => { if (active) setWhatsAppAvailable(false) })
+      .catch(() => { if (active) {
+        setWhatsAppAvailable(false)
+        setForm(current => ({ ...current, whatsapp: false }))
+      } })
       .finally(() => { if (active) setAvailabilityLoading(false) })
     return () => { active = false }
   }, [])
@@ -138,7 +145,7 @@ export default function IdentificarPedido() {
             <p className="customer-flow-error" role="alert">{error || tableError || catalogError}</p>
           )}
           <button className="th-btn th-btn--primary th-btn--block" type="submit"
-            disabled={!ready || tableLoading || loading || !!catalogError || availabilityLoading}>
+            disabled={!ready || tableLoading || loading || !!catalogError}>
             Revisar e enviar pedido <FiArrowRight aria-hidden="true" />
           </button>
           <button className="th-btn th-btn--glass th-btn--block" type="button"

@@ -57,8 +57,8 @@ export default function AuthLayout({ children, mode = 'login' }) {
 
           <div className="auth-visual__copy">
             <span>TABLEHUB</span>
-            <h1>{mode === 'register' ? 'Uma operação mais conectada.' : mode === 'reset' ? 'Seu acesso protegido.' : 'Sua operação em um só lugar.'}</h1>
-            <p>Pedidos, mesas, pagamentos e gestão com uma interface criada para manter tudo em fluxo.</p>
+            <h1>{mode === 'register' ? 'Uma operação mais conectada.' : mode === 'reset' ? 'Seu acesso protegido.' : mode.startsWith('customer') ? 'Seu próximo pedido começa aqui.' : 'Sua operação em um só lugar.'}</h1>
+            <p>{mode.startsWith('customer') ? 'Uma conta para voltar ao TableHub. O QR Code da mesa continua necessário para fazer pedidos.' : 'Pedidos, mesas, pagamentos e gestão com uma interface criada para manter tudo em fluxo.'}</p>
           </div>
         </div>
       </section>

@@ -122,10 +122,10 @@ export default function CarrinhoCliente() {
                 <button
                   className="th-btn th-btn--primary th-btn--block"
                   type="button"
-                  onClick={() => navigate(`/confirmar-pedido?mesa=${table}`)}
+                  onClick={() => navigate(`/identificar-pedido?mesa=${table}`)}
                   disabled={!tableReady || loading || !!error}
                 >
-                  Continuar pedido <FiArrowRight />
+                  Continuar para identificação <FiArrowRight />
                 </button>
 
                 <button

@@ -72,7 +72,8 @@ export default function LoginCliente() {
           <label className="th-label" htmlFor="customer-pin">Seu PIN (4 dígitos)</label>
           <input className="th-input" id="customer-pin" name="pin" type="password"
             inputMode="numeric" pattern="[0-9]{4}" minLength={4} maxLength={4}
-            autoComplete="current-password" placeholder="••••" value={form.pin}
+            autoComplete="current-password" autoFocus={Boolean(location.state?.nomeUsuario)}
+            placeholder="••••" value={form.pin}
             onChange={e => setForm(f => ({ ...f, pin: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
             disabled={loading} required />
         </div>

@@ -274,6 +274,16 @@ try {
   await waitFor("location.pathname === '/pedido-confirmado'", 'order creation')
   console.log('PASS: QR storefront → PIN signup → cart → checkout uses official ID and price')
 
+  await navigate('/menu?mesa=04')
+  await waitFor("Array.from(document.querySelectorAll('button')).some(button => button.textContent.trim() === 'Sair')", 'logged-in customer can sign out')
+  await click('Sair')
+  await waitFor("location.pathname === '/login-cliente' && document.querySelector('#customer-username')?.value === 'pablo123'", 'logout opens PIN login and remembers username')
+  assert.ok(await evaluate("!sessionStorage.getItem('tablehub_customer_auth')"), 'logout clears the customer token')
+  await input('#customer-pin', '0472')
+  await click('Entrar e continuar')
+  await waitFor("location.pathname === '/menu' && location.search === '?mesa=4' && document.body.innerText.includes('Olá, pablo123')", 'PIN login returns to the same table')
+  console.log('PASS: customer logout → PIN login → original table')
+
   await navigate('/pagamento?id=%231&mesa=04')
   await waitFor("Array.from(document.querySelectorAll('button')).some(button => button.textContent.trim() === 'PIX')", 'payment methods')
   await click('PIX')

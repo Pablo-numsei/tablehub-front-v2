@@ -241,3 +241,24 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Public storefront shown after scanning a table QR. */
+.customer-menu-vitrine {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  margin: 20px 0;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-elevated);
+  color: var(--text);
+}
+.customer-menu-vitrine > span { color: var(--text-secondary); font-size: .92rem; }
+.customer-menu-vitrine > div { display: flex; flex-wrap: wrap; gap: 10px; }
+.customer-menu-account { color: var(--text-secondary); font-size: .85rem; font-weight: 650; }
+.customer-menu-auth-button { border: 1px solid var(--border); border-radius: 12px;
+  background: var(--surface-elevated); color: var(--text); padding: 10px 14px; }
+@media (max-width: 600px) {
+  .customer-menu-vitrine > div > button { flex: 1; }
+  .customer-menu-account { font-size: .75rem; }
+}

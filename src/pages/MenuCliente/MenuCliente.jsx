@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FiMinus, FiPlus, FiShoppingBag } from 'react-icons/fi'
+import { FiCamera, FiMinus, FiPlus, FiShoppingBag } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
+import TableQrScanner from '../../components/customer/TableQrScanner.jsx'
 import { money } from '../../data/customerMenu.js'
 import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
 import useTableContext from '../../hooks/useTableContext.js'
@@ -20,6 +21,7 @@ export default function MenuCliente() {
     if (qr && ready) navigate(`/menu?mesa=${context.mesa.number}`, { replace: true })
   }, [qr, ready, context, navigate])
   const [customerSession, setCustomerSession] = useState(readCustomerSession)
+  const [scannerOpen, setScannerOpen] = useState(false)
   useEffect(() => {
     const refresh = () => setCustomerSession(readCustomerSession())
     window.addEventListener(CUSTOMER_CHANGED_EVENT, refresh)
@@ -49,7 +51,8 @@ export default function MenuCliente() {
   const add = (id) => {
     const product = products.find((item) => item.id === id)
     if (!customerSession) { enterClient(); return }
-    if (!ready || !product?.available || loading || catalogError) return
+    if (!ready) { setScannerOpen(true); return }
+    if (!product?.available || loading || catalogError) return
 
     updateCart((current) => ({
       ...current,
@@ -113,7 +116,20 @@ export default function MenuCliente() {
       <section className="customer-menu-content">
         {tableLoading && <p role="status">Validando a mesa...</p>}
         {tableError && <div className="customer-flow-error" role="alert">{tableError}</div>}
-        {!tableLoading && !ready && !tableError && <p role="status">Escaneie o QR Code atualizado da mesa para pedir ou chamar a equipe.</p>}
+        {!ready && !tableLoading && (
+          <div className="customer-menu-qr-notice" role="status">
+            <div>
+              <strong>Falta validar o QR Code da mesa</strong>
+              <p>{customerSession
+                ? 'Seu login está ativo. Para adicionar produtos ao carrinho, use o QR Code da mesa.'
+                : 'O cardápio está em modo vitrine. Entre com usuário e PIN e leia o QR Code da mesa para pedir.'}</p>
+              <small>No computador, você também pode abrir nesta aba o link do QR gerado em Gestão → Mesas → Gerenciar mesa.</small>
+            </div>
+            <button className="th-btn th-btn--primary" type="button" onClick={() => setScannerOpen(true)}>
+              <FiCamera aria-hidden="true" /> Ler QR da mesa
+            </button>
+          </div>
+        )}
         {ready && !customerSession && (
           <div className="customer-menu-vitrine" role="note">
             <strong>Vitrine do cardápio</strong>
@@ -171,11 +187,11 @@ export default function MenuCliente() {
                   {!product.available ? (
                     <span className="customer-product-unavailable">Esgotado</span>
                   ) : !customerSession ? (
-                    <button type="button" onClick={enterClient} disabled={!ready || loading || !!catalogError}>
+                    <button type="button" onClick={enterClient} disabled={loading || !!catalogError}>
                       Entrar para pedir
                     </button>
                   ) : qty === 0 ? (
-                    <button type="button" onClick={() => add(product.id)} disabled={!ready || loading || !!catalogError}>
+                    <button type="button" onClick={() => add(product.id)} disabled={loading || !!catalogError}>
                       Adicionar
                     </button>
                   ) : (
@@ -184,7 +200,7 @@ export default function MenuCliente() {
                         <FiMinus />
                       </button>
                       <span>{qty}</span>
-                      <button type="button" onClick={() => add(product.id)} disabled={!ready} aria-label={`Adicionar uma unidade de ${product.name}`}>
+                      <button type="button" onClick={() => add(product.id)} disabled={loading || !!catalogError} aria-label={`Adicionar uma unidade de ${product.name}`}>
                         <FiPlus />
                       </button>
                     </div>
@@ -207,6 +223,15 @@ export default function MenuCliente() {
           <span>{itemCount} {itemCount === 1 ? 'item' : 'itens'}</span>
           <strong>{money(total)}</strong>
         </button>
+      )}
+      {scannerOpen && (
+        <TableQrScanner
+          onClose={() => setScannerOpen(false)}
+          onDetected={route => {
+            setScannerOpen(false)
+            navigate(route)
+          }}
+        />
       )}
     </main>
   )

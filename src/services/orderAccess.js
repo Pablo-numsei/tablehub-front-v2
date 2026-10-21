@@ -36,6 +36,8 @@ export const orderIdForRequest = (config) => {
   const path = String(config.url || '').split('?')[0]
   const match = path.match(/^\/api\/(?:pedidos\/(\d+)$|itens-pedido\/pedido\/(\d+)$|payments\/(\d+)(?:\/process)?$)/)
   if (match) return validOrderId(match[1] || match[2] || match[3])
+  const optout = path.match(/^\/api\/pedidos\/(\d+)\/whatsapp\/cancelar$/)
+  if (optout && String(config.method).toLowerCase() === 'post') return validOrderId(optout[1])
   if (!['/api/atendimentos', '/api/push/subscriptions'].includes(path) || String(config.method).toLowerCase() !== 'post') return null
   try {
     const payload = typeof config.data === 'string' ? JSON.parse(config.data) : config.data

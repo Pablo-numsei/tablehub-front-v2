@@ -146,7 +146,7 @@ export default function IdentificarPedido() {
           )}
           <button className="th-btn th-btn--primary th-btn--block" type="submit"
             disabled={!ready || tableLoading || loading || !!catalogError}>
-            Revisar e enviar pedido <FiArrowRight aria-hidden="true" />
+            Revisar pedido <FiArrowRight aria-hidden="true" />
           </button>
           <button className="th-btn th-btn--glass th-btn--block" type="button"
             onClick={() => navigate(`/carrinho?mesa=${encodeURIComponent(table)}`)}>

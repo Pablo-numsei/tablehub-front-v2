@@ -119,13 +119,16 @@ const apiResponse = (request) => {
     current.status = body.status
     return [200, current]
   }
+  if (uri === '/api/whatsapp/status') return [200, { available: false }]
   if (uri === '/api/push/public-key') return [200, { enabled: false, publicKey: '' }]
   if (uri === '/api/dashboard/resumo') return staff ? [200, { pedidosHoje: order ? 1 : 0, faturamentoHoje: payment?.status === 'PAGO' ? 39.90 : 0, ticketMedio: 0, mesasOcupadas: 1, totalMesas: 1, pedidosPorStatus: [], pedidosRecentes: [], movimentoPorHora: [], mesas: [{ numero: 4, status: 'Ocupada' }] }] : [401, {}]
   if (uri === '/api/pedidos' && method === 'POST') {
     assert.equal(header('X-Table-Token'), tableToken, 'Checkout must carry its table context')
     assert.equal(body.mesaId, 1, 'The display number must resolve to the real table ID')
     assert.equal(body.itens[0].produtoId, 101, 'Checkout must use the server product ID')
-    order = { id: 1, mesa: table, status: { id: 1, name: 'Recebido', flowOrder: 1 }, totalValue: 39.90, confirmed: true, createdAt: '2026-10-13T12:00:00' }
+    assert.equal(body.nomeCliente, 'Lucas', 'Anonymous checkout must capture the name')
+    assert.equal(body.receberWhatsApp, false, 'WhatsApp opt-in must not be implicit')
+    order = { id: 1, nomeCliente: body.nomeCliente, mesa: table, status: { id: 1, name: 'Recebido', flowOrder: 1 }, totalValue: 39.90, confirmed: true, createdAt: '2026-10-13T12:00:00' }
     product.stockQuantity = 9
     return [201, { ...order, accessToken: capability }]
   }
@@ -232,13 +235,18 @@ try {
   await click('Adicionar')
   await evaluate("document.querySelector('.customer-cart-bar').click()")
   await waitFor("location.pathname === '/carrinho'", 'cart')
-  await waitFor("!Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes('Continuar pedido'))?.disabled", 'cart price refresh')
-  await click('Continuar pedido')
+  await waitFor("!Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes('Continuar para identificação'))?.disabled", 'cart price refresh')
+  await click('Continuar para identificação')
+  await waitFor("location.pathname === '/identificar-pedido'", 'identification')
+  await waitFor("document.querySelector('#customer-quick-name')", 'name input')
+  await input('#customer-quick-name', 'Lucas')
+  await waitFor("!Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes('Revisar pedido'))?.disabled", 'identification ready')
+  await click('Revisar pedido')
   await waitFor("location.pathname === '/confirmar-pedido'", 'checkout')
   await waitFor("!Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes('Confirmar pedido'))?.disabled", 'checkout ready')
   await click('Confirmar pedido')
   await waitFor("location.pathname === '/pedido-confirmado'", 'order creation')
-  console.log('PASS: menu → cart → checkout uses official ID and price')
+  console.log('PASS: menu → cart → quick identification → checkout uses official ID and price')
 
   await navigate('/pagamento?id=%231&mesa=04')
   await waitFor("Array.from(document.querySelectorAll('button')).some(button => button.textContent.trim() === 'PIX')", 'payment methods')

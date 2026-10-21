@@ -2,6 +2,8 @@
  * Customer JWT stays separate from all staff and order-capability storage.
  * Reading the JWT here only supports UX; the backend always checks the signature.
  */
+import { clearCart } from '../utils/customerSession.js'
+
 const KEY = 'tablehub_customer_auth'
 export const CUSTOMER_CHANGED_EVENT = 'tablehub-customer-auth-change'
 
@@ -24,6 +26,7 @@ export const decodeCustomerToken = (token, now = Date.now()) => {
 export const clearCustomerSession = () => {
   if (typeof window === 'undefined') return
   try { window.sessionStorage.removeItem(KEY) } catch { /* disabled */ }
+  clearCart()
   window.dispatchEvent(new Event(CUSTOMER_CHANGED_EVENT))
 }
 

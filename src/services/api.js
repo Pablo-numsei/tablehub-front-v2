@@ -15,7 +15,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = getStaffToken()
 
-  if (token) {
+  if (token && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${token}`
   }
   const path = String(config.url || '').split('?')[0]
@@ -33,7 +33,8 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use((response) => response, (error) => {
   if (error.response?.status === 401 && error.config?.headers?.['X-Customer-Token']) clearCustomerSession()
-  if (error.response?.status === 401 && error.config?.headers?.Authorization) clearAuthSession()
+  if (error.response?.status === 401 && getStaffToken() &&
+      error.config?.headers?.Authorization === `Bearer ${getStaffToken()}`) clearAuthSession()
   return Promise.reject(error)
 })
 

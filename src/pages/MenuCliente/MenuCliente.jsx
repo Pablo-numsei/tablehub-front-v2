@@ -27,9 +27,19 @@ export default function MenuCliente() {
     window.addEventListener(CUSTOMER_CHANGED_EVENT, refresh)
     return () => window.removeEventListener(CUSTOMER_CHANGED_EVENT, refresh)
   }, [])
-  const menuReturn = `/menu?mesa=${encodeURIComponent(table || '')}`
+  const menuReturn = table ? `/menu?mesa=${encodeURIComponent(table)}` : '/menu'
   const enterClient = () => navigate('/login-cliente', { state: { from: menuReturn } })
   const signUpClient = () => navigate('/cadastro-cliente', { state: { from: menuReturn } })
+  const logoutClient = () => {
+    // Keep the validated table context for the next login, but clear the account and cart.
+    const nomeUsuario = customerSession?.customer?.nomeUsuario || ''
+    clearCustomerSession()
+    setCart({})
+    navigate('/login-cliente', {
+      replace: true,
+      state: { from: menuReturn, nomeUsuario },
+    })
+  }
   const [filter, setFilter] = useState('Todos')
   const [cart, setCart] = useState(() => loadCart())
   const { products, loading, error: catalogError } = useCustomerCatalog()
@@ -92,10 +102,7 @@ export default function MenuCliente() {
           {customerSession ? (
             <>
               <span className="customer-menu-account">Olá, {customerSession.customer.nomeUsuario}</span>
-              <button className="customer-menu-auth-button" type="button" onClick={() => {
-                clearCustomerSession()
-                setCart({})
-              }}>Sair</button>
+              <button className="customer-menu-auth-button" type="button" onClick={logoutClient}>Sair</button>
             </>
           ) : <button className="customer-menu-auth-button" type="button" onClick={enterClient}>Entrar</button>}
         </div>

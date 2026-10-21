@@ -6,7 +6,7 @@ import { money } from '../../data/customerMenu.js'
 import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
 import useTableContext from '../../hooks/useTableContext.js'
 import { loadCart, saveCart } from '../../utils/customerSession.js'
-import { CUSTOMER_CHANGED_EVENT, readCustomerSession } from '../../services/customerSession.js'
+import { CUSTOMER_CHANGED_EVENT, clearCustomerSession, readCustomerSession } from '../../services/customerSession.js'
 import './MenuCliente.css'
 
 export default function MenuCliente() {
@@ -86,8 +86,15 @@ export default function MenuCliente() {
         <div className="customer-menu-header__actions">
           <div className="customer-menu-table">{table ? `MESA ${table}` : 'CARDÁPIO'}</div>
           <ThemeToggle compact />
-          {customerSession ? <span className="customer-menu-account">Olá, {customerSession.customer.nomeUsuario}</span>
-            : <button className="customer-menu-auth-button" type="button" onClick={enterClient}>Entrar</button>}
+          {customerSession ? (
+            <>
+              <span className="customer-menu-account">Olá, {customerSession.customer.nomeUsuario}</span>
+              <button className="customer-menu-auth-button" type="button" onClick={() => {
+                clearCustomerSession()
+                setCart({})
+              }}>Sair</button>
+            </>
+          ) : <button className="customer-menu-auth-button" type="button" onClick={enterClient}>Entrar</button>}
         </div>
       </header>
 

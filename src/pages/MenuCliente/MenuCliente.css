@@ -262,3 +262,22 @@
   .customer-menu-vitrine > div > button { flex: 1; }
   .customer-menu-account { font-size: .75rem; }
 }
+
+@media (max-width: 620px) {
+  .customer-menu-header {
+    flex-wrap: wrap;
+    padding-block: 12px;
+  }
+  .customer-menu-header__actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex: 1 1 210px;
+    gap: 6px;
+  }
+  .customer-menu-account {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

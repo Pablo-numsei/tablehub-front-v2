@@ -51,7 +51,7 @@ const apiOrderToManagement = (order, items = []) => ({
   backendId: order.id,
   id: `#${order.id}`,
   table: `Mesa ${String(order.mesa?.number ?? '—').padStart(2, '0')}`,
-  customer: 'Cliente da mesa',
+  customer: order.nomeCliente?.trim() || 'Cliente da mesa',
   time: formatTime(order.createdAt),
   createdAt: order.createdAt,
   status: order.status?.name || 'Recebido',
@@ -309,6 +309,10 @@ export default function Pedidos() {
                     <span>{order.table}</span>
                   </div>
                   <div>
+                    <small>CLIENTE</small>
+                    <strong>{order.customer}</strong>
+                  </div>
+                  <div>
                     <small>HORÁRIO</small>
                     <span>{order.time}</span>
                   </div>
@@ -377,6 +381,10 @@ export default function Pedidos() {
               <div>
                 <small>Mesa</small>
                 <strong>{selectedOrder.table}</strong>
+              </div>
+              <div>
+                <small>Cliente</small>
+                <strong>{selectedOrder.customer}</strong>
               </div>
               <div>
                 <small>Horário</small>

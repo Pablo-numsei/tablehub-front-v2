@@ -8,14 +8,20 @@ const keyForTable = table => {
 }
 
 export const normalizeBrazilianPhone = phone => {
-  let digits = String(phone || '').replace(/\D/g, '')
+  const raw = String(phone || '')
+  if (!/^[+()0-9\s-]*$/.test(raw)) return null
+  let digits = raw.replace(/\D/g, '')
   if (digits.length === 10 || digits.length === 11) digits = '55' + digits
   return /^55[1-9][0-9][2-9][0-9]{7,8}$/.test(digits) ? digits : null
 }
 
 export const validateQuickIdentity = ({ name, phone, whatsapp }, available) => {
-  const cleanName = String(name || '').trim().replace(/\s+/g, ' ')
-  if (cleanName.length < 2 || cleanName.length > 80 || /[\x00-\x1f\x7f]/.test(cleanName)) {
+  const rawName = String(name || '')
+  if (/[\x00-\x1f\x7f]/.test(rawName)) {
+    return { error: 'Informe seu nome sem caracteres de controle.', value: null }
+  }
+  const cleanName = rawName.trim().replace(/\s+/g, ' ')
+  if (cleanName.length < 2 || cleanName.length > 80) {
     return { error: 'Informe seu nome (2 a 80 caracteres).', value: null }
   }
   if (whatsapp && !available) return { error: 'As atualizações pelo WhatsApp estão indisponíveis.', value: null }

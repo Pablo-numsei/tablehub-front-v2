@@ -141,6 +141,9 @@ const apiResponse = (request) => {
   }
   if (uri === '/api/push/public-key') return [200, { enabled: false, publicKey: '' }]
   if (uri === '/api/dashboard/resumo') return staff ? [200, { pedidosHoje: order ? 1 : 0, faturamentoHoje: payment?.status === 'PAGO' ? 39.90 : 0, ticketMedio: 0, mesasOcupadas: 1, totalMesas: 1, pedidosPorStatus: [], pedidosRecentes: [], movimentoPorHora: [], mesas: [{ numero: 4, status: 'Ocupada' }] }] : [401, {}]
+  if (uri === '/api/payments' && method === 'GET') {
+    return staff ? [200, payment ? [payment] : []] : [401, {}]
+  }
   if (uri === '/api/pedidos' && method === 'POST') {
     assert.equal(header('X-Table-Token'), tableToken, 'Checkout must carry its table context')
     assert.equal(header('X-Customer-Token'), customerToken, 'Anonymous orders require a signed customer session')
@@ -343,10 +346,19 @@ try {
   assert.equal(new URL(await evaluate("document.querySelector('.table-qr-link input').value")).searchParams.get('qr'), qrToken)
   console.log('PASS: management generates the signed QR with a quiet zone')
   await navigate('/clientes')
-  await waitFor("document.querySelectorAll('.client-card').length === 2", 'anonymous order history')
-  assert.ok((await evaluate('document.body.innerText')).includes('Pedidos anônimos'))
-  assert.ok(!(await evaluate('document.body.innerText')).includes('Mariana Costa'))
-  console.log('PASS: history displays persisted anonymous orders without fictional people')
+  await waitFor("document.querySelectorAll('.client-card').length === 2", 'customer order history')
+  assert.ok((await evaluate('document.body.innerText')).includes('Clientes e pedidos'))
+  assert.ok((await evaluate('document.body.innerText')).includes('pablo123'))
+  assert.ok((await evaluate('document.body.innerText')).includes('Nome fictício para demonstração'))
+  console.log('PASS: real customer name and explicitly labeled demo name on legacy order')
+  await navigate('/financeiro')
+  await waitFor("document.querySelectorAll('.finance-table:not(.finance-table--head)').length === 1", 'financial records')
+  await evaluate("Array.from(document.querySelectorAll('.finance-filters button')).find(b => b.textContent === 'PIX').click()")
+  await waitFor("document.querySelector('.finance-filters button[aria-pressed=true]')?.textContent === 'PIX'", 'PIX filter')
+  assert.ok(await evaluate("document.querySelector('.finance-table:not(.finance-table--head)')?.innerText.includes('PIX')"))
+  await evaluate("Array.from(document.querySelectorAll('.finance-filters button')).find(b => b.textContent === 'Crédito').click()")
+  await waitFor("document.body.innerText.includes('Nenhum pagamento corresponde ao método')", 'empty credit filter')
+  console.log('PASS: financial payments history and PIX/Crédito filters')
   await navigate('/atendimento')
   await waitFor("document.body.innerText.includes('REQ-0001')", 'waiter panel receives request')
   await click('Avançar para Em atendimento')

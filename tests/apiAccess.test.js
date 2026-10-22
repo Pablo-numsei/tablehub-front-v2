@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import api from '../src/services/api.js'
+import { saveCustomerSession } from '../src/services/customerSession.js'
 import { saveOrderAccess } from '../src/services/orderAccess.js'
 import { saveTableContext } from '../src/services/tableAccess.js'
 
@@ -50,4 +51,25 @@ test('Axios attaches table context only to new actions for the authorized table'
   assert.equal(requests[1].headers.get('X-Table-Token'), 'synthetic-table-context-81')
   assert.ok(requests.slice(2).every((request) => !request.headers.get('X-Table-Token')))
   assert.equal(requests[3].headers.get('X-Order-Token'), 'synthetic-capability-42')
+})
+
+test('a PIN-authenticated client token only accompanies new order POSTs', async () => {
+  const payload = {
+    purpose: 'customer', clienteId: 27, sub: 'pablo123',
+    exp: Math.floor(Date.now() / 1000) + 3600,
+  }
+  const token = `head.${Buffer.from(JSON.stringify(payload)).toString('base64url')}.signature`
+  saveCustomerSession({ id: 27, nomeUsuario: 'pablo123', token })
+  const requests = []
+  api.defaults.adapter = async config => {
+    requests.push(config)
+    return { data: {}, status: 200, statusText: 'OK', headers: {}, config }
+  }
+  await api.get('/api/v1/produtos')
+  await api.post('/api/pedidos', { mesaId: 81, itens: [] })
+  await api.post('/api/atendimentos', { mesaId: 81, tipo: 'GARCOM' })
+  assert.equal(requests[0].headers.get('X-Customer-Token'), undefined)
+  assert.equal(requests[1].headers.get('X-Customer-Token'), token)
+  assert.equal(requests[2].headers.get('X-Customer-Token'), undefined)
+  assert.equal(requests[1].headers.get('X-Table-Token'), 'synthetic-table-context-81')
 })

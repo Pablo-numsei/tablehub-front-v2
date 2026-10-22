@@ -1,6 +1,7 @@
 import { customerProducts } from '../data/customerMenu.js'
 import { readCatalog, cartItems } from '../services/customerCatalog.js'
 import { saveOrderAccess } from '../services/orderAccess.js'
+import { formatOrderTime } from '../services/orderTime.js'
 
 const CART_KEY = 'tablehub_customer_cart_v2'
 const ORDERS_KEY = 'tablehub_customer_orders'
@@ -119,7 +120,7 @@ export const saveCustomerOrderFromApi = ({
   )
 
   const backendStatus = apiOrder?.status?.name || 'Recebido'
-  const createdAt = apiOrder?.createdAt || new Date().toISOString()
+  const createdAt = apiOrder?.createdAtUtc || apiOrder?.createdAt || new Date().toISOString()
   const backendId = apiOrder?.id ?? null
   saveOrderAccess(backendId, apiOrder?.accessToken)
 
@@ -129,15 +130,12 @@ export const saveCustomerOrderFromApi = ({
       : `#${String(Date.now()).slice(-6)}`,
     backendId,
     table: String(table).padStart(2, '0'),
-    customer: 'Cliente da mesa',
-    time: new Date(createdAt).toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }),
+    customer: apiOrder?.nomeCliente || 'Cliente da mesa',
+    time: formatOrderTime(apiOrder?.createdAtUtc, apiOrder?.createdAt),
     status: mapBackendStatusToCustomer(backendStatus),
     backendStatus,
     total: Number(apiOrder?.totalValue ?? localTotal),
-    note: note.trim(),
+    note: apiOrder?.observacoes ?? note.trim(),
     items,
     paymentMethod: null,
     paymentStatus: 'Pendente',
@@ -197,10 +195,10 @@ export const saveCustomerOrderSnapshot = (apiOrder, apiItems, payment) => {
   const order = {
     id, backendId: apiOrder.id,
     table: String(apiOrder.mesa?.number ?? old?.table ?? '').padStart(2, '0'),
-    customer: 'Cliente da mesa',
-    note: old?.note || '',
-    time: new Date(apiOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-    createdAt: apiOrder.createdAt,
+    customer: apiOrder?.nomeCliente || old?.customer || 'Cliente da mesa',
+    note: apiOrder?.observacoes ?? old?.note ?? '',
+    time: formatOrderTime(apiOrder?.createdAtUtc, apiOrder?.createdAt),
+    createdAt: apiOrder?.createdAtUtc || apiOrder.createdAt,
     status: mapBackendStatusToCustomer(backendStatus), backendStatus,
     total: Number(apiOrder.totalValue),
     items: Array.isArray(apiItems) ? apiItems.map((item) => ({

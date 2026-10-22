@@ -9,6 +9,9 @@ import {
 } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
 import api from '../../services/api.js'
+import {
+  PAYMENT_METHOD_FILTERS, mapPaymentHistory, filterPaymentHistory, summarizePaymentHistory,
+} from '../../utils/financialTransactions.js'
 import '../../styles/management.css'
 import './Financeiro.css'
 
@@ -23,7 +26,7 @@ export default function Financeiro() {
     revenue: 0,
     ticket: 0,
   })
-  const [transactions] = useState([])
+  const [transactions, setTransactions] = useState([])
   const [method, setMethod] = useState('Todos')
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
@@ -37,17 +40,36 @@ export default function Financeiro() {
     setError('')
 
     try {
-      const { data } = await api.get('/api/dashboard/resumo')
+      const [summaryResult, paymentsResult] = await Promise.allSettled([
+        api.get('/api/dashboard/resumo'),
+        api.get('/api/payments'),
+      ])
 
-      setSummary({
-        revenue: Number(data?.faturamentoHoje ?? 0),
-        ticket: Number(data?.ticketMedio ?? 0),
-      })
-    } catch (requestError) {
-      setError(
-        requestError?.response?.data?.message ||
-          'Não foi possível carregar os indicadores financeiros.',
-      )
+      const failures = []
+      if (summaryResult.status === 'fulfilled') {
+        const data = summaryResult.value.data
+        setSummary({
+          revenue: Number(data?.faturamentoHoje ?? 0),
+          ticket: Number(data?.ticketMedio ?? 0),
+        })
+      } else {
+        failures.push('Não foi possível carregar os indicadores financeiros.')
+      }
+
+      if (paymentsResult.status === 'fulfilled') {
+        try {
+          setTransactions(mapPaymentHistory(paymentsResult.value.data))
+        } catch (failure) {
+          setTransactions([])
+          failures.push(failure.message)
+        }
+      } else {
+        setTransactions([])
+        failures.push(paymentsResult.reason?.response?.data?.message ||
+          'Não foi possível carregar o histórico de pagamentos.')
+      }
+
+      if (failures.length) setError(failures.join(' '))
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -58,21 +80,10 @@ export default function Financeiro() {
     loadSummary()
   }, [])
 
-  const visible = useMemo(() => {
-    const normalized = query.trim().toLowerCase()
-
-    return transactions.filter((transaction) => {
-      const matchesMethod =
-        method === 'Todos' || transaction.method === method
-      const matchesSearch =
-        !normalized ||
-        transaction.id.toLowerCase().includes(normalized) ||
-        transaction.order.toLowerCase().includes(normalized) ||
-        transaction.method.toLowerCase().includes(normalized)
-
-      return matchesMethod && matchesSearch
-    })
-  }, [transactions, method, query])
+  const visible = useMemo(() =>
+    filterPaymentHistory(transactions, method, query), [transactions, method, query])
+  const paymentStats = useMemo(() =>
+    summarizePaymentHistory(transactions), [transactions])
 
   return (
     <main className="management-page finance-page">
@@ -112,8 +123,8 @@ export default function Financeiro() {
 
           <article>
             <FiDollarSign />
-            <span>Pendente</span>
-            <strong>—</strong>
+            <span>Solicitações pendentes no histórico</span>
+            <strong>{loading ? '—' : money(paymentStats.pending)}</strong>
           </article>
 
           <article>
@@ -124,15 +135,15 @@ export default function Financeiro() {
 
           <article>
             <FiCheckCircle />
-            <span>Pagamentos</span>
-            <strong>—</strong>
+            <span>Registros no histórico</span>
+            <strong>{loading ? '—' : paymentStats.total}</strong>
           </article>
         </section>
 
         <div className="finance-api-notice">
-          Os totais usam os registros confirmados no sistema e não representam
-          conciliação bancária. O histórico detalhado e os indicadores pendentes
-          ainda não estão disponíveis nesta tela.
+          Valores confirmados são simulações registradas no TableHub, sem conciliação bancária.
+          A lista exibe até 200 pagamentos recentes. Horários antigos aparecem como
+          horário do servidor, pois ainda não possuem fuso armazenado.
         </div>
 
         <section className="finance-toolbar">
@@ -143,20 +154,19 @@ export default function Financeiro() {
               placeholder="Buscar pagamento ou pedido..."
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              disabled
             />
           </label>
 
           <div className="finance-filters">
-            {['Todos', 'PIX', 'Crédito', 'Débito'].map((item) => (
+            {PAYMENT_METHOD_FILTERS.map((item) => (
               <button
-                key={item}
+                key={item.id}
                 type="button"
-                className={method === item ? 'is-active' : ''}
-                onClick={() => setMethod(item)}
-                disabled
+                className={method === item.id ? 'is-active' : ''}
+                aria-pressed={method === item.id}
+                onClick={() => setMethod(item.id)}
               >
-                {item}
+                {item.label}
               </button>
             ))}
           </div>
@@ -176,7 +186,7 @@ export default function Financeiro() {
             <div className="finance-table" key={transaction.id}>
               <strong>{transaction.id}</strong>
               <span>{transaction.order}</span>
-              <span>{transaction.method}</span>
+              <span>{transaction.methodLabel}</span>
               <span>{transaction.time}</span>
               <span
                 className={`finance-status finance-status--${transaction.status.toLowerCase()}`}
@@ -189,8 +199,10 @@ export default function Financeiro() {
 
           {visible.length === 0 && (
             <div className="management-empty">
-              O histórico detalhado de pagamentos ainda não está disponível.
-              Consulte o registro de cada pedido no painel Pedidos.
+              {loading ? 'Carregando histórico de pagamentos...' :
+                transactions.length === 0
+                  ? 'Nenhuma solicitação de pagamento foi encontrada no histórico carregado.'
+                  : 'Nenhum pagamento corresponde ao método ou à busca informada.'}
             </div>
           )}
         </section>

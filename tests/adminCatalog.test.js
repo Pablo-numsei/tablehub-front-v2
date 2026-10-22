@@ -30,24 +30,31 @@ const rows = [
   { id: 13, mesa: { id: 2, number: 9 }, status: { name: 'Em preparo' }, totalValue: '2.30', createdAt: '2026-10-14T12:00:00' },
 ]
 
-test('anonymous view keeps separate orders at the same table without inventing customer identities', () => {
+test('client order history distinguishes actual usernames from explicitly marked fictional samples', () => {
   const orders = mapAnonymousOrders(rows)
   assert.equal(orders.length, 3)
   assert.deepEqual(orders.map((order) => order.id), [13, 12, 11])
   assert.equal(orders.filter((order) => order.table === 4).length, 2)
   for (const order of orders) {
-    assert.deepEqual(Object.keys(order).sort(), ['amount', 'code', 'createdAt', 'id', 'status', 'table'])
+    assert.deepEqual(Object.keys(order).sort(), [
+      'amount', 'code', 'createdAt', 'createdAtUtc', 'displayName', 'id',
+      'isDemoName', 'status', 'table',
+    ])
+    assert.equal(order.isDemoName, true)
+    assert.ok(order.displayName)
   }
   assert.equal(orders.find((order) => order.id === 11).amount, 19.99)
 })
 
-test('anonymous filters search order IDs, padded table numbers and status without case sensitivity', () => {
+test('client filters search IDs, tables, sample customer names and status without case sensitivity', () => {
   const orders = mapAnonymousOrders(rows)
   assert.deepEqual(filterAnonymousOrders(orders, '#11', 'Todos').map((order) => order.id), [11])
   assert.deepEqual(filterAnonymousOrders(orders, 'mesa 04', 'Todos').map((order) => order.id), [12, 11])
   assert.deepEqual(filterAnonymousOrders(orders, 'MESA 4', 'Recebido').map((order) => order.id), [11])
   assert.deepEqual(filterAnonymousOrders(orders, 'EM PREPARO', 'Todos').map((order) => order.id), [13])
   assert.deepEqual(filterAnonymousOrders(orders, '#404', 'Todos'), [])
+  const demoName = orders.find((order) => order.id === 11).displayName
+  assert.deepEqual(filterAnonymousOrders(orders, demoName, 'Todos').map((order) => order.id), [11])
 })
 
 test('anonymous summaries describe only the visible order subset and sum cents exactly', () => {
@@ -71,4 +78,16 @@ test('missing order data stays unknown instead of becoming table 04 or fabricate
   assert.ok(orders.every((order) => order.table === null && order.amount === null && order.createdAt === null))
   assert.deepEqual(summarizeAnonymousOrders(orders), { count: 5, active: 0, total: 0, missingAmounts: 5 })
   assert.throws(() => mapAnonymousOrders({ error: 'invalid response' }), /interpretar/)
+})
+
+
+test('real customer usernames take precedence over fictional display names', () => {
+  const [row] = mapAnonymousOrders([{
+    id: 30, nomeCliente: 'pablo123',
+    createdAt: '2026-10-21T19:28:00',
+    createdAtUtc: '2026-10-22T00:28:00Z',
+  }])
+  assert.equal(row.displayName, 'pablo123')
+  assert.equal(row.isDemoName, false)
+  assert.equal(row.createdAtUtc, '2026-10-22T00:28:00Z')
 })

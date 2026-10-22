@@ -241,3 +241,65 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Public storefront shown after scanning a table QR. */
+.customer-menu-vitrine {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  margin: 20px 0;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-elevated);
+  color: var(--text);
+}
+.customer-menu-vitrine > span { color: var(--text-secondary); font-size: .92rem; }
+.customer-menu-vitrine > div { display: flex; flex-wrap: wrap; gap: 10px; }
+.customer-menu-account { color: var(--text-secondary); font-size: .85rem; font-weight: 650; }
+.customer-menu-auth-button { border: 1px solid var(--border); border-radius: 12px;
+  background: var(--surface-elevated); color: var(--text); padding: 10px 14px; }
+@media (max-width: 600px) {
+  .customer-menu-vitrine > div > button { flex: 1; }
+  .customer-menu-account { font-size: .75rem; }
+}
+
+@media (max-width: 620px) {
+  .customer-menu-header {
+    flex-wrap: wrap;
+    padding-block: 12px;
+  }
+  .customer-menu-header__actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex: 1 1 210px;
+    gap: 6px;
+  }
+  .customer-menu-account {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* When the visitor has not exchanged the printed QR, explain the missing context. */
+.customer-menu-qr-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px;
+  margin: 18px 0 22px;
+  border: 1px solid var(--border-active);
+  border-radius: 18px;
+  background: var(--surface-elevated);
+  color: var(--text);
+}
+.customer-menu-qr-notice > div { min-width: 0; }
+.customer-menu-qr-notice p { margin: 8px 0; color: var(--text-secondary); }
+.customer-menu-qr-notice small { color: var(--text-secondary); line-height: 1.45; }
+.customer-menu-qr-notice button { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; }
+@media (max-width: 620px) {
+  .customer-menu-qr-notice { flex-direction: column; align-items: stretch; }
+  .customer-menu-qr-notice button { justify-content: center; }
+}

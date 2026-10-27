@@ -60,15 +60,17 @@ export default function MenuCliente() {
   }
 
   useEffect(() => {
-    // Do not force a fresh login while a specific QR/table URL is being validated.
-    if (!customerSession?.token || tableLoading || ready || pinVerifiedForTable || requestedTable || qr) return
+    // A customer session without a successful PIN verification must never unlock
+    // manual table selection, even when the URL contains a table number or QR.
+    // Visitors without a session can still browse the public menu.
+    if (!customerSession?.token || tableLoading || ready || pinVerifiedForTable) return
 
     const nomeUsuario = customerSession.customer?.nomeUsuario || ''
     clearCustomerAuthSession()
     setCustomerSession(null)
     navigate('/login-cliente', {
       replace: true,
-      state: { from: menuReturn, nomeUsuario },
+      state: { from: '/menu', nomeUsuario },
     })
   }, [
     customerSession?.token,
@@ -76,8 +78,6 @@ export default function MenuCliente() {
     tableLoading,
     ready,
     pinVerifiedForTable,
-    requestedTable,
-    qr,
     menuReturn,
     navigate,
   ])

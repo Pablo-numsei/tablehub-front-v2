@@ -7,9 +7,9 @@ import { money } from '../../data/customerMenu.js'
 import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
 import useTableContext from '../../hooks/useTableContext.js'
 import { loadCart, saveCart } from '../../utils/customerSession.js'
+import { CUSTOMER_CHANGED_EVENT, clearCustomerSession, readCustomerSession } from '../../services/customerSession.js'
 import api from '../../services/api.js'
 import { saveTableContext } from '../../services/tableAccess.js'
-import { CUSTOMER_CHANGED_EVENT, clearCustomerSession, readCustomerSession } from '../../services/customerSession.js'
 import './MenuCliente.css'
 
 export default function MenuCliente() {
@@ -19,9 +19,11 @@ export default function MenuCliente() {
   const qr = params.get('qr')
   const { context, ready, loading: tableLoading, error: tableError } = useTableContext(requestedTable, qr)
   const table = context?.mesa.number || requestedTable
+
   useEffect(() => {
     if (qr && ready) navigate(`/menu?mesa=${context.mesa.number}`, { replace: true })
   }, [qr, ready, context, navigate])
+
   const [customerSession, setCustomerSession] = useState(readCustomerSession)
   const [scannerOpen, setScannerOpen] = useState(false)
   const [tablePickerOpen, setTablePickerOpen] = useState(false)
@@ -31,16 +33,18 @@ export default function MenuCliente() {
   const [selectedTableNumber, setSelectedTableNumber] = useState('')
   const [tablePickerError, setTablePickerError] = useState('')
   const needsTableSelection = Boolean(customerSession && !ready && (!qr || tableError))
+
   useEffect(() => {
     const refresh = () => setCustomerSession(readCustomerSession())
     window.addEventListener(CUSTOMER_CHANGED_EVENT, refresh)
     return () => window.removeEventListener(CUSTOMER_CHANGED_EVENT, refresh)
   }, [])
+
   const menuReturn = table ? `/menu?mesa=${encodeURIComponent(table)}` : '/menu'
   const enterClient = () => navigate('/login-cliente', { state: { from: menuReturn } })
   const signUpClient = () => navigate('/cadastro-cliente', { state: { from: menuReturn } })
+
   const logoutClient = () => {
-    // Keep the validated table context for the next login, but clear the account and cart.
     const nomeUsuario = customerSession?.customer?.nomeUsuario || ''
     clearCustomerSession()
     setCart({})
@@ -49,11 +53,14 @@ export default function MenuCliente() {
       state: { from: menuReturn, nomeUsuario },
     })
   }
+
   const [filter, setFilter] = useState('Todos')
   const [cart, setCart] = useState(() => loadCart())
   const { products, loading, error: catalogError } = useCustomerCatalog()
-  const categories = useMemo(() => ['Todos', ...new Set(products.map((product) => product.category))], [products])
-
+  const categories = useMemo(
+    () => ['Todos', ...new Set(products.map((product) => product.category))],
+    [products],
+  )
   const visible = useMemo(
     () => products.filter((product) => filter === 'Todos' || product.category === filter),
     [products, filter],
@@ -63,17 +70,24 @@ export default function MenuCliente() {
     setTablePickerOpen(true)
     setTablePickerError('')
     if (tables.length > 0) return
+
     setTablePickerLoading(true)
     try {
       const { data } = await api.get('/api/mesas')
       const activeTables = (Array.isArray(data) ? data : [])
-        .filter((item) => item && item.active !== false && Number.isSafeInteger(Number(item.number)) && Number(item.number) > 0)
+        .filter((item) => item && item.active !== false &&
+          Number.isSafeInteger(Number(item.number)) && Number(item.number) > 0)
         .sort((a, b) => Number(a.number) - Number(b.number))
+
       setTables(activeTables)
       setSelectedTableNumber((current) => current || String(activeTables[0]?.number || ''))
-      if (activeTables.length === 0) setTablePickerError('Não há mesas ativas disponíveis no momento.')
+      if (activeTables.length === 0) {
+        setTablePickerError('Não há mesas ativas disponíveis no momento.')
+      }
     } catch (failure) {
-      setTablePickerError(failure?.response?.data?.message || 'Não foi possível carregar as mesas. Tente novamente.')
+      setTablePickerError(
+        failure?.response?.data?.message || 'Não foi possível carregar as mesas. Tente novamente.',
+      )
     } finally {
       setTablePickerLoading(false)
     }
@@ -82,6 +96,7 @@ export default function MenuCliente() {
   const chooseTable = async (event) => {
     event.preventDefault()
     if (!customerSession?.token || !selectedTableNumber || tableSubmitting) return
+
     setTableSubmitting(true)
     setTablePickerError('')
     try {
@@ -94,7 +109,9 @@ export default function MenuCliente() {
       setTablePickerOpen(false)
       navigate(`/menu?mesa=${validatedContext.mesa.number}`, { replace: true })
     } catch (failure) {
-      setTablePickerError(failure?.response?.data?.message || 'Não foi possível selecionar essa mesa. Tente novamente.')
+      setTablePickerError(
+        failure?.response?.data?.message || 'Não foi possível selecionar essa mesa. Tente novamente.',
+      )
     } finally {
       setTableSubmitting(false)
     }
@@ -124,10 +141,8 @@ export default function MenuCliente() {
     updateCart((current) => {
       const next = { ...current }
       const value = (next[id] || 0) - 1
-
       if (value <= 0) delete next[id]
       else next[id] = value
-
       return next
     })
   }
@@ -145,16 +160,19 @@ export default function MenuCliente() {
           <span className="customer-menu-brand__mark">T</span>
           <span>TableHub</span>
         </div>
-
         <div className="customer-menu-header__actions">
-          <div className="customer-menu-table">{table ? `MESA ${table}` : customerSession ? 'SELECIONE A MESA' : 'CARDÁPIO'}</div>
+          <div className="customer-menu-table">
+            {table ? `MESA ${table}` : customerSession ? 'SELECIONE A MESA' : 'CARDÁPIO'}
+          </div>
           <ThemeToggle compact />
           {customerSession ? (
             <>
               <span className="customer-menu-account">Olá, {customerSession.customer.nomeUsuario}</span>
               <button className="customer-menu-auth-button" type="button" onClick={logoutClient}>Sair</button>
             </>
-          ) : <button className="customer-menu-auth-button" type="button" onClick={enterClient}>Entrar</button>}
+          ) : (
+            <button className="customer-menu-auth-button" type="button" onClick={enterClient}>Entrar</button>
+          )}
         </div>
       </header>
 
@@ -162,13 +180,15 @@ export default function MenuCliente() {
         <div>
           <span>{needsTableSelection ? 'ACESSO DO CLIENTE' : 'CARDÁPIO DIGITAL'}</span>
           <h1>{needsTableSelection ? 'Escolha sua mesa.' : 'Escolha seus itens.'}</h1>
-          <p>{needsTableSelection
-            ? 'Sua conta está conectada. Selecione o número da mesa para abrir o cardápio e fazer seu pedido.'
-            : ready
-              ? customerSession
-                ? `Sua mesa ${table} está pronta para receber pedidos.`
-                : 'Veja os pratos e preços. Para adicionar produtos ao carrinho, entre ou crie uma conta com PIN.'
-              : 'Consulte a vitrine. Para pedir, leia o QR Code da mesa e acesse uma conta de cliente.'}</p>
+          <p>
+            {needsTableSelection
+              ? 'Sua conta está conectada. Selecione o número da mesa para abrir o cardápio e fazer seu pedido.'
+              : ready
+                ? customerSession
+                  ? `Sua mesa ${table} está pronta para receber pedidos.`
+                  : 'Veja os pratos e preços. Para adicionar produtos ao carrinho, entre ou crie uma conta com PIN.'
+                : 'Consulte a vitrine. Para pedir, leia o QR Code da mesa e acesse uma conta de cliente.'}
+          </p>
         </div>
       </section>
 
@@ -187,19 +207,30 @@ export default function MenuCliente() {
             ) : (
               <form className="customer-table-picker" onSubmit={chooseTable}>
                 <label htmlFor="customer-table-number">Número da mesa</label>
-                <select id="customer-table-number" required value={selectedTableNumber}
+                <select
+                  id="customer-table-number"
+                  required
+                  value={selectedTableNumber}
                   onChange={(event) => setSelectedTableNumber(event.target.value)}
-                  disabled={tablePickerLoading || tableSubmitting || tables.length === 0}>
-                  <option value="" disabled>{tablePickerLoading ? 'Carregando mesas...' : 'Selecione uma mesa'}</option>
+                  disabled={tablePickerLoading || tableSubmitting || tables.length === 0}
+                >
+                  <option value="" disabled>
+                    {tablePickerLoading ? 'Carregando mesas...' : 'Selecione uma mesa'}
+                  </option>
                   {tables.map((item) => (
-                    <option key={item.id} value={item.number}>Mesa {String(item.number).padStart(2, '0')}</option>
+                    <option key={item.id} value={item.number}>
+                      Mesa {String(item.number).padStart(2, '0')}
+                    </option>
                   ))}
                 </select>
                 {tablePickerLoading && <p role="status">Buscando mesas ativas...</p>}
                 {tablePickerError && <div className="customer-flow-error" role="alert">{tablePickerError}</div>}
                 <div className="customer-table-picker__actions">
-                  <button className="th-btn th-btn--glass" type="button" onClick={() => { setTablePickerOpen(false); setTablePickerError('') }} disabled={tableSubmitting}>Voltar</button>
-                  <button className="th-btn th-btn--primary" type="submit" disabled={tablePickerLoading || tableSubmitting || !selectedTableNumber || tables.length === 0}>
+                  <button className="th-btn th-btn--glass" type="button"
+                    onClick={() => { setTablePickerOpen(false); setTablePickerError('') }}
+                    disabled={tableSubmitting}>Voltar</button>
+                  <button className="th-btn th-btn--primary" type="submit"
+                    disabled={tablePickerLoading || tableSubmitting || !selectedTableNumber || tables.length === 0}>
                     {tableSubmitting ? 'Abrindo cardápio...' : 'Ir para o cardápio'}
                   </button>
                 </div>
@@ -232,16 +263,17 @@ export default function MenuCliente() {
                 </div>
               </div>
             )}
-            {ready && <button className="th-btn th-btn--glass" type="button" onClick={() => navigate(`/chamar-garcom?mesa=${table}`)}>Chamar garçom</button>}
-            {catalogError && (
-              <div className="customer-flow-error" role="alert">
-                {catalogError}
-              </div>
+            {ready && (
+              <button className="th-btn th-btn--glass" type="button" onClick={() => navigate(`/chamar-garcom?mesa=${table}`)}>
+                Chamar garçom
+              </button>
             )}
+            {catalogError && <div className="customer-flow-error" role="alert">{catalogError}</div>}
             {loading && <p role="status">Atualizando cardápio...</p>}
             <div className="customer-menu-tabs">
               {categories.map((category) => (
-                <button key={category} type="button" className={filter === category ? 'is-active' : ''}
+                <button key={category} type="button"
+                  className={filter === category ? 'is-active' : ''}
                   onClick={() => setFilter(category)}>
                   {category}
                 </button>
@@ -281,74 +313,21 @@ export default function MenuCliente() {
           </>
         )}
       </section>
-        {tableError && <div className="customer-flow-error" role="alert">{tableError}</div>}
-        {!ready && !tableLoading && (
-          <div className="customer-menu-qr-notice" role="status">
-            <div>
-              <strong>Falta validar o QR Code da mesa</strong>
-              <p>{customerSession
-                ? 'Seu login está ativo. Para adicionar produtos ao carrinho, use o QR Code da mesa.'
-                : 'O cardápio está em modo vitrine. Entre com usuário e PIN e leia o QR Code da mesa para pedir.'}</p>
-              <small>No computador, você também pode abrir nesta aba o link do QR gerado em Gestão → Mesas → Gerenciar mesa.</small>
-            </div>
-            <button className="th-btn th-btn--primary" type="button" onClick={() => setScannerOpen(true)}>
-              <FiCamera aria-hidden="true" /> Ler QR da mesa
-            </button>
-          </div>
-        )}
-        {ready && !customerSession && (
-          <div className="customer-menu-vitrine" role="note">
-            <strong>Vitrine do cardápio</strong>
-            <span>Para adicionar itens ao carrinho, identifique-se com usuário e PIN.</span>
-            <div>
-              <button className="th-btn th-btn--primary" type="button" onClick={signUpClient}>Criar conta</button>
-              <button className="th-btn th-btn--glass" type="button" onClick={enterClient}>Já tenho conta</button>
-            </div>
-          </div>
-        )}
-        {ready && <button className="th-btn th-btn--glass" type="button" onClick={() => navigate(`/chamar-garcom?mesa=${table}`)}>Chamar garçom</button>}
-        {catalogError && (
-          <div className="customer-flow-error" role="alert">
-            {catalogError}
-          </div>
-        )}
 
-        {loading && <p role="status">Atualizando cardápio...</p>}
-        <div className="customer-menu-tabs">
-          {categories.map((category) => (
-            <button
-              key={category}
-              type="button"
-              className={filter === category ? 'is-active' : ''}
-              onClick={() => setFilter(category)}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-
-
-
-      {customerSession && itemCount > 0 && (
-        <button
-          className="customer-cart-bar"
-          type="button"
-          disabled={!ready}
-          onClick={() => navigate(`/carrinho?mesa=${table}`)}
-        >
+      {customerSession && ready && itemCount > 0 && (
+        <button className="customer-cart-bar" type="button" disabled={!ready}
+          onClick={() => navigate(`/carrinho?mesa=${table}`)}>
           <FiShoppingBag />
           <span>{itemCount} {itemCount === 1 ? 'item' : 'itens'}</span>
           <strong>{money(total)}</strong>
         </button>
       )}
+
       {scannerOpen && (
-        <TableQrScanner
-          onClose={() => setScannerOpen(false)}
-          onDetected={route => {
-            setScannerOpen(false)
-            navigate(route)
-          }}
-        />
+        <TableQrScanner onClose={() => setScannerOpen(false)} onDetected={route => {
+          setScannerOpen(false)
+          navigate(route)
+        }} />
       )}
     </main>
   )

@@ -60,7 +60,8 @@ export default function MenuCliente() {
   }
 
   useEffect(() => {
-    if (!customerSession?.token || tableLoading || ready || pinVerifiedForTable) return
+    // Do not force a fresh login while a specific QR/table URL is being validated.
+    if (!customerSession?.token || tableLoading || ready || pinVerifiedForTable || requestedTable || qr) return
 
     const nomeUsuario = customerSession.customer?.nomeUsuario || ''
     clearCustomerAuthSession()
@@ -75,6 +76,8 @@ export default function MenuCliente() {
     tableLoading,
     ready,
     pinVerifiedForTable,
+    requestedTable,
+    qr,
     menuReturn,
     navigate,
   ])

@@ -241,3 +241,158 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Public storefront shown after scanning a table QR. */
+.customer-menu-vitrine {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  margin: 20px 0;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-elevated);
+  color: var(--text);
+}
+.customer-menu-vitrine > span { color: var(--text-secondary); font-size: .92rem; }
+.customer-menu-vitrine > div { display: flex; flex-wrap: wrap; gap: 10px; }
+.customer-menu-account { color: var(--text-secondary); font-size: .85rem; font-weight: 650; }
+.customer-menu-auth-button { border: 1px solid var(--border); border-radius: 12px;
+  background: var(--surface-elevated); color: var(--text); padding: 10px 14px; }
+@media (max-width: 600px) {
+  .customer-menu-vitrine > div > button { flex: 1; }
+  .customer-menu-account { font-size: .75rem; }
+}
+
+@media (max-width: 620px) {
+  .customer-menu-header {
+    flex-wrap: wrap;
+    padding-block: 12px;
+  }
+  .customer-menu-header__actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex: 1 1 210px;
+    gap: 6px;
+  }
+  .customer-menu-account {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* When the visitor has not exchanged the printed QR, explain the missing context. */
+.customer-menu-qr-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px;
+  margin: 18px 0 22px;
+  border: 1px solid var(--border-active);
+  border-radius: 18px;
+  background: var(--surface-elevated);
+  color: var(--text);
+}
+.customer-menu-qr-notice > div { min-width: 0; }
+.customer-menu-qr-notice p { margin: 8px 0; color: var(--text-secondary); }
+.customer-menu-qr-notice small { color: var(--text-secondary); line-height: 1.45; }
+.customer-menu-qr-notice button { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; }
+@media (max-width: 620px) {
+  .customer-menu-qr-notice { flex-direction: column; align-items: stretch; }
+  .customer-menu-qr-notice button { justify-content: center; }
+}
+
+
+/* Landing shown after customer PIN login, before selecting an active table. */
+.customer-table-gate {
+  width: min(620px, 100%);
+  margin: 8px auto 42px;
+  padding: clamp(22px, 4vw, 38px);
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-soft, 0 18px 48px rgba(0,0,0,.08));
+}
+.customer-table-gate__icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  border: 1px solid var(--border-active);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+.customer-table-gate__eyebrow {
+  color: var(--primary);
+  font-size: .68rem;
+  font-weight: 850;
+  letter-spacing: .14em;
+}
+.customer-table-gate h2 {
+  margin: 0;
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  letter-spacing: -.035em;
+}
+.customer-table-gate > p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+.customer-table-gate__button {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.customer-table-picker {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+}
+.customer-table-picker label {
+  font-size: .86rem;
+  font-weight: 750;
+}
+.customer-table-picker select {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  background: var(--surface);
+}
+.customer-table-picker__actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+.customer-table-picker__actions button {
+  min-height: 42px;
+}
+@media (max-width: 620px) {
+  .customer-table-gate {
+    margin-top: 0;
+    padding: 22px 18px;
+  }
+  .customer-table-picker__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .customer-table-picker__actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}

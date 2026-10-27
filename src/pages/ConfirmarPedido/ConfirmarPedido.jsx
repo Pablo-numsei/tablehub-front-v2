@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import { FiArrowLeft, FiCheck } from 'react-icons/fi'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { money } from '../../data/customerMenu.js'
 import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
 import useTableContext from '../../hooks/useTableContext.js'
 import { mapCustomerCatalog, saveCatalog, cartItems, cartTotal } from '../../services/customerCatalog.js'
 import api from '../../services/api.js'
+import { readCustomerSession } from '../../services/customerSession.js'
 import {
   clearCart,
   loadCart,
@@ -112,6 +113,7 @@ export default function ConfirmarPedido() {
       const payload = {
         mesaId: mesa.id,
         criadoPor: null,
+        observacoes: note.trim() || null,
         itens: resolvedItems.map(({ item, backendProduct }) => ({
           produtoId: backendProduct.id,
           quantidade: item.quantity,
@@ -143,6 +145,11 @@ export default function ConfirmarPedido() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (!readCustomerSession()) {
+    return <Navigate to="/login-cliente" replace
+      state={{ from: `/menu?mesa=${encodeURIComponent(table)}` }} />
   }
 
   if (items.length === 0) {
@@ -215,7 +222,7 @@ export default function ConfirmarPedido() {
                 placeholder="Ex.: sem cebola, ponto da carne..."
                 maxLength={255}
               />
-              <small>Informe restrições de preparo diretamente à equipe; este campo fica salvo no seu dispositivo.</small>
+              <small>A observação será enviada à cozinha junto com o pedido (até 255 caracteres).</small>
             </label>
           </div>
 

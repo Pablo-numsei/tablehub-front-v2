@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import { FiArrowLeft, FiArrowRight, FiMinus, FiPlus } from 'react-icons/fi'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import ThemeToggle from '../../components/layout/ThemeToggle.jsx'
 import { money } from '../../data/customerMenu.js'
 import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
 import useTableContext from '../../hooks/useTableContext.js'
 import { cartItems, cartTotal } from '../../services/customerCatalog.js'
 import { loadCart, saveCart } from '../../utils/customerSession.js'
+import { readCustomerSession } from '../../services/customerSession.js'
 import '../../styles/customer-flow.css'
 
 export default function CarrinhoCliente() {
@@ -34,6 +35,9 @@ export default function CarrinhoCliente() {
       return next
     })
   }
+
+  if (!readCustomerSession()) return <Navigate to="/login-cliente" replace
+    state={{ from: `/menu?mesa=${encodeURIComponent(table)}` }} />
 
   return (
     <main className="customer-flow-page">

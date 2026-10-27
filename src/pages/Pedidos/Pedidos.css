@@ -367,3 +367,28 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* A observação do cliente é informação operacional, destacada no painel. */
+.order-card__description { display: grid; gap: 5px; min-width: 0; }
+.order-card__description > span { color: var(--text-secondary); font-size: .78rem; }
+.order-card__description > small { text-transform: none; letter-spacing: normal; }
+.order-card__note {
+  margin: 4px 0 0;
+  border-left: 3px solid var(--warning);
+  padding: 8px 12px;
+  color: var(--text);
+  background: rgba(255, 191, 105, .08);
+  border-radius: 0 8px 8px 0;
+  overflow-wrap: anywhere;
+  font-size: .86rem;
+}
+.order-drawer__customer { margin: 0 0 20px; }
+.order-drawer__notes {
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid var(--warning);
+  background: rgba(255, 191, 105, .10);
+  border-radius: 14px;
+}
+.order-drawer__notes > strong { font-size: .76rem; letter-spacing: .08em; }
+.order-drawer__notes p { margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }

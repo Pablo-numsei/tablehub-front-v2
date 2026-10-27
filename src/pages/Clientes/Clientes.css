@@ -314,3 +314,12 @@
     justify-self: start;
   }
 }
+
+/* Nomes exemplificativos são sinalizados para não parecerem registros pessoais reais. */
+.client-demo-label {
+  color: var(--text-secondary);
+  font-size: .69rem;
+  font-style: normal;
+  line-height: 1.25;
+}
+.client-card__identity strong { overflow-wrap: anywhere; }

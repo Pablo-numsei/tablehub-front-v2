@@ -8,7 +8,17 @@ import '../../styles/management.css'
 import './Clientes.css'
 
 const money = (value) => value == null ? 'Não informado' : value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-const formatDate = (value) => value ? new Date(value).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'Não informada'
+const formatDate = (order) => {
+  if (order.createdAtUtc) {
+    return new Intl.DateTimeFormat('pt-BR', {
+      dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo',
+    }).format(new Date(order.createdAtUtc))
+  }
+  // Pedido legado: timestamp do servidor sem informação do fuso.
+  const parts = typeof order.createdAt === 'string' &&
+    order.createdAt.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/)
+  return parts ? `${parts[3]}/${parts[2]}/${parts[1]} ${parts[4]}:${parts[5]} (servidor)` : 'Não informada'
+}
 const tableLabel = (order) => order.table == null ? 'Mesa não informada' : 'Mesa ' + String(order.table).padStart(2, '0')
 const statusClass = (status) => 'client-status client-status--' + normalizeCatalogText(status).replace(/\s+/g, '-')
 
@@ -48,8 +58,8 @@ export default function Clientes() {
         <header className="management-header">
           <div>
             <span className="management-eyebrow">CONSULTA DE PEDIDOS</span>
-            <h1>Pedidos anônimos</h1>
-            <p>Cada registro representa um pedido real, sem cadastro ou identificação de pessoas.</p>
+            <h1>Clientes e pedidos</h1>
+            <p>Pedidos registrados no TableHub, associados aos clientes quando identificados.</p>
           </div>
           <button className="th-btn th-btn--primary" type="button" onClick={reload} disabled={loading}>
             <FiRefreshCw /> {loading ? 'Atualizando...' : 'Atualizar'}
@@ -66,13 +76,14 @@ export default function Clientes() {
         <p className="clients-scope">
           {hasData ? 'Resumo de ' + summary.count + ' pedidos exibidos, de ' + orders.length + ' carregados. ' : ''}
           Os valores são de pedidos e não representam faturamento ou pagamento confirmado.
+          Nomes identificados como exemplo são fictícios e não correspondem a clientes reais.
           {hasData && summary.missingAmounts > 0 && ' ' + summary.missingAmounts + ' pedidos estão sem valor informado e não entram na soma.'}
         </p>
 
         <section className="clients-toolbar">
           <label className="clients-search">
             <FiSearch />
-            <input type="search" aria-label="Buscar pedido, mesa ou status" placeholder="Buscar pedido, mesa ou status..." value={query} onChange={(event) => setQuery(event.target.value)} />
+            <input type="search" aria-label="Buscar cliente, pedido, mesa ou status" placeholder="Buscar cliente, pedido, mesa ou status..." value={query} onChange={(event) => setQuery(event.target.value)} />
           </label>
           <div className="clients-filters" aria-label="Filtrar pedidos por status">
             {ORDER_FILTERS.map((status) => <button key={status} type="button" className={filter === status ? 'is-active' : ''} aria-pressed={filter === status} onClick={() => setFilter(status)}>{status}</button>)}
@@ -84,9 +95,14 @@ export default function Clientes() {
           {hasData && visibleOrders.map((order) => (
             <article className="client-card" key={order.id}>
               <div className="client-card__avatar" aria-hidden="true"><FiShoppingBag /></div>
-              <div className="client-card__identity"><small>PEDIDO ANÔNIMO</small><strong>{order.code}</strong><span title={tableLabel(order) + ' · ' + formatDate(order.createdAt)}>{tableLabel(order)} · {formatDate(order.createdAt)}</span></div>
+              <div className="client-card__identity">
+                <small>{order.isDemoName ? 'CLIENTE DE EXEMPLO' : 'CLIENTE IDENTIFICADO'}</small>
+                <strong>{order.displayName}</strong>
+                {order.isDemoName && <em className="client-demo-label">Nome fictício para demonstração</em>}
+                <span title={order.code + ' · ' + tableLabel(order) + ' · ' + formatDate(order)}>{order.code} · {tableLabel(order)} · {formatDate(order)}</span>
+              </div>
               <div className="client-card__metric"><small>MESA</small><strong>{order.table == null ? '—' : String(order.table).padStart(2, '0')}</strong></div>
-              <div className="client-card__metric client-card__metric--date"><small>REGISTRADO</small><span>{formatDate(order.createdAt)}</span></div>
+              <div className="client-card__metric client-card__metric--date"><small>REGISTRADO</small><span>{formatDate(order)}</span></div>
               <div className="client-card__metric"><small>VALOR DO PEDIDO</small><strong>{money(order.amount)}</strong></div>
               <span className={statusClass(order.status)}>{order.status}</span>
               <button className="client-card__open" type="button" onClick={() => setSelectedId(order.id)} aria-label={'Abrir detalhes do pedido ' + order.code}><FiArrowRight /></button>
@@ -98,16 +114,19 @@ export default function Clientes() {
 
       {selected && (
         <div className="client-drawer-backdrop" onClick={() => setSelectedId(null)}>
-          <aside className="client-drawer" role="dialog" aria-modal="true" aria-labelledby="anonymous-order-title" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => { if (event.key === 'Escape') setSelectedId(null) }}>
+          <aside className="client-drawer" role="dialog" aria-modal="true" aria-labelledby="customer-order-title" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => { if (event.key === 'Escape') setSelectedId(null) }}>
             <button className="client-drawer__close" type="button" autoFocus onClick={() => setSelectedId(null)} aria-label="Fechar detalhes"><FiX /></button>
             <div className="client-drawer__avatar" aria-hidden="true"><FiShoppingBag /></div>
-            <span className="management-eyebrow">PEDIDO ANÔNIMO</span>
-            <h2 id="anonymous-order-title">{selected.code}</h2>
+            <span className="management-eyebrow">{selected.isDemoName ? 'CLIENTE DE EXEMPLO' : 'CLIENTE IDENTIFICADO'}</span>
+            <h2 id="customer-order-title">{selected.displayName}</h2>
+            <p>{selected.code}{selected.isDemoName ? ' · Nome fictício para demonstração' : ''}</p>
             <span className={statusClass(selected.status)}>{selected.status}</span>
-            <p className="clients-scope">Este registro representa um pedido, sem nome, e-mail, telefone ou histórico pessoal.</p>
+            <p className="clients-scope">Pedido real registrado no sistema. {selected.isDemoName
+              ? 'O nome mostrado é apenas um exemplo visual, pois este pedido antigo não possui cliente identificado.'
+              : 'O nome exibido corresponde ao usuário autenticado associado ao pedido.'}</p>
             <div className="client-drawer__stats">
               <div><FiGrid /><span>Mesa</span><strong>{selected.table == null ? 'Não informada' : String(selected.table).padStart(2, '0')}</strong></div>
-              <div><FiClock /><span>Registro</span><strong>{formatDate(selected.createdAt)}</strong></div>
+              <div><FiClock /><span>Registro</span><strong>{formatDate(selected)}</strong></div>
               <div><FiShoppingBag /><span>Valor do pedido</span><strong>{money(selected.amount)}</strong></div>
             </div>
             <p className="clients-scope">O valor do pedido não comprova recebimento de pagamento.</p>

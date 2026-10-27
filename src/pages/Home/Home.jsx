@@ -46,10 +46,10 @@ export default function Home() {
             </div>
             <div className="hero-page-links hero-stagger">
               <Link to="/recursos"><small>01</small><span>Recursos</span></Link>
-              <Link to="/menu"><small>02</small><span>Explorar cardápio sem cadastro</span></Link>
+              <Link to="/menu"><small>02</small><span>Ver vitrine do cardápio</span></Link>
             </div>
             <p className="hero-guest-note hero-stagger">
-              Para fazer pedidos, é necessário validar o QR Code da mesa — com ou sem cadastro.
+              O cardápio é uma vitrine aberta. Para colocar itens no carrinho, entre com usuário e PIN e valide o QR Code da mesa.
             </p>
           </div>
           <div className="hero-visual hero-stagger">

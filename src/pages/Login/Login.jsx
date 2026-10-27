@@ -28,7 +28,7 @@ export default function Login() {
     setLoading(true)
 
     try {
-      const { data } = await api.post('/api/auth/login', form)
+      const { data } = await api.post('/api/auth/login', form, { timeout: 180000 })
 
       const session = saveAuthSession(data, remember)
       const destination = canAccessRoute(session.user.role, location.state?.from)
@@ -37,7 +37,9 @@ export default function Login() {
     } catch (requestError) {
       setError(requestError?.response?.status === 429
         ? 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.'
-        : requestError?.response ? 'E-mail ou senha inválidos, ou acesso indisponível.'
+        : requestError?.code === 'ECONNABORTED'
+          ? 'O servidor demorou a responder. Verifique o status do backend no Render e tente novamente.'
+          : requestError?.response ? 'E-mail ou senha inválidos, ou acesso indisponível.'
           : requestError?.message || 'Não foi possível entrar. Tente novamente.')
     } finally {
       setLoading(false)
@@ -71,7 +73,7 @@ export default function Login() {
         </div>
 
         <button className="th-btn th-btn--primary th-btn--block" type="submit" disabled={loading}>
-          {loading ? 'Entrando...' : 'Entrar'}
+          {loading ? 'Conectando ao servidor...' : 'Entrar'}
         </button>
 
         <p className="auth-switch">Não possui conta? Solicite acesso ao administrador do restaurante.</p>

@@ -6,6 +6,8 @@ import {
   FiRefreshCw,
 } from 'react-icons/fi'
 import ManagementSidebar from '../../components/layout/ManagementSidebar.jsx'
+import WastePanel from '../Estoque/WastePanel.jsx'
+import { useAuth } from '../../components/auth/AuthProvider.jsx'
 import api from '../../services/api.js'
 import './Dashboard.css'
 
@@ -15,6 +17,18 @@ const moneyFormatter = new Intl.NumberFormat('pt-BR', {
 })
 
 const formatMoney = (value) => moneyFormatter.format(Number(value || 0))
+
+const mapWasteProduct = (product) => ({
+  id: product.id,
+  name: product.name,
+  category: product.category?.name || 'Sem categoria',
+  categoryId: product.category?.id,
+  description: product.description || '',
+  price: Number(product.price),
+  stock: Number(product.stockQuantity ?? 0),
+  minimum: 10,
+  unit: 'un.',
+})
 
 const statusSlug = (status = '') =>
   status
@@ -33,6 +47,11 @@ const formatTime = (value) => {
 }
 
 export default function Dashboard() {
+  const { user } = useAuth()
+  const canManageWaste = user?.role === 'GARCOM'
+  const [wasteInventory, setWasteInventory] = useState([])
+  const [wasteInventoryLoading, setWasteInventoryLoading] = useState(false)
+  const [wasteInventoryError, setWasteInventoryError] = useState('')
   const [dashboard, setDashboard] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -55,9 +74,26 @@ export default function Dashboard() {
     }
   }
 
+  const loadWasteInventory = async () => {
+    setWasteInventoryLoading(true)
+    try {
+      const { data } = await api.get('/api/v1/produtos')
+      setWasteInventory((Array.isArray(data) ? data : []).map(mapWasteProduct))
+      setWasteInventoryError('')
+    } catch (requestError) {
+      setWasteInventoryError(
+        requestError?.response?.data?.message ||
+          'Não foi possível carregar os produtos para registrar desperdícios.',
+      )
+    } finally {
+      setWasteInventoryLoading(false)
+    }
+  }
+
   useEffect(() => {
     loadDashboard()
-  }, [])
+    if (canManageWaste) loadWasteInventory()
+  }, [canManageWaste])
 
   const metrics = useMemo(() => {
     if (!dashboard) return []
@@ -269,6 +305,27 @@ export default function Dashboard() {
               </div>
             </article>
           </>
+        )}
+
+        {canManageWaste && (
+          <section className="dashboard-waste-section" aria-label="Controle de desperdício de alimentos">
+            {wasteInventoryError && (
+              <div className="dashboard-alert" role="alert">
+                <FiAlertCircle />
+                <div>
+                  <strong>Não foi possível carregar o estoque para os descartes.</strong>
+                  <span>{wasteInventoryError}</span>
+                </div>
+                <button type="button" onClick={loadWasteInventory} disabled={wasteInventoryLoading}>
+                  Tentar novamente
+                </button>
+              </div>
+            )}
+            {!wasteInventoryError && wasteInventoryLoading && wasteInventory.length === 0 && (
+              <p role="status">Carregando produtos para o controle de desperdício...</p>
+            )}
+            <WastePanel inventory={wasteInventory} onStockChanged={loadWasteInventory} />
+          </section>
         )}
       </section>
     </main>

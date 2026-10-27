@@ -10,6 +10,7 @@ import { useAuth } from '../../components/auth/AuthProvider.jsx'
 import { canAdvanceOrder } from '../../services/authSession.js'
 import { loadOrderPayment, paymentMethodLabel, paymentStatusLabel } from '../../services/orderPayments.js'
 import { money } from '../../data/customerMenu.js'
+import { formatOrderTime } from '../../services/orderTime.js'
 import api from '../../services/api.js'
 import { updateCustomerOrderStatus } from '../../utils/customerSession.js'
 import '../../styles/management.css'
@@ -38,22 +39,14 @@ const statusSlug = (status = '') =>
     .toLowerCase()
     .replace(/\s+/g, '-')
 
-const formatTime = (value) => {
-  if (!value) return '—'
-
-  return new Date(value).toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
 const apiOrderToManagement = (order, items = []) => ({
   backendId: order.id,
   id: `#${order.id}`,
   table: `Mesa ${String(order.mesa?.number ?? '—').padStart(2, '0')}`,
-  customer: 'Cliente da mesa',
-  time: formatTime(order.createdAt),
-  createdAt: order.createdAt,
+  customer: order.nomeCliente || 'Cliente da mesa',
+  note: order.observacoes || '',
+  time: formatOrderTime(order.createdAtUtc, order.createdAt),
+  createdAt: order.createdAtUtc || order.createdAt,
   status: order.status?.name || 'Recebido',
   total: money(order.totalValue),
   items: items.map(
@@ -327,11 +320,13 @@ export default function Pedidos() {
                 </div>
 
                 <div className="order-card__bottom">
-                  <span>
-                    {order.items.length > 0
+                  <div className="order-card__description">
+                    <span>{order.items.length > 0
                       ? order.items.join(' · ')
-                      : 'Itens registrados no pedido'}
-                  </span>
+                      : 'Itens registrados no pedido'}</span>
+                    <small>Cliente: {order.customer}</small>
+                    {order.note && <p className="order-card__note"><strong>Observação para cozinha:</strong> {order.note}</p>}
+                  </div>
                   <button
                     type="button"
                     onClick={() => setSelectedId(order.backendId)}
@@ -387,6 +382,14 @@ export default function Pedidos() {
                 <strong>{selectedOrder.status}</strong>
               </div>
             </div>
+
+            <p className="order-drawer__customer">Cliente: <strong>{selectedOrder.customer}</strong></p>
+            {selectedOrder.note && (
+              <section className="order-drawer__notes" aria-label="Observações de preparo">
+                <strong>OBSERVAÇÃO PARA COZINHA</strong>
+                <p>{selectedOrder.note}</p>
+              </section>
+            )}
 
             <div className="order-drawer__items">
               <span>ITENS</span>

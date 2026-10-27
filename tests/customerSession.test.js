@@ -2,9 +2,10 @@ import test, { beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   readCustomerSession, saveCustomerSession, clearCustomerSession,
-  decodeCustomerToken, safeCustomerReturn,
+  hasCustomerPinVerification, decodeCustomerToken, safeCustomerReturn,
 } from '../src/services/customerSession.js'
 import { decodeStaffToken } from '../src/services/authSession.js'
+import { getTableContext, saveTableContext } from '../src/services/tableAccess.js'
 
 const storage = () => {
   const data = new Map()
@@ -25,6 +26,8 @@ beforeEach(() => {
 
 test('a customer PIN session does not grant staff privileges', () => {
   saveCustomerSession(response())
+  assert.equal(hasCustomerPinVerification(), true)
+  saveTableContext({ mesa: { id: 81, number: 4 }, tableToken: 'synthetic-table-81', expiresAt: new Date(Date.now() + 3600000).toISOString() })
   assert.equal(readCustomerSession().customer.nomeUsuario, 'pablo123')
   assert.equal(window.sessionStorage.getItem('tablehub_token'), null)
   assert.equal(window.localStorage.getItem('tablehub_customer_auth'), null)
@@ -32,6 +35,8 @@ test('a customer PIN session does not grant staff privileges', () => {
   assert.equal(decodeCustomerToken(token()).nomeUsuario, 'pablo123')
   clearCustomerSession()
   assert.equal(readCustomerSession(), null)
+  assert.equal(hasCustomerPinVerification(), false)
+  assert.equal(getTableContext(81), null)
 })
 
 test('forged, expired and wrong-purpose customer sessions are ignored', () => {

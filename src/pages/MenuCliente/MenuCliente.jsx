@@ -7,7 +7,7 @@ import { money } from '../../data/customerMenu.js'
 import useCustomerCatalog from '../../hooks/useCustomerCatalog.js'
 import useTableContext from '../../hooks/useTableContext.js'
 import { loadCart, saveCart } from '../../utils/customerSession.js'
-import { CUSTOMER_CHANGED_EVENT, clearCustomerSession, readCustomerSession } from '../../services/customerSession.js'
+import { CUSTOMER_CHANGED_EVENT, clearCustomerAuthSession, clearCustomerPinVerification, clearCustomerSession, hasCustomerPinVerification, readCustomerSession } from '../../services/customerSession.js'
 import api from '../../services/api.js'
 import { saveTableContext } from '../../services/tableAccess.js'
 import './MenuCliente.css'
@@ -25,6 +25,7 @@ export default function MenuCliente() {
   }, [qr, ready, context, navigate])
 
   const [customerSession, setCustomerSession] = useState(readCustomerSession)
+  const [pinVerifiedForTable, setPinVerifiedForTable] = useState(hasCustomerPinVerification)
   const [scannerOpen, setScannerOpen] = useState(false)
   const [tablePickerOpen, setTablePickerOpen] = useState(false)
   const [tables, setTables] = useState([])
@@ -32,10 +33,13 @@ export default function MenuCliente() {
   const [tableSubmitting, setTableSubmitting] = useState(false)
   const [selectedTableNumber, setSelectedTableNumber] = useState('')
   const [tablePickerError, setTablePickerError] = useState('')
-  const needsTableSelection = Boolean(customerSession && !ready && (!qr || tableError))
+  const needsTableSelection = Boolean(customerSession && pinVerifiedForTable && !ready && (!qr || tableError))
 
   useEffect(() => {
-    const refresh = () => setCustomerSession(readCustomerSession())
+    const refresh = () => {
+      setCustomerSession(readCustomerSession())
+      setPinVerifiedForTable(hasCustomerPinVerification())
+    }
     window.addEventListener(CUSTOMER_CHANGED_EVENT, refresh)
     return () => window.removeEventListener(CUSTOMER_CHANGED_EVENT, refresh)
   }, [])
@@ -48,11 +52,38 @@ export default function MenuCliente() {
     const nomeUsuario = customerSession?.customer?.nomeUsuario || ''
     clearCustomerSession()
     setCart({})
+    // A new login starts a new table-selection flow instead of reusing the previous table.
+    navigate('/login-cliente', {
+      replace: true,
+      state: { from: '/menu', nomeUsuario },
+    })
+  }
+
+  useEffect(() => {
+    if (!customerSession?.token || tableLoading || ready || pinVerifiedForTable) return
+
+    const nomeUsuario = customerSession.customer?.nomeUsuario || ''
+    clearCustomerAuthSession()
+    setCustomerSession(null)
     navigate('/login-cliente', {
       replace: true,
       state: { from: menuReturn, nomeUsuario },
     })
-  }
+  }, [
+    customerSession?.token,
+    customerSession?.customer?.nomeUsuario,
+    tableLoading,
+    ready,
+    pinVerifiedForTable,
+    menuReturn,
+    navigate,
+  ])
+
+  useEffect(() => {
+    if (!customerSession?.token || !ready || !pinVerifiedForTable) return
+    clearCustomerPinVerification()
+    setPinVerifiedForTable(false)
+  }, [customerSession?.token, ready, pinVerifiedForTable])
 
   const [filter, setFilter] = useState('Todos')
   const [cart, setCart] = useState(() => loadCart())
@@ -67,6 +98,10 @@ export default function MenuCliente() {
   )
 
   const openTablePicker = async () => {
+    if (!customerSession?.token || !pinVerifiedForTable) {
+      enterClient()
+      return
+    }
     setTablePickerOpen(true)
     setTablePickerError('')
     if (tables.length > 0) return
@@ -95,7 +130,7 @@ export default function MenuCliente() {
 
   const chooseTable = async (event) => {
     event.preventDefault()
-    if (!customerSession?.token || !selectedTableNumber || tableSubmitting) return
+    if (!customerSession?.token || !pinVerifiedForTable || !selectedTableNumber || tableSubmitting) return
 
     setTableSubmitting(true)
     setTablePickerError('')
@@ -128,7 +163,11 @@ export default function MenuCliente() {
   const add = (id) => {
     const product = products.find((item) => item.id === id)
     if (!customerSession) { enterClient(); return }
-    if (!ready) { openTablePicker(); return }
+    if (!ready) {
+      if (!pinVerifiedForTable) { enterClient(); return }
+      openTablePicker()
+      return
+    }
     if (!product?.available || loading || catalogError) return
 
     updateCart((current) => ({

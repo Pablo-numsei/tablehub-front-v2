@@ -3,8 +3,10 @@
  * Reading the JWT here only supports UX; the backend always checks the signature.
  */
 import { clearCart } from '../utils/customerSession.js'
+import { clearTableContexts } from './tableAccess.js'
 
 const KEY = 'tablehub_customer_auth'
+const TABLE_SELECTION_AUTH_KEY = 'tablehub_customer_pin_verified_for_table_selection'
 export const CUSTOMER_CHANGED_EVENT = 'tablehub-customer-auth-change'
 
 export const decodeCustomerToken = (token, now = Date.now()) => {
@@ -23,11 +25,29 @@ export const decodeCustomerToken = (token, now = Date.now()) => {
   }
 }
 
-export const clearCustomerSession = () => {
+export const hasCustomerPinVerification = () => {
+  if (typeof window === 'undefined') return false
+  try { return window.sessionStorage.getItem(TABLE_SELECTION_AUTH_KEY) === '1' } catch { return false }
+}
+
+export const clearCustomerPinVerification = () => {
+  if (typeof window === 'undefined') return
+  try { window.sessionStorage.removeItem(TABLE_SELECTION_AUTH_KEY) } catch { /* disabled */ }
+}
+
+/** Clear the active customer login without discarding a cart during reauthentication. */
+export const clearCustomerAuthSession = () => {
   if (typeof window === 'undefined') return
   try { window.sessionStorage.removeItem(KEY) } catch { /* disabled */ }
-  clearCart()
+  clearCustomerPinVerification()
   window.dispatchEvent(new Event(CUSTOMER_CHANGED_EVENT))
+}
+
+export const clearCustomerSession = () => {
+  if (typeof window === 'undefined') return
+  clearCustomerAuthSession()
+  clearCart()
+  clearTableContexts()
 }
 
 export const readCustomerSession = () => {
@@ -50,7 +70,15 @@ export const saveCustomerSession = response => {
     throw new Error('Sessão inválida. Tente entrar novamente.')
   }
   const data = { id: claims.id, nomeUsuario: response.nomeUsuario, token: response.token }
-  try { window.sessionStorage.setItem(KEY, JSON.stringify(data)) } catch {
+  try {
+    window.sessionStorage.setItem(KEY, JSON.stringify(data))
+    // A manual table selection is only unlocked after a successful PIN login.
+    window.sessionStorage.setItem(TABLE_SELECTION_AUTH_KEY, '1')
+  } catch {
+    try {
+      window.sessionStorage.removeItem(KEY)
+      window.sessionStorage.removeItem(TABLE_SELECTION_AUTH_KEY)
+    } catch { /* Storage is unavailable. */ }
     throw new Error('O navegador não permitiu salvar sua sessão nesta aba.')
   }
   window.dispatchEvent(new Event(CUSTOMER_CHANGED_EVENT))

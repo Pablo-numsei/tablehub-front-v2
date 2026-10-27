@@ -2,35 +2,22 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout.jsx'
 import api from '../../services/api.js'
-import { clearCustomerSession, readCustomerSession, safeCustomerReturn, saveCustomerSession } from '../../services/customerSession.js'
+import { clearCustomerAuthSession, safeCustomerReturn, saveCustomerSession } from '../../services/customerSession.js'
 import './ClienteAuth.css'
 
 export default function LoginCliente() {
   const navigate = useNavigate()
   const location = useLocation()
   const from = safeCustomerReturn(location.state?.from)
-  const [session, setSession] = useState(readCustomerSession)
   const [form, setForm] = useState({ nomeUsuario: location.state?.nomeUsuario || '', pin: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!session?.token) return
-    let active = true
-    api.get('/api/clientes/me', {
-      headers: { Authorization: `Bearer ${session.token}` },
-    }).then(() => {
-      if (active) navigate(from, { replace: true })
-    }).catch(failure => {
-      if (!active) return
-      if ([401, 403].includes(failure?.response?.status)) {
-        clearCustomerSession()
-        setSession(null)
-        setError('Sua sessão expirou. Entre novamente.')
-      }
-    })
-    return () => { active = false }
-  }, [session?.token, from, navigate])
+    // Opening the login screen means the customer must explicitly enter their PIN.
+    clearCustomerAuthSession()
+  }, [])
+
 
   const submit = async event => {
     event.preventDefault()

@@ -8,6 +8,11 @@ export const tableNumber = (value) => {
   return Number.isSafeInteger(number) && number > 0 && number <= 2147483647 ? number : null
 }
 
+export const clearTableContexts = () => {
+  memory = {}
+  try { window.sessionStorage.removeItem(STORAGE_KEY) } catch { /* Storage may be disabled. */ }
+}
+
 const validContext = (value, now = Date.now()) => {
   const id = Number(value?.mesa?.id)
   const number = tableNumber(value?.mesa?.number)

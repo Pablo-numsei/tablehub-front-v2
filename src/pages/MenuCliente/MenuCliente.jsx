@@ -63,7 +63,7 @@ export default function MenuCliente() {
     // A customer session without a successful PIN verification must never unlock
     // manual table selection, even when the URL contains a table number or QR.
     // Visitors without a session can still browse the public menu.
-    if (!customerSession?.token || tableLoading || ready || pinVerifiedForTable) return
+    if (!customerSession?.token || tableLoading || pinVerifiedForTable) return
 
     const nomeUsuario = customerSession.customer?.nomeUsuario || ''
     clearCustomerAuthSession()

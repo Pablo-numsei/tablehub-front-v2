@@ -1,20 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <rect width="200" height="200" fill="#000"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#000"/>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#fff0a8"/><stop offset=".48" stop-color="#f4ca52"/><stop offset="1" stop-color="#c88a17"/>
+      <stop offset="0" stop-color="#fff4a6"/>
+      <stop offset=".34" stop-color="#f7d447"/>
+      <stop offset=".68" stop-color="#ffdf46"/>
+      <stop offset="1" stop-color="#bd7b08"/>
     </linearGradient>
   </defs>
-  <g transform="translate(100 100) scale(1.22) translate(-100 -100)">
-    <g fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke-width="4.8" d="M76 48 C61 29 72 13 91 18 C101 5 119 13 125 21 C146 16 158 30 149 45 C143 54 132 57 126 70"/>
-      <path stroke-width="3.6" d="M82 48 Q101 43 127 51 M91 46 L87 29 M104 47 L107 24 M117 48 L125 31"/>
-      <path stroke-width="9" d="M42 92 C57 65 89 57 116 65 C132 69 143 79 150 89"/>
-      <path stroke-width="5.5" d="M51 105 C44 132 60 157 87 168 C118 180 149 159 156 128"/>
-    </g>
-    <path fill="url(#gold)" d="M74 87 H128 V97 H107 V146 H95 V97 H74 Z"/>
-    <path fill="url(#gold)" d="M136 68 C132 65 128 68 130 73 L143 89 L151 82 Z M143 85 L162 98 L159 103 L140 90 Z M148 80 L167 93 L164 98 L145 85 Z M153 75 L172 88 L169 93 L150 80 Z"/>
-    <path fill="url(#gold)" d="M33 130 C24 126 18 132 20 141 C22 151 30 158 40 154 C46 151 44 144 40 139 Z"/>
-    <path fill="none" stroke="url(#gold)" stroke-width="5.5" stroke-linecap="round" d="M39 151 Q75 185 119 169 Q151 158 156 128"/>
+  <g fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke-width="7" d="M77 83 C54 66 54 43 73 29 C91 15 111 23 128 35 C143 13 171 14 188 31 C211 29 229 46 223 67 C220 79 209 87 195 96"/>
+    <path stroke-width="5" d="M77 83 Q126 72 195 96 M93 79 Q91 56 76 42 M119 76 Q133 53 130 30 M147 79 Q164 54 172 36 M171 86 Q192 68 198 51"/>
+    <path stroke-width="14" d="M43 130 C62 91 99 80 139 85 C178 89 207 113 218 148 C232 194 194 228 143 231 C91 234 48 207 38 170 C34 156 36 143 43 130"/>
   </g>
+  <path fill="url(#gold)" d="M77 111 Q128 121 179 111 L179 130 L143 130 L143 201 L113 201 L113 130 L77 130 Z"/>
 </svg>

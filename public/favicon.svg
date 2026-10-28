@@ -1,9 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <rect width="200" height="200" rx="18" fill="#050505"/>
-  <rect x="7" y="7" width="186" height="186" rx="31" fill="none" stroke="#F2C51B" stroke-width="5"/>
-  <g fill="#F2C51B">
-    <path d="M56 40H144V65H111V163H89V65H56Z"/>
-    <path d="M35 40H38V70C38 74 40 76 43 77V160C43 163 41 165 39 165S35 163 35 160V77C32 76 30 74 30 70V40H33V67H35Z" transform="translate(5 0)"/>
-    <path d="M158 31C153 39 151 49 151 60V82C151 89 154 94 160 99L162 103V158C162 163 165 166 168 166S174 163 174 158L170 103L174 97C178 91 180 85 180 77V31C180 28 177 28 176 32L172 76C172 79 170 81 168 81S164 79 164 76L163 32C163 28 160 28 158 31Z" transform="translate(-6 0) scale(.92 1)"/>
+  <rect width="200" height="200" fill="#000"/>
+  <defs><linearGradient id="gold" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#fff0a8"/><stop offset=".48" stop-color="#f5d36a"/><stop offset="1" stop-color="#c58b19"/></linearGradient></defs>
+  <g fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke-width="3.5" d="M77 48 C62 28 75 13 91 18 C100 5 119 13 124 20 C146 16 157 30 149 44 C141 53 130 55 126 69"/>
+    <path stroke-width="2.5" d="M83 48 Q100 44 127 51 M91 46 L88 29 M104 47 L107 24 M117 48 L125 31"/>
+    <path stroke-width="7" d="M43 92 C57 66 89 57 116 65 C132 69 143 79 149 88"/>
+    <path stroke-width="4" d="M52 105 C45 131 60 155 86 166 C117 179 148 159 155 128"/>
   </g>
+  <path fill="url(#gold)" d="M76 88 H126 V96 H106 V144 H96 V96 H76 Z"/>
+  <path fill="url(#gold)" d="M137 69 C133 65 129 67 130 73 L142 88 L151 82 Z M145 85 L161 96 L158 101 L142 90 Z M149 81 L165 92 L162 97 L146 86 Z"/>
+  <path fill="url(#gold)" d="M34 130 C26 126 19 131 20 140 C21 150 30 157 39 153 C44 151 44 144 40 139 Z"/>
+  <path fill="none" stroke="url(#gold)" stroke-width="4" stroke-linecap="round" d="M39 151 Q75 184 119 169 Q150 159 155 128"/>
 </svg>

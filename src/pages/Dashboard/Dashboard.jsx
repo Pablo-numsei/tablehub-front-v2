@@ -92,9 +92,10 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    loadDashboard()
+    if (user?.role === 'COZINHA') setLoading(false)
+    else loadDashboard()
     if (canManageWaste) loadWasteInventory()
-  }, [canManageWaste])
+  }, [canManageWaste, user?.role])
 
   const metrics = useMemo(() => {
     if (!dashboard) return []
@@ -144,7 +145,7 @@ export default function Dashboard() {
             <p>Dados persistidos no TableHub. Pagamentos usam o fluxo simulado desta entrega, sem cobrança bancária.</p>
           </div>
 
-          <button
+          {user?.role !== 'COZINHA' && <button
             type="button"
             className="dashboard-period"
             onClick={loadDashboard}
@@ -152,7 +153,7 @@ export default function Dashboard() {
           >
             <FiRefreshCw className={loading ? 'is-spinning' : ''} />
             {loading ? 'Atualizando' : 'Hoje'}
-          </button>
+          </button>}
         </header>
 
         {error && (

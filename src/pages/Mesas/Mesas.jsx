@@ -173,7 +173,7 @@ export default function Mesas() {
 
           <div className="tables-header-actions">
             <button className="th-btn th-btn--glass" type="button" onClick={() => setReloadKey((current) => current + 1)} disabled={loading}><FiRefreshCw /> Atualizar</button>
-            {user?.role === 'ADMINISTRADOR' && <button className="th-btn th-btn--primary" type="button" onClick={() => { setCreating(true); setCreateError('') }}><FiPlus /> Nova mesa</button>}
+            {['ADMINISTRADOR', 'GARCOM'].includes(user?.role) && <button className="th-btn th-btn--primary" type="button" onClick={() => { setCreating(true); setCreateError('') }}><FiPlus /> Nova mesa</button>}
           </div>
         </header>
 

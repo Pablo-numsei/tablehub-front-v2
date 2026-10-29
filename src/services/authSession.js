@@ -8,18 +8,18 @@ export const normalizeRole = (role = '') => String(role)
 const roles = new Set(['ADMINISTRADOR', 'GARCOM', 'COZINHA'])
 
 export const MANAGEMENT_ROUTES = [
-  { label: 'Dashboard', path: '/dashboard', roles: ['ADMINISTRADOR', 'GARCOM'] },
+  { label: 'Dashboard', path: '/dashboard', roles: ['ADMINISTRADOR', 'GARCOM', 'COZINHA'] },
   { label: 'Cardápio', path: '/cardapio', roles: ['ADMINISTRADOR'] },
   { label: 'Pedidos', path: '/pedidos', roles: ['ADMINISTRADOR', 'GARCOM', 'COZINHA'] },
   { label: 'Atendimento', path: '/atendimento', roles: ['ADMINISTRADOR', 'GARCOM'] },
   { label: 'Clientes', path: '/clientes', roles: ['ADMINISTRADOR'] },
-  { label: 'Financeiro', path: '/financeiro', roles: ['ADMINISTRADOR', 'GARCOM'] },
+  { label: 'Financeiro', path: '/financeiro', roles: ['ADMINISTRADOR'] },
   { label: 'Mesas', path: '/mesas', roles: ['ADMINISTRADOR', 'GARCOM'] },
   { label: 'Produtos / Estoque', path: '/estoque', roles: ['ADMINISTRADOR'] },
   { label: 'Usuários', path: '/cadastro', roles: ['ADMINISTRADOR'] },
 ]
 
-export const landingPage = (role) => normalizeRole(role) === 'COZINHA' ? '/pedidos' : '/dashboard'
+export const landingPage = (role) => '/dashboard'
 export const canAccessRoute = (role, path) =>
   MANAGEMENT_ROUTES.find((route) => route.path === path)?.roles.includes(normalizeRole(role)) === true
 

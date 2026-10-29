@@ -142,7 +142,7 @@ export default function Dashboard() {
           <div>
             <span className="dashboard-header__eyebrow">VISÃO GERAL</span>
             <h1>Dashboard</h1>
-            <p>Dados persistidos no TableHub. Pagamentos usam o fluxo simulado desta entrega, sem cobrança bancária.</p>
+            <p>{user?.role === 'COZINHA' ? 'Controle operacional de desperdício de alimentos.' : user?.role === 'GARCOM' ? 'Acompanhe pedidos, mesas e a operação do salão.' : 'Dados persistidos no TableHub. Pagamentos usam o fluxo simulado desta entrega, sem cobrança bancária.'}</p>
           </div>
 
           {user?.role !== 'COZINHA' && <button

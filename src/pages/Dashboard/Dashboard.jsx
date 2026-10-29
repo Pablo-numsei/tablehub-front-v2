@@ -48,7 +48,8 @@ const formatTime = (value) => {
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const canManageWaste = user?.role === 'GARCOM'
+  const canManageWaste = ['GARCOM', 'COZINHA'].includes(user?.role)
+  const canViewFinancial = user?.role === 'ADMINISTRADOR'
   const [wasteInventory, setWasteInventory] = useState([])
   const [wasteInventoryLoading, setWasteInventoryLoading] = useState(false)
   const [wasteInventoryError, setWasteInventoryError] = useState('')
@@ -108,23 +109,22 @@ export default function Dashboard() {
         value: String(dashboard.pedidosHoje),
         detail: 'Pedidos registrados no banco',
       },
-      {
+      ...(canViewFinancial ? [{
         label: 'Pagamentos confirmados',
         value: formatMoney(dashboard.faturamentoHoje),
         detail: 'Registros do fluxo simulado confirmados hoje',
-      },
-      {
+      }, {
         label: 'Ticket médio',
         value: formatMoney(dashboard.ticketMedio),
         detail: 'Média dos pedidos pagos hoje',
-      },
+      }] : []),
       {
         label: 'Mesas ocupadas',
         value: `${dashboard.mesasOcupadas} / ${dashboard.totalMesas}`,
         detail: `${occupiedPercentage}% das mesas ativas`,
       },
     ]
-  }, [dashboard])
+  }, [dashboard, canViewFinancial])
 
   const movement = dashboard?.movimentoPorHora || []
   const maxMovement = Math.max(
@@ -223,7 +223,7 @@ export default function Dashboard() {
                         >
                           {order.status}
                         </span>
-                        <span>{formatMoney(order.total)}</span>
+                        {canViewFinancial && <span>{formatMoney(order.total)}</span>}
                         <small>{formatTime(order.criadoEm)}</small>
                       </div>
                     ))}

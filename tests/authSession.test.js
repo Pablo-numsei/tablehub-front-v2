@@ -22,12 +22,15 @@ beforeEach(() => {
 test('role policy denies unlisted roles and routes, including public registration', () => {
   assert.equal(normalizeRole(' Garçom '), 'GARCOM')
   assert.equal(canAccessRoute('Cozinha', '/pedidos'), true)
-  for (const path of ['/cadastro', '/financeiro', '/estoque', '/dashboard']) assert.equal(canAccessRoute('Cozinha', path), false)
+  for (const path of ['/cadastro', '/financeiro', '/estoque']) assert.equal(canAccessRoute('Cozinha', path), false)
+  assert.equal(canAccessRoute('Cozinha', '/dashboard'), true)
+  assert.equal(canAccessRoute('Garçom', '/financeiro'), false)
+  assert.equal(canAccessRoute('Garçom', '/mesas'), true)
   assert.equal(canAccessRoute('Garçom', '/cadastro'), false)
   assert.equal(canAccessRoute('Administrador', '/cadastro'), true)
   assert.equal(canAccessRoute('Cliente', '/pedidos'), false)
   assert.equal(canAccessRoute('Administrador', '//evil.example'), false)
-  assert.equal(landingPage('Cozinha'), '/pedidos')
+  assert.equal(landingPage('Cozinha'), '/dashboard')
 })
 
 test('status actions match kitchen, waiter and administrator responsibilities', () => {

@@ -132,6 +132,11 @@ export default function MenuCliente() {
                 <small>{product.category.toUpperCase()}</small>
                 <h2>{product.name}</h2>
                 <strong>{money(product.price)}</strong>
+                <p className={product.available ? 'customer-product-stock' : 'customer-product-stock is-empty'}>
+                  {product.available
+                    ? `Disponível: ${product.stock} ${product.stock === 1 ? 'unidade' : 'unidades'}`
+                    : 'Sem estoque no momento'}
+                </p>
 
                 <div className="customer-product-card__action">
                   {!product.available ? (
@@ -146,10 +151,19 @@ export default function MenuCliente() {
                         <FiMinus />
                       </button>
                       <span>{qty}</span>
-                      <button type="button" onClick={() => add(product.id)} disabled={!ready} aria-label={`Adicionar uma unidade de ${product.name}`}>
+                      <button
+                        type="button"
+                        onClick={() => add(product.id)}
+                        disabled={!ready || qty >= product.stock}
+                        aria-label={qty >= product.stock ? `Estoque máximo atingido para ${product.name}` : `Adicionar uma unidade de ${product.name}`}
+                        title={qty >= product.stock ? 'Estoque máximo atingido' : 'Adicionar uma unidade'}
+                      >
                         <FiPlus />
                       </button>
                     </div>
+                  )}
+                  {product.available && qty >= product.stock && (
+                    <p className="customer-product-stock-limit" role="status">Limite do estoque atingido.</p>
                   )}
                 </div>
               </article>

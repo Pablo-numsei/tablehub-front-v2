@@ -20,6 +20,7 @@ export default function MenuCliente() {
   }, [qr, ready, context, navigate])
   const [filter, setFilter] = useState('Todos')
   const [cart, setCart] = useState(() => loadCart())
+  const [stockMessages, setStockMessages] = useState({})
   const { products, loading, error: catalogError } = useCustomerCatalog()
   const categories = useMemo(() => ['Todos', ...new Set(products.map((product) => product.category))], [products])
 
@@ -38,12 +39,20 @@ export default function MenuCliente() {
 
   const add = (id) => {
     const product = products.find((item) => item.id === id)
-    if (!ready || !product?.available || loading || catalogError) return
+    if (!ready || !product || loading || catalogError) return
 
-    updateCart((current) => ({
-      ...current,
-      [id]: Math.min((current[id] || 0) + 1, Math.min(product.stock, 100)),
-    }))
+    const currentQuantity = cart[id] || 0
+    if (!product.available || product.stock <= 0) {
+      setStockMessages((current) => ({ ...current, [id]: 'Sem estoque no momento.' }))
+      return
+    }
+    if (currentQuantity >= product.stock) {
+      setStockMessages((current) => ({ ...current, [id]: 'Sem estoque adicional para este item.' }))
+      return
+    }
+
+    setStockMessages((current) => ({ ...current, [id]: '' }))
+    updateCart((current) => ({ ...current, [id]: currentQuantity + 1 }))
   }
 
   const remove = (id) => {
@@ -54,6 +63,7 @@ export default function MenuCliente() {
       if (value <= 0) delete next[id]
       else next[id] = value
 
+      setStockMessages((current) => ({ ...current, [id]: '' }))
       return next
     })
   }
@@ -154,16 +164,16 @@ export default function MenuCliente() {
                       <button
                         type="button"
                         onClick={() => add(product.id)}
-                        disabled={!ready || qty >= product.stock}
-                        aria-label={qty >= product.stock ? `Estoque máximo atingido para ${product.name}` : `Adicionar uma unidade de ${product.name}`}
-                        title={qty >= product.stock ? 'Estoque máximo atingido' : 'Adicionar uma unidade'}
+                        disabled={!ready || loading || !!catalogError}
+                        aria-label={`Adicionar uma unidade de ${product.name}`}
+                        title="Adicionar uma unidade"
                       >
                         <FiPlus />
                       </button>
                     </div>
                   )}
-                  {product.available && qty >= product.stock && (
-                    <p className="customer-product-stock-limit" role="status">Limite do estoque atingido.</p>
+                  {stockMessages[product.id] && (
+                    <p className="customer-product-stock-limit" role="status">{stockMessages[product.id]}</p>
                   )}
                 </div>
               </article>

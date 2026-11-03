@@ -241,3 +241,25 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+.customer-product-stock {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  font-size: .78rem;
+}
+
+.customer-product-stock.is-empty {
+  color: #f08b8b;
+}
+
+.customer-product-stock-limit {
+  margin: 8px 2px 0;
+  color: var(--text-secondary);
+  font-size: .76rem;
+}
+
+.customer-quantity button:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}

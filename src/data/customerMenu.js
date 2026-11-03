@@ -61,7 +61,7 @@ export const customerProducts = [
     category: 'Bebidas',
     price: 12.9,
     available: true,
-    image: '/images/menu/coca.jpg',
+    image: 'https://santaluzia.vtexassets.com/arquivos/ids/997380/556297.jpg?v=638525861586730000',
     imageFit: 'contain',
   },
   {

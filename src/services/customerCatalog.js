@@ -7,7 +7,9 @@ const normalize = (value = '') => String(value).normalize('NFD').replace(/[\u030
 export const mapCustomerCatalog = (rows) => (Array.isArray(rows) ? rows : [])
   .filter((row) => Number.isSafeInteger(row?.id) && row.id > 0 && row.active !== false && Number.isFinite(Number(row.price)) && Number(row.price) > 0)
   .map((row) => {
-    const photo = customerProducts.find((product) => normalize(product.name) === normalize(row.name))
+    const normalizedName = normalize(row.name)
+    const photo = customerProducts.find((product) => normalize(product.name) === normalizedName)
+      || (normalizedName.includes('coca') ? customerProducts.find((product) => normalize(product.name).includes('coca')) : null)
     const stock = Math.max(0, Number(row.stockQuantity) || 0)
     return { id: row.id, backendId: row.id, name: row.name, category: row.category?.name || 'Outros',
       price: Number(row.price), stock, available: row.available !== false && stock > 0,
